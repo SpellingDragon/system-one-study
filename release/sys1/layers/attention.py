@@ -317,9 +317,10 @@ def attention_masked(
     heads, seq, dim = q3.shape
     scale = dim ** -0.5 if scale is None else float(scale)
     score = q3.to(torch.float32) @ k3.to(torch.float32).transpose(-1, -2) * scale
-    score = score.masked_fill(~window_band(seq, window, device=q.device), NEG_INF)
+    band = window_band(seq, window, device=q.device)[0]        # (1,T,T)：与 score 同秩，masked_fill 不升维
+    score = score.masked_fill(~band, NEG_INF)
     out = torch.softmax(score, dim=-1) @ v3.to(torch.float32)
-    return AttnOut(out.reshape(lead_shape(q) + (dim,)) if q.dim() > 3 else out, {
+    return AttnOut(out.reshape(lead_shape(q) + (seq, dim)), {
         "route": "masked", "window": window, "seq": seq, "heads": heads,
         "materialized_peak_bytes": score.numel() * score.element_size(),
         "memory_ledger": "cpu-alloc 口径，非 NPU 显存账",
@@ -388,7 +389,7 @@ def attention_band(
         else "O((chunk+window)^2) x 块数，单块峰值与总长无关",
         "memory_ledger": "cpu-alloc 口径，非 NPU 显存账",
     }
-    return AttnOut(out.reshape(lead_shape(q) + (dim,)) if q.dim() > 3 else out, stats)
+    return AttnOut(out.reshape(lead_shape(q) + (seq, dim)), stats)
 
 
 def compare_routes(
