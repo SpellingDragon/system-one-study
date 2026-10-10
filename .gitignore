@@ -27,3 +27,6 @@ wandb/
 .tmp_*/
 release/tests/.tmp_p205/
 release/ascend/port910b/cann_cache/
+
+# 构建产物：pip install -e 生成的 egg-info 元数据（audit-remediation-1010 R-P1-3 出库，不入库）
+*.egg-info/

@@ -1,7 +1,7 @@
 # orchestration Specification
 
 ## Purpose
-TBD - created by archiving change teacher-p1-scratch-mps. Update Purpose after archive.
+定义本仓多级 OpenSpec 变更的编排契约：一级只司编排与裁决、实现义务下沉子变更，并约束目录自包含、波次合并前置与变更级 DoD 收尾门，防止编排层与实现层互相污染。
 ## Requirements
 ### Requirement: 二级子变更结构
 一级变更 SHALL 以 `changes/p1-NN-<domain>/` 承载全部二级子变更，每个子变更 MUST 自包含 `{proposal.md, design.md, tasks.md, specs/<capability>/spec.md}` 四件套；一级 `specs/` 仅保留本编排契约（orchestration）。

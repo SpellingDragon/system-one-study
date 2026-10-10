@@ -7,7 +7,7 @@
 | `rules/common.md` | "One For All" 通用工程纪律（第〇层元规则 / 第一层操作纪律 / 第二层工程实测表）；frontmatter `alwaysApply: true`，宿主自动注入，供任何 coding agent 长期遵循；语言中立表述，不绑定具体仓库 |
 
 用法总说明见仓库根 [AGENTS.md](../AGENTS.md)；skill 正文：
-- [SKILL.md](skills/openspec-multilevel-planning/SKILL.md) — 六阶段工作流 / 核心原则 / 反模式 R1–R14
+- [SKILL.md](skills/openspec-multilevel-planning/SKILL.md) — 六阶段工作流 / 核心原则 / 反模式 R 系列（编号以 SKILL.md 为唯一源，此处不写死区间）
 - [review-checklist.md](skills/openspec-multilevel-planning/review-checklist.md) — 规划防线（覆盖性 5 查 + 一致性）
 - [apply-orchestration.md](skills/openspec-multilevel-planning/apply-orchestration.md) — 执行防线（派发八要素 / 完成度四查与重派三型 / 计划缺陷回写 / 验收双路法）
 
