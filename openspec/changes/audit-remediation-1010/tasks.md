@@ -22,6 +22,8 @@
 - [x] R-P2-1 统计补强方案入档（多种子/基线扩样/Wilson 区间/needle 扩题；前置=训测分离后） —— 验证：docs 或 design 增补节存在
 - [x] R-P2-2 合规论证入档（CC BY-NC 蒸馏权利推演、GLM API ToS 分析——标注"非法律意见"） —— 验证：docs/compliance.md 存在且含两节
 
+- [ ] R-P1-5 授权面收口（代理 W 自纠所揭，新风险）：本仓 `LICENSE` 对外发 MIT（含商用），而教师为 CC BY-NC-4.0——若"模型输出非 Adapted Material"前提被推翻，等于**替第三方素材做超权限授权**。处置＝① LICENSE 不变（授的是自有代码），② README/NOTICE 一行明写"MIT 仅覆盖本仓自写代码，不授予任何第三方模型/数据集权利（教师权重为 CC BY-NC-4.0，底座为 Apache-2.0，含上游 NOTICE 血缘）" —— 验证：`grep -n "MIT.*仅覆盖\|not grant.*third-party" README.md`（或 NOTICE）命中 + 血缘声明与 registry/教师卡实际 license 一致
+
 ## 收尾
 
 - [x] F1 编排者集成复验：DoD 1–5 逐项 + 全量 pytest 无新红 + grep 清单
