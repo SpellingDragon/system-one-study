@@ -29,16 +29,15 @@ jobs:
   release-gates:                 # 评审 2.2.3：release/ 的 300+ 测试此前零 CI 覆盖 —— 双重 fixture 能活着入库的结构性原因
     runs-on: ubuntu-latest
     timeout-minutes: 30          # 常规优化：大包安装 + 全量测试，不设上限会白烧 runner 六小时
-    # ⚠ 归因已立、翻转待 CI 实况（R-P1-4，台账 docs/ci_baseline_triage.md；design「风险与回退」第 3 条：先归因、不静默放行）：
-    #   首跑 38052186621 的 11 红 = 资产缺件×6（skip-when-missing 门已立，应转 SKIP）
-    #                     + 设备条件×4（MPS 门已立，ubuntu 应转 SKIP）
-    #                     + KNOWN-ENV×1（test_longctx::test_sliding_routes_agree_with_mask_reference，
-    #                       逐位相等断言平台敏感，**故意不 skip**——skip 会掩盖真回归）。
-    #   翻转条件（两条其一）= 下一次 ubuntu run `0 failed`；或唯一红仅剩上述 KNOWN-ENV 一条
-    #     且编排者已另行裁决（放宽容差属 sys1 侧口径，或显式 xfail(strict) 挂台账）。
-    #   本地全绿 ≠ ubuntu 全绿（BLAS/指令集与 bench/ 缺件差异），故翻转由编排者看 CI 实况后执行。
-    #   翻转操作 = 删下面这一行 continue-on-error，其余一字不动。
-    continue-on-error: true
+    # ⚠ 归因已立、已翻正式门（R-P1-4，台账 docs/ci_baseline_triage.md；design「风险与回退」第 3 条：先归因、不静默放行）：
+    #   首跑 38052186621 的 11 红按实况＝6 资产缺件→SKIP 门已立 + 4 backends→MPS 门 skipif 已立
+    #     （host 伪造无 MPS 亦复现同 4 条 skipif）+ 1 test_longctx 判据缺陷（**已修**：旧 `==0.0` 逐位
+    #     判据平台敏感，为此前 2 红 4 绿的根因；已换平台无关结构判据 release/tests/test_longctx.py:634-759，
+    #     host 35 次连跑 0 红，凭据见 release/ascend/kernels/reconcile/E_RESULT.md 与 D_determinism.md）。
+    #     旧注释「KNOWN-ENV 保留红／预期稳态 1 failed」已被证伪，随本次订正删除。
+    #   翻转条件已达成：run 38070929040（0 failed, 297 passed, 38 skipped）+ run 38075461293
+    #     （0 failed，非确定判据重建后首跑）连续两次绿 → 已按既定操作删去 continue-on-error 行，本 job 为硬门。
+    #   翻门后再红即真信号：按三分归因先证后判，勿静默放行（本地全绿 ≠ ubuntu 全绿，属既有现象）。
     defaults:
       run: { shell: bash }
     steps:
@@ -77,7 +76,7 @@ jobs:
           SUMMARY=$(grep -E "^[0-9]+ (passed|failed|error)" "$LOG" | tail -1)
           [ -n "$SUMMARY" ] || SUMMARY="（未命中汇总行，见工件日志尾部）"
           {
-            echo "### release-gates 基线（采集期，continue-on-error）"
+            echo "### release-gates 基线（正式门）"
             echo '```'
             echo "$SUMMARY"
             echo '```'

@@ -169,6 +169,7 @@ host 全量基线由 `332 passed, 3 skipped, 3 deselected` 变为 `340 passed, 3
 - 修改：`release/tests/test_backends.py`（门+注释）、`test_longctx.py`（门+KNOWN-ENV 注释）、
   `test_chinese.py`、`test_mm.py`、`test_opd.py`（skip-when-missing）；`.github/workflows/ci.yml`（仅注释，
   `yaml.safe_load` 复验过：jobs×3、continue-on-error=True、steps=8 不变）
+  （**2026-10-11 订正**：本条两处说法已被后续动作作废——`test_longctx.py` 的 KNOWN-ENV 注释随判据缺陷修复删除（现 `grep -rn "KNOWN-ENV" release/tests release/sys1` = 0 残留），`ci.yml` 亦不再“仅注释”：R-P1-4 翻门已执行，`continue-on-error: true` 行删除、该 job 为硬门）
 - 新增：本档；`openspec/changes/audit-remediation-1010/tasks.md` R-P1-4 勾选
 - 全量自证：`cd release && .venv/bin/python -m pytest tests -q -m "not integration"`
-  → `332 passed, 3 skipped, 3 deselected`（host，0 failed）
+  → `332 passed, 3 skipped, 3 deselected`（host，0 failed；**2026-10-11 订正**：该快照已被新增用例作废，现全量基线为 `0 failed, 340 passed, 3 skipped, 3 deselected`）

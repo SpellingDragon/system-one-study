@@ -57,3 +57,5 @@ cd ../release && python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 1. 第一幕 `learning/` 轨禁第三方权重；第二幕产出基座必须 Apache 2.0（StartLux 权重实为 CC BY-NC-4.0，仅限蒸馏/verifier/对照评测；蒸馏产物权利推演待补，见 P2 合规论证项）；
 2. 一切跑分走 `sys1/eval/` 同 harness，双基线亲跑不引用卡面；训练口只准吃 `axis: train`（本波 audit-remediation-1010 自查出 5 份 yaml 与默认值曾写 `axis: quality`，而 quality 轴主力集登记 `split="test"`——即训测同集风险；已切 train 并加守卫测试 `release/tests/test_train_axis_guard.py`，历史 run 档原样不改）；
 3. `sys1/decision/` 契约零改动——程序即宪法，三层守护。
+
+> 授权面声明（**非法律意见**，权利推演与核验清单见 `docs/compliance.md`）：本仓 `LICENSE` 的 MIT 仅覆盖**本仓自写代码**，不授予任何第三方模型权重/数据集的权利——教师权重为 CC BY-NC-4.0（卡面明示商用需另行取得许可人授权），底座为 Apache-2.0（含上游 NOTICE 血缘）；再分发产物时需一并保留上游 NOTICE/署名要求。
