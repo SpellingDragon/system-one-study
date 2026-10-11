@@ -148,6 +148,7 @@ class _LinearFn(torch.autograd.Function):
         ctx.save_for_backward(A, W)
         ctx.has_bias = bias is not None
         ctx.target = target
+        ctx.bias_dtype = None if bias is None else bias.dtype   # F2：db 的交货位宽按输入原件
         if A.dtype == torch.float64:
             out = A @ W.t()
             if bias is not None:
@@ -168,6 +169,10 @@ class _LinearFn(torch.autograd.Function):
         dA = gemm_kernel.forward(dC, W.t().contiguous(), None, "none", A.dtype, ctx.target)
         dW = gemm_bwd_dw_kernel.backward(dC, A, out_dtype=W.dtype, target=ctx.target)
         db = dC.float().sum(dim=0) if ctx.has_bias else None
+        if db is not None:
+            # F2 位宽传导：db 的**归约在 fp32 面做**（上行 .float()），出口按原件位宽交货；
+            # bias 本就是 fp32 时 `.to()` 恒等返回 self，fp32 档行为逐字不变。
+            db = db.to(ctx.bias_dtype)
         return dA, dW, db, None, None
 
 
@@ -368,7 +373,12 @@ class _GdnFn(torch.autograd.Function):
                 out = _gdn_torch(*leaves)
                 return torch.autograd.grad(out, leaves, dout) + (None, None)
             grads = gdn_kernel.backward(q, k, v, g, beta, dout, ctx.target)
-        return (*grads[:5], None, None)
+        # F2 位宽传导：gdn 五梯的**内核出口恒 fp32**（C2 §2：归约不降位），交回 autograd 前
+        # 按各自输入原件位宽交货。fp32 档 `.to()` 恒等返回 self ⇒ 行为与改前逐字同；
+        # fp16 档不依赖引擎的静默折算，交货位宽在件上就钉死。
+        dq_, dk_, dv_, dg_, db_ = grads[:5]
+        return (dq_.to(q.dtype), dk_.to(k.dtype), dv_.to(v.dtype),
+                dg_.to(g.dtype), db_.to(beta.dtype), None, None)
 
 
 def _gdn_torch(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, g: torch.Tensor,

@@ -52,6 +52,9 @@
 #   CARDRUN_TGZ=…          增采 C 的产物包落点（默认 /tmp/sys1_kernels.tgz）
 #   SYS1_BENCH=1           [4b] 可选 bench 腿：跑 release/ascend/bench_card.py（E2 交付件）；
 #                          未设或文件不在 ⇒ 只记 SKIP，不进验收、不影响退码（验收优先）
+#   SYS1_SKIP_FP16_LEG=1   [4] 显式砍掉 fp16 档第二趟（**默认跑两趟**）。预算兜底用：
+#                          砍了必须打得见（CASE-trainstep-fp16 SKIP reason=…）且计入
+#                          skipped_legs——绝不许静默消失（A3 §4 的 20 分钟窗据此复核）
 #
 set -uo pipefail
 export TILELANG_CACHE_DIR=$(mktemp -d)   # 缓存纪律：key 不含模板内容，必须全新；[3][4] 共享此目录=编译复用
@@ -120,7 +123,7 @@ runner_done() {
     "$RUNLOG"/*.log 2>/dev/null | head -80
   echo "VERDICT-SCAN-END"
   echo "SUMMARY-DEGRADED note=无设备 命中=$(cat "$RUNLOG"/*.log 2>/dev/null | grep -c 'note=无设备') 行"
-  echo "LOGS $RUNLOG (每条腿原文一份，补看：grep -E '^Y-|^NUM-|^ASC-|^P2-STEP|^KERNEL-USED' $RUNLOG/<腿>.log)"
+  echo "LOGS $RUNLOG (每条腿原文一份，补看：grep -E '^Y-|^NUM-|^ASC-|^P2-STEP|^KERNEL-USED|^DTYPE-TRACE' $RUNLOG/<腿>.log)"
   echo "RUNNER-DONE SUMMARY pass=$PASS_N fail=$FAIL_N skipped_legs=$SKIP_N degraded=$DEG_N advisory_fail=$ADV_N exit=$code"
   exit $code
 }
@@ -129,7 +132,11 @@ runner_done() {
 LEGS_PROD=(linear_prod dw_prod readout_prod)
 LEGS_PERF=(gemm_l1_intrinsic dw_intrinsic readout_intrinsic addln_intrinsic gdn)
 N_LEGS_3=$(( ${#LEGS_PROD[@]} + ${#LEGS_PERF[@]} + 2 ))     # + delta 腿 + 增采 D 的 ASC-products 腿
-N_LEGS_4=$(( 2 + BENCH_PLANNED ))                            # [4] train_step + [4c] kernels-tgz +（可选）[4b] bench
+# G（p2-13）：[4] 的 fp16 档第二趟是**计划内腿**，必须进 N_LEGS_4，否则 STOP_AFTER=2/3
+# 分支会把"少跑了一条腿"报成"一条没少"。显式砍腿时它由 [4] 自己记 SKIP ⇒ 此处不再计（不重复计账）。
+FP16_PLANNED=1
+if [ "${SYS1_SKIP_FP16_LEG:-0}" = "1" ]; then FP16_PLANNED=0; fi
+N_LEGS_4=$(( 2 + BENCH_PLANNED + FP16_PLANNED ))   # [4] train_step(fp32) + train_step(fp16) + [4c] kernels-tgz +（可选）[4b] bench
 
 echo "=== [0] env ==="
 # H1 探针（**必须早于任何腿**）：整窗唯一能把"Y-*-ASC-COMPILE-PASS note=无设备"与
@@ -241,14 +248,47 @@ if [ -n "$STOP_AFTER" ] && [ "$STOP_AFTER" -ge 3 ] 2>/dev/null; then
   echo "STOP-AFTER-3"; SKIP_N=$N_LEGS_4; runner_done
 fi
 
-echo "=== [4] mixed-stack train step on npu (P2 首步 + P1-1l 内核自证) ==="
+echo "=== [4] mixed-stack train step on npu (P2 首步 + P1-1l 内核自证 + F2 位宽档) ==="
 cd "$SYS1/release"
 # PASS 需要**两样**：接线判（P2-STEP-*）+ 内核启用判（KERNEL-USED-PASS blockers=0 fallbacks=0）。
 # 只看 P2-STEP 就是本元静默假绿：内核一次没走、整步落 eager，loss 照样降、旧版照样 PASS 退 0。
+# ⚠ 这条 fp32 腿的**标签/超时/三个正则/命令**与 B 写面逐字同，一个新 token 都没加
+#   （F2 §7：卡窗加档是"一行参数"的事，fp32 档行为不许被顺手改掉）。改前改后的窗级差异
+#   应当**只多出下面 trainstep-fp16 一条腿**，其余都算越权。
 LEG_TRACK=gating
 run_leg "trainstep" 900 '^P2-STEP|^KERNEL-USED|^NPU-REG|已回退 torch eager' \
   '^P2-STEP-.*FAIL|^KERNEL-USED-FAIL|NPU-REG fail' '^KERNEL-USED-PASS' - \
   env DMLAYA_ASCEND_TARGET=ascend python3 ascend/train_step.py --target ascend
+
+# G（p2-13）：**同窗第二趟 = F2 的 fp16 档**（F2_RESULT §7 明示"card_run.sh 加不加 --dtype fp16
+# 属 B 写面、判决行格式已兼容"）。一次开窗同时验 fp32/fp16 **两种模具形状**，不多开一窗。
+# 三条老规矩一条不破：
+#   ① LEG_TRACK=gating ⇒ 退码优先级 2>3>6>5 里的 **6（EXIT_DTYPE_DISCIPLINE，位宽纪律钉违规）
+#      计 gating FAIL 并顶窗**。advisory 只归 NUM-*/PERF-* 对照轨（Y 口径：不可当正确性判决引用），
+#      fp16 属产品面 ⇒ 严禁挂 advisory；
+#   ② 判决行仍走 B 的**两趟 grep**，不新造通道：第一趟 disp_re 加 `^DTYPE-TRACE`（F2 新增的位宽
+#      判决，fp16 腿专属——fp32 档它也会打，但 fp32 腿"逐字不动"的优先级更高，故只在 fp16 腿补）；
+#      fail_re 加 `^DTYPE-TRACE-FAIL` 与 `fp32_accum=false`，让 rc=6 **在判决级就红**，
+#      不只靠 rc 校验（真件 rc=6 两样同红：有 DTYPE-TRACE-FAIL 行 + rc≠0，双保险）；
+#   ③ 第二趟错误 grep 的匹配词一个都没动（`error:|FATAL|Traceback|RuntimeError|AssertionError`），
+#      **没把 `aicore` 加回来**——它命中 bisheng 命令行的 `-cce-aicore-*` 会挤掉判决行（B §3.1/H2）。
+# 无卡时它不可能静默 PASS：train_step 在 NPU-REG 门上就 `P2-STEP-ascend FAIL: NPU-REG-FAIL` + 退 4
+#   （B §5 同形）⇒ 既凑不出 `KERNEL-USED-PASS`，也凑不出 rc=0 ⇒ verdict=FAIL。
+#   （不是 DEGRADED：train_step 没有"note=无设备⇒只判编译"那种 PASS 形状的降级，那是 run_numerics 面。）
+# 预算复核（A3 §4 的 20 分钟窗；账见 reconcile/G_RESULT.md §4）：fp16 模具键含位宽段
+#   （`…dfloat16` / `…qfloat16afloat32`）⇒ **与 fp32 不共享缓存**，本腿另付一次 13 键冷编
+#   （容器实测 ≈20s；F2 host 13 枚模具 19.1s）+ 一次 npu 上下文初始化（3–15s）+ 真发射对拍（<30s）
+#   ⇒ 净链 2.5–6 分钟 → **3.5–8 分钟**；腿级 900s 超时富余仍 ≈15×，20 分钟窗含一次 fixup 补跑仍够
+#   ⇒ **默认跑两趟，不静默砍腿**；确需省时间用 `SYS1_SKIP_FP16_LEG=1` 显式砍（打 SKIP reason= 并计账）。
+if [ "${SYS1_SKIP_FP16_LEG:-0}" = "1" ]; then
+  echo "CASE-trainstep-fp16 SKIP reason=SYS1_SKIP_FP16_LEG=1 显式砍腿 ⇒ fp16 档本窗未验"
+  SKIP_N=$((SKIP_N+1))
+else
+  run_leg "trainstep-fp16" 900 '^P2-STEP|^KERNEL-USED|^NPU-REG|^DTYPE-TRACE|已回退 torch eager' \
+    '^P2-STEP-.*FAIL|^KERNEL-USED-FAIL|^DTYPE-TRACE-FAIL|^DTYPE-TRACE fp16 .*fp32_accum=false|NPU-REG fail' \
+    '^KERNEL-USED-PASS' - \
+    env DMLAYA_ASCEND_TARGET=ascend python3 ascend/train_step.py --target ascend --dtype fp16
+fi
 
 echo "=== [4b] bench（可选腿：SYS1_BENCH=1 且 E2 交付件在场才跑）==="
 if [ -z "${SYS1_BENCH:-}" ]; then

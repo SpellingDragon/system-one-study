@@ -74,7 +74,11 @@ def _eager(A: torch.Tensor, W: torch.Tensor, bias: torch.Tensor, act: str, out_d
     """
     if act not in SUPPORTED_ACTS:
         raise ValueError(f"未知 act={act!r}，只支持 {'/'.join(SUPPORTED_ACTS)}")
-    acc = (A @ W.T).float() + bias.float()
+    # F2 单行缺陷修复（组合暴露，登记于 F2_RESULT ⑤）：原式 `(A @ W.T).float()` 的
+    # 乘加在 **A 的位宽面**做、算完才升宽——与本函数 doc"先转 fp32 乘加"不符；fp32 轨
+    # 因入口 to32 升宽从未暴露，train_step fp16 档 n=2 小形状被模具拒绝落到本线时才现形
+    # （归约纪律钉抓到 fp16 内积）。改为先升宽再乘加：fp32 时 .float() 恒等 ⇒ 行为逐字不变。
+    acc = A.float() @ W.T.float() + bias.float()
     if act == "relu":
         acc = acc.clamp_min(0.0)
     return acc.to(out_dtype)
