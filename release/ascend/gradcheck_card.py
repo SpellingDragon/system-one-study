@@ -13,6 +13,12 @@ gdn_delta / gdn_conv / readout / lora_apply），在**同一次运行里**同时
 末行 `GRADCHECK-SUMMARY ops=8 pass= fail= invalid= kernel_used=<n>/<8>`；退出码：pass 全绿 0 /
 有 FAIL 1 / 有 INVALID 2。
 
+【非有限值一律 FAIL（P1-1zc 补闸）】`abs_err`/`ana_norm`/`rel` 任一非有限（nan/inf）即判 **FAIL**，
+不判 PASS——口径沿 `port910b/run_delta_card.py` 的 D3 逐项式 `fin and (v <= thr)`。**为何必须补**：
+`ok` 原式为 `abs_err <= ATOL + RTOL*ana_norm`，当两侧同为 `+inf` 时 `inf <= inf` 为 **True**，
+而 `rel=inf/inf=nan` ⇒ 会打出「PASS max_rel=nan」的假绿；解析梯度里只要有**一个** ±inf，
+`ana_norm` 与 `abs_err`（`d=n−a` 含 −inf）就双双溢出 `+inf`，正中此坑（窗四 gdn_delta 实证）。
+
 【为什么必须与 KERNEL-USED 三证同窗绑定（R14 防假绿）】内核在编译/发射失败时会**静默**落回
 torch eager（`ascend_env.get_compiled` 返回 None ⇒ 入口落 `_eager`）。eager 与解析梯度数学一致，
 于是「gradcheck 一致」会**伪装**成「内核 gradcheck 通过」——M2 已证 Python 层量不到内核内部。
@@ -34,6 +40,7 @@ torch eager（`ascend_env.get_compiled` 返回 None ⇒ 入口落 `_eager`）。
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import sys
 import time
@@ -192,12 +199,20 @@ def _gradcheck_op(op: str, target: str, device: torch.device,
                 sq_ana += float((a.double() ** 2).sum())
         abs_err, ana_norm = sq_err ** 0.5, sq_ana ** 0.5
         rel = abs_err / max(ana_norm, 1e-30)
-        return {"rel": rel, "abs_err": abs_err, "ana_norm": ana_norm, "eps": eps,
+        # 非有限值一律 FAIL（沿 run_delta_card 的 D3 逐项口径 `fin and (v <= thr)`）：
+        # **不加这道闸**时 `abs_err <= ATOL + RTOL * ana_norm` 在两侧同为 +inf 时为 True
+        # （`inf <= inf`），而 `rel = inf/inf = nan` ⇒ 会打出「PASS max_rel=nan」的假绿。
+        # 解析梯度里只要有一个 ±inf，`ana_norm` 与 `abs_err`（d=n−a 含 −inf）双双溢出为
+        # +inf ⇒ 命中该假绿。故先判 finite，再比阈值。（rtol/atol/INVALID 语义不变。）
+        finite = (math.isfinite(abs_err) and math.isfinite(ana_norm)
+                  and math.isfinite(rel))
+        return {"rel": rel, "abs_err": abs_err, "ana_norm": ana_norm,
+                "finite": finite, "eps": eps,
                 "fwd_keys": fwd_keys, "exc": None,
-                "ok": abs_err <= ATOL + RTOL * ana_norm}
+                "ok": finite and (abs_err <= ATOL + RTOL * ana_norm)}
     except Exception as e:  # noqa: BLE001  前向/反向任何抛出都收成判决，不让单件带崩整窗
-        return {"rel": None, "abs_err": None, "ana_norm": None, "eps": eps,
-                "fwd_keys": _fwd_keys(), "exc": e, "ok": False}
+        return {"rel": None, "abs_err": None, "ana_norm": None, "finite": None,
+                "eps": eps, "fwd_keys": _fwd_keys(), "exc": e, "ok": False}
 
 
 def _fallback_keys(messages) -> list[str]:
@@ -279,8 +294,10 @@ def run_one(op: str, target: str, *, no_run: bool, device: torch.device,
         head = f"{type(exc).__name__}: {(str(exc).splitlines() or [''])[0]}"
         return {**base, "verdict": "FAIL", "rel": None, "err": head}
     if no_run:
-        return {**base, "verdict": "PASS", "rel": None}
-    return {**base, "verdict": "PASS" if result["ok"] else "FAIL", "rel": result["rel"]}
+        return {**base, "verdict": "PASS", "rel": None, "finite": True}
+    return {**base, "verdict": "PASS" if result["ok"] else "FAIL",
+            "rel": result["rel"], "finite": result.get("finite", True),
+            "abs_err": result.get("abs_err"), "ana_norm": result.get("ana_norm")}
 
 
 # ────────────────────────── `--target ascend --no-run` 的编译替身（同 compile_all_asc 手法）──────
@@ -375,6 +392,9 @@ def main(argv=None) -> int:
                 extra += f" fallback={res['fb']}"
             if res.get("err"):
                 extra += f" err={res['err']}"
+            if res.get("finite") is False:
+                extra += (f" nonfinite=true(abs_err={res.get('abs_err')} "
+                          f"ana_norm={res.get('ana_norm')} => 强制 FAIL)")
             print(f"    · {extra} wall={res['ms']:.2f}s", flush=True)
     finally:
         if args.no_run:

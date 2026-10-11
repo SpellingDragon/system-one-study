@@ -27,3 +27,15 @@ repo `caf824e`；实例资源盘点（决策人要求）：**910B4 单卡、HBM 
 1. **正确性**：四产品件+delta fwd+fp32/fp16 训练步维持全绿；GDN 反向缺口收敛为 **2 个 device-only 缺陷**（`pure` 变体 dbeta〔修法已明：设备侧选 ub〕、F4 conv 反向件）+1 个探针 bug（gradcheck nan 判据）。
 2. **性能**：cube 栈真机数据到手（GDN 六件 rel=0 + gemm 718×）——**底座对齐（B 路线）由 README 承诺升级为真机判决**。
 3. 待本地（不占卡）：①设备腿变体选择修 dbeta（连带 gdn_delta 2.2e5 复验）②gradcheck nan 判据修 ③conv 反向卡上缺陷归因 ④v2→方案 B ⑤R6/R7 报价按"tilelang-ascend 路径"重算口径。
+
+
+## ⑧ 勘误（K4 三重证据推翻本账 §V4 的解读——第三次被代理证据纠回，机制有效）
+我写的是："V3 腿失败说明 run_delta_card 设备腿实际走 pure（D3 早前'设备=ub'反了）"。**错**。K4 证据：
+1. **代码**：`run_delta_card.py:60-63` `_variant()`：ascend→**ub**，且早于窗二即如此（D3 未动它）；
+2. **指纹**：V3 的 `dq=6.999e-08/dk=9.322e-08/dg=1.016e-07` 与 **V4-ub 逐字同**、与 V4-pure 全异；
+3. **键**：`c2ubz`。
+**真正的机理**（K4 点破）：`ub` 的 **fresh（首次发射）指纹 `e609a6ab` 恰好 == pure 的指纹**——V3 的 dbeta 错不是因为走了 pure，而是 **`ub` 在 UB 未初始化（fresh）时表现与 pure 相同；`prefill=zero` 后 dbeta 才对（`1.018e-07`）**（D3 探针的 ITEM 读的是 `runs["zero"]`，`D3_probe_dbeta_order.py:160`）。
+⇒ **dbeta 根因改判：`gdnb` 内核首次发射时读取了未初始化的 UB**（D3 早前"八槽先写后读无 stale 落点"的静态结论被顺序实验推翻——存在某条首迭代读-before-写路径）；**修法＝UB 预清零**（非变体选择）。
+⇒ **K4 对台账必答项的回答：生产训练步（train_step/train_step_real → autograd_asc.gdn_delta）在设备上走 `ub`** ⇒ dbeta 缺陷**在生产路径上**（首次发射即错）⇒ 高危。
+⇒ **统一假说（升级为待验主线）**：GDN 族 device-only 缺陷群（dbeta 0.80 / gdn_conv 5.5e4 / gdn_delta 2.2e5）可能同为"**首次发射未初始化 UB 读**"一类——与窗三 E 段跨步 stale（H-b）同族但不同落点。**一枪可判**：每 op 发射前做一次 UB 清零发射（或预热发射丢弃首跑），三缺陷同窗复判。
+- 修正 tasks：P1-1z 修法从"变体选择"改为"**P1-1zg UB 预清零**"；变体选择无需改动（已是 ub，K4 零码改、负例 `--variant pure→c2purez` 证明开关为真）。
