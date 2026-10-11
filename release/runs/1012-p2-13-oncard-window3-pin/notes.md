@@ -84,3 +84,17 @@ STALE-DIFF>0 ⇒ H-b 真：残留含 stale ⇒ 修复须同时处理 UB 预清�
 - **G3(b)（双因子提案 v2，不落地）**：`attempts/S3_compat_proposal_v2.diff`（v1 gap 归一 ＋ 因子二 **UB 预清零** `vector_dup`，`blockCount==1` 跳过⇒对 SINGLE 无回归）。**两因子确实进码**由预处理原文证实：`srcStrideB/32→srcGapB/32`、`vector_dup` 三处（v1/trunk 均 0）。trunk 三处 md5 复验未变 `ca023c2e`。
   - **诚实边界**：v2 仍是提案，**真机判决未做**；且 G3 明确 **不声称顺带修 `dbeta`**（D3 已证 `gdnb` 无 DMA，不同面）。
 - **编排者本轮两次自犯同坑（记档防再犯）**：① `grep -c` 返 0 时 exit 1 断 `&&` 链（第二次犯）；② 把 `2>/dev/null` 加在 docker exec 上，吞掉自己写错路径的报错（`/work/port910b` 应为 `/work/ascend/port910b`）——**与窗二 scp 同类错误**。结论：**任何验证命令都不得静默 stderr**。
+
+
+## ⑩ 重大上游事实更正（2026-10-12，决策人提供的 CANN org 链接引出；按"先核对已有结论是否被推翻"纪律）
+**此前结论"PMC 不维护 910 卡"只对 tilelang MAIN 仓成立，整体判断被推翻**：
+1. **`tile-ai/tilelang-ascend` 是活跃维护的官方 Ascend 适配仓**（API 元信息实测：`fork:false`、描述 "Ascend TileLang adapter"、**默认分支＝`ascendc_pto`**、404 星/175 fork/**534 开放 issue**、created 2025-09-25、**pushed 2026-10-09**）；CANN 官方 org 页（gitcode.com/cann）"相关链接"直接挂它。后端双轨：AscendC & PTO / AscendNPU IR；README 含正统 cube 路（`T.gemm_v0(A_L1,B_L1,C_L0, init=…)`）、Flash/Sparse/Linear Attention & RNN 示例、ACLGraph、torch 集成；要求 CANN ≥8.3.RC1（我们的 8.5.0/8.5.2 满足）。
+2. **我们的一手取证被上游独立佐证**：#1762 `[Bug] Scalar BF16-to-FP32 casts fail in the BiSheng backend`（open, 09-08）＝我们 C2 的 `not support bf16 type cast`；#1758 `[Bugfix] Lower scalar BF16-to-FP32 casts through AscendC` —— 修复路线已存在。
+3. **旗舰 P1-3（GDN delta rule）正被整族上游化**：#1191 `chunk_gated_delta_rule`（closed＝已合）、#1799 `chunk_delta_h`、#1827 `WY Fast`、#1866/#1802 `chunk_o fwd/bwd`（2026-09/10 密集提交）。
+4. 另：#1830 open（dav-2201 编译路径 bug，2026-09-22）说明官方适配仓在 910B 代系上也有未闭问题——**采用前必须实测，README 承诺≠我们环境的判决**。
+
+### 对既有决策的影响（待决策人确认方向调整）
+- **§9 决策记录的"上游回馈目标"改判**：未来整包 PR 的对象应从 tilelang main 改为 **tilelang-ascend**；我们的 compat/取证（bf16 复现、跨步语义）在该仓是**佐证材料**而非自用补丁。
+- **§12 考古（P1-1d/P1-1s）的战略价值降级**：私 fork 在 main 仓上模拟 950 内联函数打到 910B，本质是在复刻适配仓已原生解决的层次；若适配仓实测可用，§12 轨可转为"对齐适配仓"而非继续私养。
+- **P1-3（GDN 旗舰）出现第二条完成路径**：上游 chunk 族（含 bwd）实测 + 我们的可信判决件（gradcheck/delta_bwd/dtype 矩阵）做验收——比继续调我们手写反向在 `ub` 档的三个真机缺陷可能更快更稳。
+- **不变**：窗四仍值得跑（15–20 分钟，把三个 GDN 反向缺陷的责任面钉死，无论底座换不换都是知识）；标量正确性链与判决件体系是**可迁移资产**。
