@@ -138,17 +138,19 @@ NUM-dw_intrinsic-FAIL        AttributeError: 'Tensor' object has no attribute 'n
 
 ## 3. 卡上重跑该怎么做（含 env 正确写法）
 
-**唯一必须先做对的事：把 `P910B_REPO` 指到卡上 repo 根**。卡上 = `/tmp/sys1`（`card_run.sh:68`）。
-最稳的写法是**让它自己算**（不写死）：
+**唯一必须先做对的事：把 `P910B_REPO` 指到卡上的 `release/ascend` 目录**。**注意语义：这个变量
+是 "ascend 包目录"（`release/ascend`），并非 repo 根** —— `RUNNERS` 由它拼出
+`…/compile_all_asc.py` 与 `…/port910b/run_numerics.py`。卡上 repo 根 = `/tmp/sys1`
+（`card_run.sh:68`）⇒ 该值 = **`/tmp/sys1/release/ascend`**。最稳的写法是**让它自己算**（不写死）：
 
 ```bash
 # ── 卡上开窗后，先 source CANN（卡上路径是 8.5.2，与本容器的 8.5.0 不同）──
 source /usr/local/Ascend/cann-8.5.2/set_env.sh
 
-# ── repo 根：优先由 git 自算；card_run.sh 已 clone 到 $SYS1=/tmp/sys1 ──
+# ── 取 release/ascend 目录：先 git 自算 repo 根，再拼 /release/ascend（card_run.sh 已 clone 到 $SYS1=/tmp/sys1）──
 SYS1=${SYS1_DIR:-/tmp/sys1}
-export P910B_REPO=$(git -C "$SYS1" rev-parse --show-toplevel)   # = /tmp/sys1
-echo "P910B_REPO=$P910B_REPO"                                    # 期望 /tmp/sys1
+export P910B_REPO=$(git -C "$SYS1" rev-parse --show-toplevel)/release/ascend   # = /tmp/sys1/release/ascend
+echo "P910B_REPO=$P910B_REPO"                                    # 期望 /tmp/sys1/release/ascend
 test -f "$P910B_REPO/port910b/run_numerics.py" && echo RUNNER-OK # 期望 RUNNER-OK
 
 # ── 前置自检（开关在场）：§3 第 0 步，别省 ──
@@ -183,7 +185,7 @@ D2-LEGS-SUMMARY valid=k/n combos=… invalid=…
 * `[<c>] SO-VERDICT so=SAME` 而 `c∈{A,C}` → 开关没进命令行（注入链断），该趟无论红绿都不采信。
 * 全绿但 `+B` 变色 / dw 腿在 `+C` 下变色 → 覆盖关系地基动摇，**停手回报**（`D2_variants.md §3` 停窗条不变）。
 
-> env 写法要点：① `P910B_REPO` 必须指 repo **根**（含 `port910b/run_numerics.py` 的那层）；
+> env 写法要点：① `P910B_REPO` 必须指 **`release/ascend` 目录**（含 `port910b/run_numerics.py` 的那层，**不是 repo 根**；卡上 = `/tmp/sys1/release/ascend`）；
 > ② CANN 用卡上的 `cann-8.5.2`（不是 8.5.0）；③ 盘紧把 `--cache-root` 指 `/dev/shm`；
 > ④ **不要**去设 `TL_DEVICE_COMPILE_FLAGS`（`D2_variants.md §2` 已论证该 env 路不稳，patch 与 env
 > 传导会被 tvm 配置层吞），注入只走本脚本的 monkeypatch。
@@ -294,7 +296,7 @@ D2-LEGS-SUMMARY valid=0/1 combos=A invalid=A        （rc=1）
 FATAL D2-PRECHECK missing-runner leg=compile_all path=/tmp/sys1_wrong/compile_all_asc.py
 FATAL D2-PRECHECK missing-runner leg=gemm_l1_intrinsic path=/tmp/sys1_wrong/port910b/run_numerics.py
 FATAL D2-PRECHECK missing-runner leg=dw_intrinsic path=/tmp/sys1_wrong/port910b/run_numerics.py
-FATAL D2-PRECHECK 提示：… 请 export P910B_REPO=$(cd <repo> && git rev-parse --show-toplevel) …
+FATAL D2-PRECHECK 提示：P910B_REPO 指 <repo>/release/ascend 包目录（非 repo 根）；请 export P910B_REPO=$(cd <repo> && git rev-parse --show-toplevel)/release/ascend（卡上实测为 /tmp/sys1/release/ascend）后重跑。缺件腿一律不得算数据。
 ```
 即：同样的"路径写错"场景，第二窗表现为**静默 rc=1 + 0 件**，现在表现为**一行 FATAL + 写法提示 + rc=2**。
 

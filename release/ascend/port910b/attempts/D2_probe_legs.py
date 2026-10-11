@@ -3,8 +3,8 @@
 
 ⚠ P1-1r 修复（2026-10-11，归因工具自身缺陷）——本文件是**唯一可改的产品面**，改动只加
    "可归因 + 判据刚性"，不改任何禁改件、不改任何判定语义：
-   · 病灶 1（真病因，已在容器 1:1 复现）：`REPO` 默认写死容器路径 `/work/ascend`，而**卡上
-     repo 根在 `/tmp/sys1`** ⇒ `run_numerics.py` 路径不存在 ⇒ 每腿 FileNotFoundError ⇒ 子进程
+   · 病灶 1（真病因，已在容器 1:1 复现）：`REPO`（＝`release/ascend` 包目录，非 repo 根）默认写死容器
+     路径 `/work/ascend`，而**卡上该值是 `/tmp/sys1/release/ascend`** ⇒ 逐腿 FileNotFoundError ⇒ 子进程
      rc=1、缓存 0 件、无 `NUM-*` 行 = 第二窗"两趟作废"的**逐字节同型现场**
      （`aibin 0 件 总=0B fp=e3b0c44298fc1c14` + `spawn rc=1`）。修法：跑前 precheck 逐腿断言
      runner 存在，缺则 `FATAL D2-PRECHECK` 并退 2（不再静默 rc=1）；并显式提示 `P910B_REPO` 写法。
@@ -42,8 +42,8 @@
 用法（容器/卡内，先 source CANN set_env）：
   # 容器（有 bisheng 无设备）：编译面自证，不需要卡
   python3 D2_probe_legs.py --combos default,A,B,C --baseline /dev/shm/d2base/d2_legs_default
-  # 真机（卡上）：必须先 export P910B_REPO=<repo 根>（卡上通常是 /tmp/sys1），否则 precheck FATAL
-  P910B_REPO=/tmp/sys1 python3 D2_probe_legs.py --combos default,A,B,C --card \
+  # 真机（卡上）：必须先 export P910B_REPO=<release/ascend 包目录>（卡上＝/tmp/sys1/release/ascend），否则 precheck FATAL
+  P910B_REPO=/tmp/sys1/release/ascend python3 D2_probe_legs.py --combos default,A,B,C --card \
         --baseline /tmp/sys1/d2_cache_base --cache-root /dev/shm/d2_legs
   python3 D2_probe_legs.py --digest-only /tmp/d2_cache_base       # 只出某目录的指纹表
 """
@@ -55,9 +55,9 @@ import re
 import subprocess
 import sys
 
-# 卡上 repo 根**不一定是** /work/ascend（容器里是；卡上是 /tmp/sys1）。
+# P910B_REPO 语义＝**release/ascend 包目录**（非 repo 根）：容器内 /work/ascend、卡上 /tmp/sys1/release/ascend。
 # 第二窗作废现场就是这里写死容器路径、卡上又没 export P910B_REPO ⇒ 逐腿 FileNotFoundError。
-REPO = os.environ.get("P910B_REPO", "/work/ascend")
+REPO = os.environ.get("P910B_REPO", "/work/ascend")  # 指向 release/ascend 包目录（RUNNERS 由它拼出）
 RUNNERS = {
     "compile_all": (os.path.join(REPO, "compile_all_asc.py"),
                     ["--target", "ascend"]),
@@ -328,9 +328,9 @@ def main():
     if bad:
         for leg, s in bad:
             print("FATAL D2-PRECHECK missing-runner leg=%s path=%s" % (leg, s))
-        print("FATAL D2-PRECHECK 提示：卡上 repo 根通常不是 /work/ascend；"
-              "请 export P910B_REPO=$(cd <repo> && git rev-parse --show-toplevel)"
-              "（卡上实测多为 /tmp/sys1）后重跑。缺件腿一律不得算数据。")
+        print("FATAL D2-PRECHECK 提示：P910B_REPO 指 <repo>/release/ascend 包目录（非 repo 根）；"
+              "请 export P910B_REPO=$(cd <repo> && git rev-parse --show-toplevel)/release/ascend"
+              "（卡上实测为 /tmp/sys1/release/ascend）后重跑。缺件腿一律不得算数据。")
         return 2
     print("D2-PRECHECK-OK runner=compile_all+gemm_l1_intrinsic+dw_intrinsic 全部在场")
 

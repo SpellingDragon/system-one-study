@@ -19,9 +19,10 @@ On dav-2201 the native MTE intrinsics `copy_gm_to_ubuf` / `copy_ubuf_to_gm` take
 7, an **inter-burst gap**, *not* an address-to-address pitch. Three independent CANN sources say
 so (below). TileLang's Ascend copy planner (`src/ascend/op/copy.cc`, `plan_single_row`) computes
 and forwards an inter-row **pitch** in those slots, and only collapses to a single burst when
-`stride == row_bytes` on both sides. So for `bk < k` multi-burst strided copies the hardware
-advances by `blockLen + pitch` per burst instead of `pitch` — the loaded rows are misaligned and
-the tail bursts run past the intended region.
+`stride == row_bytes` on both sides. So for `bk < k` multi-burst strided copies the leading hypothesis
+is that the ISA's gap-slot is being fed a pitch, which would make the hardware advance by
+`blockLen + pitch` per burst instead of `pitch` — misaligning the loaded rows and running the tail
+bursts past the intended region.
 
 We are reporting this against upstream `copy.cc` because the planner's naming/contract
 (`src_stride` / `dst_stride`, pitch semantics) is the locus that does not survive the port to
@@ -142,7 +143,9 @@ archive that is 4 kernels out of ~46 (`k=48` fp32, `k=96` fp32, `k=96` fp16, and
 matmul with `blockCount=2048`). The other 40+ kernels are all `blockCount == 1` (`gap = pitch −
 len = 0`), i.e. **byte-identical** under either semantics, so there is no small-shape regression.
 The `bk < k` condition is exactly the "odd-K gemm" case, so this shows up as the *only* failing
-shape class for a gemm-heavy model.
+shape class for a gemm-heavy model. This impact set rests on the gap-vs-pitch reading above being
+the operative mechanism, and is therefore **partially localised / not fully attributed**
+(see *What we have NOT determined*).
 
 ## Proposed fix / reference patch
 
