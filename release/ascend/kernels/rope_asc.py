@@ -31,6 +31,14 @@ import torch
 
 from ascend.kernels import ascend_env
 
+#: 昇腾侧内核位宽白名单（P1-1m）：qkv 与角度表都只收 fp32/fp16；**bf16 显式不收**（bisheng
+#: dav-2201 vector 面缺 bf16 标量 cast，取证 attempts/B/b_addln_910b.py:23-24 + dump_bf16.py）。
+#: 早先 _plan 收 bf16/fp16 而正文声明 fp32 ⇒ 编译按声明位宽出核、非 fp32 张量到发射期才被当 fp32
+#: 解读（静默错数据，取证 reconcile/I_RESULT.md §⑥-3）；现在位宽在 plan 期就拒或按 dtype 参数化。
+_ASC_DTYPES = (torch.float32, torch.float16)
+#: torch dtype → DSL 位宽名
+_TL_DT = {torch.float32: "float32", torch.float16: "float16"}
+
 #: 打包布局里被旋转的槽位：0=查询、1=键；2=值 永远不动（与 P1 rope_mps.ROTATE_SLOTS 同值）
 ROTATE_SLOTS = (0, 1)
 #: 昇腾侧一次发射占用的向量核块数。910B 标量面件没有"每块多少线程、流水几级"这两维，
@@ -75,7 +83,8 @@ def rope_cpu_impl(QKV, Cos, Sin, heads: int, dim: int, slots: int, sign: int):
     return rope_impl
 
 
-def rope_asc_impl(QKV, Cos, Sin, heads: int, dim: int, slots: int, sign: int):
+def rope_asc_impl(QKV, Cos, Sin, heads: int, dim: int, slots: int, sign: int,
+                  qdt: str = "float32", adt: str = "float32"):
     """昇腾方言正文（910B / dav-2201 可编形态）：纯 AIV 标量面，按跨步领 token 行、就地转。
 
     白话：八个工人各领每隔八个的一本记录；翻到某一页某一头，先把前半后半各抄进手心（x1、x2），
@@ -101,10 +110,23 @@ def rope_asc_impl(QKV, Cos, Sin, heads: int, dim: int, slots: int, sign: int):
     tokens = T.dynamic("tokens")
     half = dim // 2
 
+    # 位宽参数化（P1-1m）：qkv 与两张角度表各自按实际位宽声明（生产就是 qkv fp16 + 表 fp32 的
+    # 混宽），**计算量仍恒 fp32**（alloc_var 不动，只在标量 load/store 处 cast）——与 `_eager`
+    # “fp32 累加、按 qkv 位宽交货”同口径。三个 helper 在位宽为 float32 时都是恒等函数 ⇒
+    # fp32 轨的生成码与参数化之前逐字相同（零回归）。
+    def _lq(e):            # 标量读 qkv：qdt → fp32
+        return e if qdt == "float32" else T.cast(e, "float32")
+
+    def _la(e):            # 标量读角度表：adt → fp32
+        return e if adt == "float32" else T.cast(e, "float32")
+
+    def _sq(e):            # 标量写 qkv：fp32 结算 → qdt（就地语义、不新增全局缓冲）
+        return e if qdt == "float32" else T.cast(e, qdt)
+
     @T.prim_func
-    def rope_impl(QKV: T.Tensor((tokens, 3, heads, dim), "float32"),
-                  Cos: T.Tensor((tokens, half), "float32"),
-                  Sin: T.Tensor((tokens, half), "float32")):
+    def rope_impl(QKV: T.Tensor((tokens, 3, heads, dim), qdt),
+                  Cos: T.Tensor((tokens, half), adt),
+                  Sin: T.Tensor((tokens, half), adt)):
         """被追踪的那一层：头数、每头宽度、转几摞、正转还是反转都是常量，只有条数是活的。
 
         白话：昇腾件这一份，多个工人按跨步各领一段记录，同一条转法照着两张小抄做——前半减去
@@ -121,14 +143,14 @@ def rope_asc_impl(QKV, Cos, Sin, heads: int, dim: int, slots: int, sign: int):
                     for s in T.serial(slots):
                         for hh in T.serial(heads):
                             for j in T.serial(half):
-                                x1 = QKV[t, s, hh, j]
-                                x2 = QKV[t, s, hh, j + half]
-                                c = Cos[t, j]
-                                sn = Sin[t, j]
+                                x1 = _lq(QKV[t, s, hh, j])
+                                x2 = _lq(QKV[t, s, hh, j + half])
+                                c = _la(Cos[t, j])
+                                sn = _la(Sin[t, j])
                                 if sign < 0:
                                     sn = T.float32(0.0) - sn
-                                QKV[t, s, hh, j] = x1 * c - x2 * sn
-                                QKV[t, s, hh, j + half] = x2 * c + x1 * sn
+                                QKV[t, s, hh, j] = _sq(x1 * c - x2 * sn)
+                                QKV[t, s, hh, j + half] = _sq(x2 * c + x1 * sn)
 
     return rope_impl
 
@@ -153,11 +175,21 @@ def _plan(qkv: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor, slots: int,
     if name == ascend_env.TARGET_CPU:
         if qkv.dtype != torch.float32 or cos.dtype != torch.float32 or sin.dtype != torch.float32:
             return None
-    elif qkv.dtype not in (torch.float32, torch.bfloat16, torch.float16) or qkv.dtype != cos.dtype:
-        return None
+    else:
+        # 昇腾面位宽判据（P1-1m，单点裁决）：qkv 与两张表都只收 fp32/fp16；两张表必须同宽
+        # （sin 也要比——早先只比 cos，sin 换宽就是静默错数据）；qkv 与表**允许不同宽**：生产的
+        # cos/sin 出自 train_step._build_params 的 torch.cos(angle) ⇒ fp32，而主干 qkv 是 fp16，
+        # 早先那条 `qkv.dtype != cos.dtype` 会把生产形状直接判死、内核永不被调用。
+        if (qkv.dtype not in _ASC_DTYPES or cos.dtype not in _ASC_DTYPES
+                or sin.dtype not in _ASC_DTYPES or cos.dtype != sin.dtype):
+            return None
     kwargs = {"heads": heads, "dim": dim, "slots": slots, "sign": sign}
     impl = rope_asc_impl if name == ascend_env.TARGET_ASCEND else rope_cpu_impl
-    key = f"rope[{name}]|h{heads}d{dim}s{slots}g{sign}"
+    qdt, adt = _TL_DT.get(qkv.dtype, "float32"), _TL_DT.get(cos.dtype, "float32")
+    if name == ascend_env.TARGET_ASCEND:
+        kwargs.update(qdt=qdt, adt=adt)
+    # 键尾位宽段：同 (h,dim,slots,sign) 换位宽必得新模具（防陈旧产物错位读内存，见 gemm_asc 同注）
+    key = f"rope[{name}]|h{heads}d{dim}s{slots}g{sign}q{qdt}a{adt}"
     return {"target": name, "key": key, "kwargs": kwargs, "impl": impl}
 
 
@@ -202,11 +234,12 @@ def forward(qkv: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor,
                 qkv.copy_(q32.to(qkv.dtype))
             return qkv
     elif (name == ascend_env.TARGET_ASCEND
-          and ascend_env.active_backend(name, qkv.device) == ascend_env.TILELANG
-          and qkv.dtype == torch.float32 and cos.dtype == torch.float32 and sin.dtype == torch.float32):
+          and ascend_env.active_backend(name, qkv.device) == ascend_env.TILELANG):
         # P1-4 合流（路由修复）：target=ascend 现走内核；此前 forward 无 ascend 分支，
-        # 卡上会永落 _eager（内核白编）。限 fp32：ascend 正文声明 fp32，非 fp32 落 _eager 以免
-        # 静默错数据（编译门对位宽错配是瞎的，见 D-int 侦察）；fp16 rope 内核化列为后续。
+        # 卡上会永落 _eager（内核白编）。P1-1m（dtype 矩阵）：位宽判据从这里的“硬编码 fp32 三门”
+        # 下放到 `_plan` **单点裁决**——正文已按 qdt/adt 参数化（fp32 累加、按实际位宽交货），
+        # fp16 主干＋fp32 角度表就是生产形状；白名单外的位宽（bf16 等）由 _plan 回 None，照旧落
+        # _eager，不会出现“按声明位宽出核、把 fp16 内存当 fp32 读”的静默错数据。
         spec = _plan(qkv, cos, sin, slots, 1, name)
         if spec is not None and _run(qkv, cos, sin, spec):
             return qkv

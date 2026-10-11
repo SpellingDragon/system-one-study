@@ -852,6 +852,48 @@ __aicore__ inline void asc_copy_ub2gm_align(__gm__ uint8_t *dst, __ubuf__ uint8_
 #ifdef TL_PORT910B_NATIVE_TYPES
 #ifndef TL910B_SEC12_L1GEMM
 #define TL910B_SEC12_L1GEMM
+
+// ── D2 判别器（p2-13 / P1-1n）：E-1..E-4 最小判别实验的编译期可选变体 ────────────
+// 三个**互相正交**的开关，默认全 OFF ⇒ 本文件展开后的 token 流与 Z 落地态等价；
+// 实证入口：attempts/D2_probe_matrix.py（pristine f56432b0 vs 本文件，同 TU 同参数编 .o
+// → sha256 必须相同）+ attempts/D2_probe_legs.py（真生成码 gemm_l1_intrinsic /
+// dw_intrinsic 的 device_kernel.asc 与 kernel.aibin 同基线）。
+// 注入面：-DTL910B_VARIANT_x（tilelang 侧唯一入口 = contrib/bisheng.py 的 result 行与
+//   tilelang_callback_ascend_compile 的 options；窗内配方见 attempts/D2_variants.md §2）。
+//   -DTL910B_VARIANT_A  写侧 GM→L1 退回 8 参 **ND 线性**拷贝（P1 之前）→ 答 E-1/裁决②
+//   -DTL910B_VARIANT_B  读侧 sid 槽重新吃 IR m_start（P0 之前）        → 答 E-3/裁决③
+//   -DTL910B_VARIANT_C  读侧退单趟 repeatTimes=mStep + 不折指针（P2 之前）→ 答 E-2/E-4/U2/U3
+// ⚠ 三个开关都是**判别载荷，不是修法**：开启后可能拿静默错值也可能拿非法访问——这正是判据。
+// ⚠ 覆盖关系：`asc_copy_l12l0a/b_transpose`（§8-U5，Z 未改该件）既无 sid 槽、也从未走过
+//   P2 的折指针/拆趟 ⇒ **B、C 对只发 _transpose 件的腿（dw_intrinsic，其生成码里读侧只有
+//   asc_copy_l12l0a_transpose/l12l0b_transpose）无效**，该腿只对 A 有反应；勿读成"变体失效"。
+// sid 槽取值（VARIANT-B 的唯一改动点；默认展开 = `(uint8_t)0`，与 Z 文本逐 token 同）
+// ── VARIANT-B ══ 读侧第 7 槽 sid 回归控制（E-3；X_FRACTAL_EVIDENCE §7.2 表第 7 行 +
+//   §2.2 S1/S2（sid=4-bit，sema 对**编译期常量**查 [0,15]）+ §2.4 RT3（**运行期值不查**，
+//   rc=0 → 越界只能真机暴露 = 507015 头号嫌疑的成因）。旧形（P0 之前）把 codegen
+//   args[2]＝IR m_start（row16 块起点，0..127 量级，copy.cc:457/535-538）回穿进 sid 槽。
+//   开它回答 **E-3 二选一**：507015 是不是 sid 越界触发的。
+// ⚠ 本窗实测（attempts/D2_probe_matrix.py 表② -D B 行 + D2_probe_legs.py [+B vs default]）：
+//     sid 槽在本窗**两条真腿上都拿不到非零值** —— gemm_l1_intrinsic 走 gemm.h:68/74 的
+//     mStart **字面 0**；dw_intrinsic 读侧只发 `_transpose` 件（该件无 sid 槽，Z 未改）。
+//     ⇒ B 在这两腿 .o/.so 指纹 SAME = **空开关**，E-3 对这两腿**零卡即可结案（否）**；
+//     B 的判别力只存在于 mStart≠0 的载荷（矩阵 M3/M5 已证 DIFF）——若日后 codegen 直发
+//     tl.ascend_load_cbuf_to_ca 且 m_start 为运行期表达式，本开关即刻可用，无需再改 §12。
+//     `-DTL910B_VARIANT_B_SID=<n>`（默认 0/未定义）是把 sid 钉成**编译期常量**的加强支：
+//     n>15 时 bisheng **编译期即拦**（本窗实测错误原文
+//     `error: the range of 7th parameter must be [0, 15]`，报在 `asc_copy_l12l0a`/`l12l0b`
+//     里 `load_cbuf_to_ca`/`load_cbuf_to_cb` 的第 7 实参行）⇒ 它只能作 sema 面的旁证，
+//     **不能**当真机载荷用（行号随本文件改动漂移，故不给死行号；见 D2_variants.md §6.2）。
+#if defined(TL910B_VARIANT_B)
+#ifdef TL910B_VARIANT_B_SID  // B 的强制值支：sid 给一个**编译期已知越界**的常量（可选）
+#define TL910B_L1_SID(mStart) (uint8_t)(TL910B_VARIANT_B_SID)
+#else
+#define TL910B_L1_SID(mStart) (uint8_t)(mStart)  // 回归控制：4-bit sid 槽重新吃 IR m_start
+#endif
+#else
+#define TL910B_L1_SID(mStart) (uint8_t)0  // 默认（P0 止血）：sid≡0（§5.2 规则 4）
+#endif
+
 // b7 探针 5/5 USABLE（compat 链内，无框架 include）：load_cbuf_to_ca、load_gm_to_ca、
 // mad(官方 10 参)、fix_matrix_cc_to_cbufubuf_dualout、copy_gm_to_cbuf —— 全 native 组装。
 // codegen 发射的 mode 枚举（存在性面，值域保守）
@@ -895,6 +937,20 @@ template <typename DT, typename ST>
 __aicore__ inline void asc_copy_gm2l1_nd2nz(__cbuf__ DT *dst, __gm__ ST *src,
                                             int rowBytes, asc_load_l2_cache_mode mode,
                                             int nRows, int cols, int pad1, int pad2) {
+#if defined(TL910B_VARIANT_A)
+  // ══ VARIANT-A ══ 写侧退回 8 参 ND 线性拷贝（逐字取自 X_sec12_proposal.md §2 的 "-" 侧
+  //   = 官方 DataCopyGM2L1Impl，kernel_operator_data_copy_impl.h:83-108）。行号证据：
+  //   X_FRACTAL_EVIDENCE §2.5 D7（8 参形在 2201 **能编** ⇒ 不是编译期病灶）+ §6 证据
+  //   1/2/4（startIndex 文档语义=Fractal matrix ID ⇒ L1 必须是 NZ；官方 Matmul 写 L1
+  //   只有 ND2NZ/NZ2NZ 两路；旧形丢 d_value、nz_para 空实现 ⇒ c0 pitch 从未生成）。
+  //   开它回答：**E-1 / 裁决②（ND vs NZ 布局是不是主因）**——默认(NZ) 与 A(ND) 各一趟，
+  //   `gemm_l1_intrinsic` 红绿翻转即坐实布局主因；同色则布局被排除，主嫌转读侧（C）。
+  (void)mode; (void)cols; (void)pad1; (void)pad2;
+  uint16_t const blk = (uint16_t)((unsigned)rowBytes >> 5);  // 32B 块口径（§5.1 定论）
+  // 官方 8 参（data_copy_impl.h:92）：sid,blockCount,blockLen,srcStride,dstStride,pad
+  copy_gm_to_cbuf((__cbuf__ void *)(uintptr_t)dst, (__gm__ void *)(uintptr_t)src, (int8_t)0,
+                  (uint16_t)nRows, blk, blk, blk, (pad_t)0);
+#else
   (void)mode; (void)pad1; (void)pad2;  // l2_cache_ctrl 在 2201 ND2NZ 件无对应槽；pad 区由
                                        // AscendInsertOOBPadding 预处理 / asc_fill_l1 收尾（U4）
   __cbuf__ ST *const d = (__cbuf__ ST *)(uintptr_t)dst;
@@ -938,6 +994,7 @@ __aicore__ inline void asc_copy_gm2l1_nd2nz(__cbuf__ DT *dst, __gm__ ST *src,
       }
     }
   }
+#endif  // TL910B_VARIANT_A（写侧；dn2nz 委托同一开关覆盖）
 }
 template <typename DT, typename ST>
 __aicore__ inline void asc_copy_gm2l1_dn2nz(__cbuf__ DT *dst, __gm__ ST *src,
@@ -969,6 +1026,18 @@ __aicore__ inline void asc_copy_gm2l1_dn2nz(__cbuf__ DT *dst, __gm__ ST *src,
 template <typename T>
 __aicore__ inline void asc_copy_l12l0a(__ca__ T *dst, __cbuf__ T *src, int mStart, int kStart,
                                        int mStep, int kStep, int srcStride, int dstStride) {
+#if defined(TL910B_VARIANT_C)
+  // ══ VARIANT-C ══ 读侧退单条指令 + 不折指针（逐字取自 X_sec12_proposal.md §3 的 "-"
+  //   侧，即 P2 之前的 trunk）。逐槽错位（X_FRACTAL_EVIDENCE §7.2 表）——
+  //   〔3 startIndex〕←kStart（官方恒 0，二维起点要折进指针）、〔4 repeatTimes〕←mStep
+  //   （轴选反，应=kStep；u8 还会静默截断 m_step>255，§2.3 E2）、〔6 dstGap〕←dstStride
+  //   （U3 未定论）、(void)kStep（丢掉官方唯一合法的 repeat 值）、**无 M 向拆趟**。
+  //   开它回答：**E-2/E-4（U1 块线性序 / U2 L0 目的步进 / U3 dstGap 真值）**。
+  (void)kStep;
+  load_cbuf_to_ca(dst, src, (uint16_t)kStart, (uint8_t)mStep, (uint16_t)srcStride,
+                  (uint16_t)dstStride, TL910B_L1_SID(mStart), false,
+                  (__cce_scalar::addr_cal_mode_t)0);  // 官方 9 参位序（mm_impl.h:35）
+#else
   // P2（按官方 V1 模板 load_to_l0a_load2d.h:41-110 降级，§5.2 四条硬规则）：
   //   (1) 二维起点折进指针，startIndex≡0；(2) repeatTimes 沿 K/C0 = kStep；
   //   (3) srcStride = L1 的 row16 块数（= IR src_stride，口径本就一致，§7.1）；
@@ -982,20 +1051,31 @@ __aicore__ inline void asc_copy_l12l0a(__ca__ T *dst, __cbuf__ T *src, int mStar
   __ca__ T *dbase = (__ca__ T *)(uintptr_t)dst;
   if (kStep == 1) {  // 官方同款退化（blockUseK==1 支）：repeat 改沿 M、srcStride=1
     load_cbuf_to_ca(dbase, base, (uint16_t)0, (uint8_t)mStep, (uint16_t)1, (uint16_t)0,
-                    (uint8_t)0, false, (__cce_scalar::addr_cal_mode_t)0);
+                    TL910B_L1_SID(mStart), false, (__cce_scalar::addr_cal_mode_t)0);
   } else {  // repeatTimes=u8：kStep>255 静默截断（§2.3 E2 实证类型）——本窗不设 ICHECK，
             // 910B tile 的 C0 组数远低于 255，越界属真机 E-2 判别面
     for (int i = 0; i < mStep; ++i) {  // 块线性序 block_id = k_block*pitch + m_block（VERIFY U1）
       load_cbuf_to_ca(dbase + (int64_t)i * kStep * blkElems,
                       base + (int64_t)i * blkElems,
                       (uint16_t)0, (uint8_t)kStep, (uint16_t)srcStride, (uint16_t)0,
-                      (uint8_t)0, false, (__cce_scalar::addr_cal_mode_t)0);  // mm_impl.h:35 位序
+                      TL910B_L1_SID(mStart), false, (__cce_scalar::addr_cal_mode_t)0);  // mm_impl.h:35 位序
     }
   }
+#endif  // TL910B_VARIANT_C（读侧单趟/不折指针回退）
 }
 template <typename T>
 __aicore__ inline void asc_copy_l12l0b(__cb__ T *dst, __cbuf__ T *src, int mStart, int kStart,
                                        int mStep, int kStep, int srcStride, int dstStride) {
+#if defined(TL910B_VARIANT_C)
+  // ══ VARIANT-C ══ 同 L12L0A：退单条指令、repeatTimes←mStep、startIndex←kStart（不折
+  //   指针）、dstGap←dstStride、(void)kStep。行号证据同上（§7.2 逐槽表，B 侧对称）。
+  //   开它回答 E-2/E-4 的 **B 侧**（U3：官方 load_to_l0b_basic.h:112 的 dstGap=
+  //   l0bDststride=nFraC0-1 而非 0，与 L0A 路不同）。
+  (void)kStep;
+  load_cbuf_to_cb(dst, src, (uint16_t)kStart, (uint8_t)mStep, (uint16_t)srcStride,
+                  (uint16_t)dstStride, TL910B_L1_SID(mStart), false,
+                  (__cce_scalar::addr_cal_mode_t)0);  // 对称 LoadData2DL12L0BCal
+#else
   // P2-B（提案 §3）：官方 L0B 非转置路 repeatTimes=blockUseN、srcStride=Ceil(bL1K,16)；
   //   转置由 L1 写侧 dn2nz 承担而非 load 侧 transpose 位（load_to_l0b_load2d.h:38-92、
   //   load_to_l0b_basic.h:111-119：cfg{startIndex=0, repeat=l0bRepeat, srcStride=l0bSrcstride,
@@ -1006,8 +1086,9 @@ __aicore__ inline void asc_copy_l12l0b(__cb__ T *dst, __cbuf__ T *src, int mStar
   int const blkElems = 16 * (int)(32 / (int)sizeof(T));
   __cbuf__ T *base = (__cbuf__ T *)(uintptr_t)src + (int64_t)(kStart * srcStride) * blkElems;
   load_cbuf_to_cb((__cb__ T *)(uintptr_t)dst, base, (uint16_t)0, (uint8_t)kStep,
-                  (uint16_t)srcStride, (uint16_t)0, (uint8_t)0, false,
+                  (uint16_t)srcStride, (uint16_t)0, TL910B_L1_SID(mStart), false,
                   (__cce_scalar::addr_cal_mode_t)0);  // 对称 LoadData2DL12L0BCal（mm_impl.h）
+#endif  // TL910B_VARIANT_C（读侧单趟/不折指针回退）
 }
 template <typename T>
 __aicore__ inline void asc_copy_l12l0b_transpose(__cb__ T *dst, __cbuf__ T *src, int mStart,

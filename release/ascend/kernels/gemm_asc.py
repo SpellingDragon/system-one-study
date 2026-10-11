@@ -4,7 +4,9 @@
 （`gemm_scalar_body`）在两种方言下各追一遍——语言模块由 `ascend_env.dialect(target)` 注入，正文
 只用两方言公共子集（`T.serial` 循环 + `T.copy`(GM→UB) + 标量 load/store + 整数索引算术），
 不含任何立方体（Cube/mad/T.gemm）或 SIMT 向量构造。两份都由 plan() 判形状、run() 负责取编译
-产物并就地写出口，位宽转换不在方言里做（出口一律 fp32）。
+产物并就地写出口。位宽口径（P1-1m dtype 矩阵）：CPU 那份仍恒 fp32 出口；昇腾那份按实际位宽
+   参数化（`idt`/`odt`）——cast 只发生在**标量 load/store** 面，DMA 装填缓冲恒与源张量同宽，因为
+   昇腾搬运不允许顺带转类型（ascend/analysis/vf_checker：“DMA copies cannot perform type casting”）。
 【怎么做】① 件形是"张量参数在前、整数常量在后"的工厂函数；run() 现场调用工厂拿到追踪好的
    PrimFunc，再交给 tilelang.compile 出产物并按形状键缓存。刻意**不用 tilelang.jit**：这种写法
    属 lazy 风格，jit(...) 只回 Kernel 对象不执行（实测出口保持全零），而它的 call-form 缓存拿
@@ -51,6 +53,16 @@ from ascend.kernels import ascend_env
 #: 内核侧真正落地的截断口径；其余口径由入口层走普通写法（与 P1 同名同取值）
 SUPPORTED_ACTS = ("none", "relu")
 ACT_MODE = {"none": 0, "relu": 1}
+
+#: 昇腾侧内核位宽白名单（P1-1m）：fp32/fp16 已在正文按位宽参数化并本地闭环（reconcile/
+#: C2_dtype_matrix.md）。**bf16 不在名单里是有意的**：bisheng 15.0.5 在 dav-2201 vector 面对 bf16
+#: 标量转换直接 `fatal error: error in backend: not support bf16 type cast`（取证 attempts/B/
+#: b_addln_910b.py:23-24 与 attempts/B/dump_bf16.py），而生产口径本就是 fp16。早先这里收 bf16/fp16
+#: 而正文声明 fp32 ⇒ 编译按**声明**位宽出核、非 fp32 张量到发射期才被当 fp32 解读（静默错数据，取证
+#: reconcile/I_RESULT.md §⑥-3；host 侧则崩在 cython `_check_buffer_dtype`）。位宽不符现在 plan 期拒。
+_ASC_DTYPES = (torch.float32, torch.float16)
+#: torch dtype → DSL 位宽名（白名单外的 dtype 进不了这里，plan 已挡）
+_TL_DT = {torch.float32: "float32", torch.float16: "float16"}
 
 #: M 轴块高：行块太大会浪费并行度（批大小可能等于 1）
 BLOCK_M = 16
@@ -117,7 +129,7 @@ def _alloc_tile(T, shape, dtype):
 
 
 def gemm_scalar_body(T, A, W, bias, C, n: int, k: int, bm: int, bn: int, bk: int,
-                     act_mode: int):
+                     act_mode: int, idt: str = "float32", odt: str = "float32"):
     """可移植标量正文（D-cube1 correctness 轨）：同一份算式在 cpu/ascend 两方言下各追一遍。
 
     白话：列切成固定的几块，每块自己从上往下把行一段段取进小格子；取数时末尾不满一行块的部分
@@ -137,18 +149,25 @@ def gemm_scalar_body(T, A, W, bias, C, n: int, k: int, bm: int, bn: int, bk: int
     m = T.dynamic("m")
     nb = n // bn   # 列块数＝网格上界：纯常量，两方言同一条纪律
     nk = k // bk   # K 分块数：同样常量（k 已被 plan 判过整除）
+    # 位宽参数化（P1-1m）：入参/出口声明跟着实际位宽走，算式恒在 fp32 面上做。缺省 float32 时
+    # 下面两个 helper 是**恒等函数**（一个 cast 都不插）⇒ fp32 轨的生成码与参数化之前逐字相同。
+    def _ld(e):            # 标量读：idt → fp32 累加面
+        return e if idt == "float32" else T.cast(e, "float32")
+
+    def _st(e):            # 标量写：fp32 结算面 → odt 交货
+        return e if odt == "float32" else T.cast(e, odt)
 
     @T.prim_func
-    def gemm_impl(A: T.Tensor((m, k), "float32"), W: T.Tensor((n, k), "float32"),
-                  bias: T.Tensor((n,), "float32"), C: T.Tensor((m, n), "float32")):
+    def gemm_impl(A: T.Tensor((m, k), idt), W: T.Tensor((n, k), idt),
+                  bias: T.Tensor((n,), "float32"), C: T.Tensor((m, n), odt)):
         """被追踪的那一层：列块/块宽/要不要压负数都是常量，只有行数 m 是活的。
 
         白话：模具在这一层定型——竖着切几列、每列多宽、K 分几段都写死；有多少行不影响切法，
         行与行之间不串，末尾不满一块的行既不读表外也不写表外。
         """
         with T.Kernel(nb) as mx:
-            a_ub = _alloc_tile(T, (bm, bk), "float32")
-            w_ub = _alloc_tile(T, (bn, bk), "float32")
+            a_ub = _alloc_tile(T, (bm, bk), "float32")   # 夹址标量填装面：恒 fp32（读时才升宽）
+            w_ub = _alloc_tile(T, (bn, bk), idt)           # DMA 装填：必须与源张量同宽（搬运不许转类型）
             c_ub = _alloc_tile(T, (bm, bn), "float32")
             acc = T.alloc_var("float32", T.float32(0.0))
             v = T.alloc_var("float32", T.float32(0.0))
@@ -166,14 +185,14 @@ def gemm_scalar_body(T, A, W, bias, C, n: int, k: int, bm: int, bn: int, bk: int
                         row = row0 + i
                         rc = T.min(row, m - 1)
                         for kk in T.serial(bk):
-                            a_ub[i, kk] = T.if_then_else(row < m, A[rc, ko * bk + kk],
+                            a_ub[i, kk] = T.if_then_else(row < m, _ld(A[rc, ko * bk + kk]),
                                                          T.float32(0.0))
                     # 标量三重循环：c[i,j] += Σ_kk A[i,kk]·W[j,kk]（W 按 (N,K) 存 ⇒ 天然右翻方向）
                     for i in T.serial(bm):
                         for j in T.serial(bn):
                             acc = T.float32(0.0)
                             for kk in T.serial(bk):
-                                acc = acc + a_ub[i, kk] * w_ub[j, kk]
+                                acc = acc + a_ub[i, kk] * _ld(w_ub[j, kk])
                             c_ub[i, j] = c_ub[i, j] + acc
                 # 收尾：加偏置、按需压负为零，逐格落全局并按运行时行号守卫（尾行不碰）
                 for i in T.serial(bm):
@@ -184,12 +203,13 @@ def gemm_scalar_body(T, A, W, bias, C, n: int, k: int, bm: int, bn: int, bk: int
                             if act_mode == 1:
                                 if v < 0:
                                     v = T.float32(0.0)
-                            C[row, mx * bn + j] = v
+                            C[row, mx * bn + j] = _st(v)
 
     return gemm_impl
 
 
-def gemm_asc_impl(A, W, bias, C, n: int, k: int, bm: int, bn: int, bk: int, act_mode: int):
+def gemm_asc_impl(A, W, bias, C, n: int, k: int, bm: int, bn: int, bk: int, act_mode: int,
+                  idt: str = "float32", odt: str = "float32"):
     """昇腾 910B 正文＝可移植标量体（P1-1f 改道，D-cube1 correctness 轨）。
 
     与 cpu 侧共用 `gemm_scalar_body` 这一份算式，只是语言模块换成 `tilelang.ascend.language`：
@@ -201,7 +221,7 @@ def gemm_asc_impl(A, W, bias, C, n: int, k: int, bm: int, bn: int, bk: int, act_
         reconcile/S_cpu_oracle.py --ascend 与 reconcile/verify_gemm.py）。
     """
     return gemm_scalar_body(ascend_env.dialect(ascend_env.TARGET_ASCEND), A, W, bias, C,
-                            n=n, k=k, bm=bm, bn=bn, bk=bk, act_mode=act_mode)
+                            n=n, k=k, bm=bm, bn=bn, bk=bk, act_mode=act_mode, idt=idt, odt=odt)
 
 
 def _largest_block(total: int) -> int | None:
@@ -217,7 +237,8 @@ def plan(A: torch.Tensor, W: torch.Tensor, bias: torch.Tensor | None, C: torch.T
     """判断这组形状/口径能不能交给方言内核；能则返回编译参数与缓存键，否则返回 None（不硬凑）。
 
     硬条件三条：截断口径在支持表里；N/K 都能被某个候选块宽整除；位宽组合在该 target 的白名单里
-    （CPU 侧只收 fp32，昇腾侧收 fp32/bf16/fp16 同宽操作数 + fp32 偏置与出口）。任一不满足就回
+    （CPU 侧只收 fp32；昇腾侧收 **fp32/fp16** 同宽操作数与出口 + fp32 偏置，bf16 显式不收，理由见
+    `_ASC_DTYPES`）。任一不满足就回
     None，由入口层换普通写法。
 
     白话：先看这活儿的尺寸和记法合不合现成模具；不合就不勉强开模，直接换手工做法。
@@ -233,13 +254,18 @@ def plan(A: torch.Tensor, W: torch.Tensor, bias: torch.Tensor | None, C: torch.T
         return None
     if name == ascend_env.TARGET_CPU and A.dtype != torch.float32:
         return None
-    if name == ascend_env.TARGET_ASCEND and A.dtype not in (torch.float32, torch.bfloat16, torch.float16):
+    if name == ascend_env.TARGET_ASCEND and A.dtype not in _ASC_DTYPES:
         return None
     if A.dtype != W.dtype or not (A.is_contiguous() and W.is_contiguous() and C.is_contiguous()):
         return None
+    dt = _TL_DT.get(A.dtype, "float32")   # plan 已判 C.dtype == A.dtype 且位宽在白名单内 ⇒ 单段位宽
     kwargs = {"n": n, "k": k, "bm": BLOCK_M, "bn": bn, "bk": bk, "act_mode": ACT_MODE[act]}
     impl = gemm_asc_impl if name == ascend_env.TARGET_ASCEND else gemm_cpu_impl
-    key = f"gemm[{name}]|n{n}k{k}b{BLOCK_M}x{bn}x{bk}a{act}"
+    if name == ascend_env.TARGET_ASCEND:
+        kwargs.update(idt=dt, odt=dt)
+    # 键尾的位宽段是防“陈旧模具复用”：同 (n,k,b,act) 换位宽必须另开一份产物，否则 fp32 的产物
+    # 会被 fp16 形状命中缓存、发射期把 fp16 内存当 fp32 读（静默错数据）。
+    key = f"gemm[{name}]|n{n}k{k}b{BLOCK_M}x{bn}x{bk}a{act}d{dt}"
     return {"target": name, "key": key, "kwargs": kwargs, "impl": impl, "shape": (n, k)}
 
 

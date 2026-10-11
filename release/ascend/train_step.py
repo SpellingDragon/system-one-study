@@ -20,6 +20,13 @@ Adam（`lr=1e-2`）——尺度不变的更新对**单步是否下降**最稳（
 冻结件拽进 P2 波次，破坏"接口稳定 + 内核合流"的层次；被否方案二：只写单测不写可运行
 脚本——上卡那天还得重搭一遍 main，等于把卡窗时间花在写脚本上。
 
+【卡窗可信化（p2-13 代理 B）】在原有 `P2-STEP-<target> loss0=.. loss1=..` 之外再加两条判决：
+`NPU-REG ok|fail|skip <version>`——H1：torch 内建清单里没有 npu，ascend 轨必须先
+`import torch_npu` 把设备注册进来（cpu 轨**不得** import，无 npu 机器会当场 ImportError）；
+`KERNEL-USED-PASS kernels=<n> blockers=<m> fallbacks=<k>`——P1-1l：loss 下降只证明**接线**对，
+不证明**走了内核**（探针/发射一失败就回落 eager，train_step 照样打 PASS）。三证不齐即
+`KERNEL-USED-FAIL`，ascend 轨非零退出（退码 5），把"跑完=成功"这条误读彻底堵死。
+
 不接的位点（本波边界，如实登记，不假绿）：
 - `gdn_conv` 门面不在本件里跑——`gdn_kernel.conv_forward` 无 conv_backward 入口，
   本波 `_GdnConvFn` 的 fp32 闭式兜底已由 `test_ascend_train_step.py` 的 gradcheck
@@ -29,8 +36,10 @@ Adam（`lr=1e-2`）——尺度不变的更新对**单步是否下降**最稳（
 from __future__ import annotations
 
 import argparse
+import os
 import pathlib
 import sys
+import warnings
 
 # 允许 `python ascend/train_step.py` 直接跑（用户交付指令里的调用形式）：
 # 把 release/ 挂进 sys.path，让 import 语义与 `python -m ascend.train_step` / pytest 一致。
@@ -42,6 +51,105 @@ import torch  # noqa: E402
 
 from ascend import autograd_asc as ops  # noqa: E402
 from ascend.kernels import add_ln_kernel, ascend_env  # noqa: E402
+
+# --------------------------------------------------------------------------- H1：npu 设备注册
+#: torch 的内建设备清单里没有 `npu`——没注册时 `torch.device("npu")` 直接抛
+#: `RuntimeError: Expected one of cpu, cuda, ... device string: npu`（凭据：
+#: reconcile/A3_PREFLIGHT.md §3 与 §6，容器整链实测 [4] 腿连 P2-STEP 行都留不下）。
+#: 注册它是 `torch_npu` 在 import 时的副作用；而 cpu 轨去 import 它又会在无 npu 的机器上
+#: ImportError 崩掉整条链 ⇒ 只能"按 ascend 轨条件 import"，并把结果收成一行可 grep 的账。
+NPU_TARGET_ALIASES = ("ascend", "asc", "npu")
+#: 退出码：4=设备/注册不可用（H1），5=内核一次没走却自称通过（P1-1l）
+EXIT_DEVICE_UNAVAILABLE = 4
+EXIT_KERNEL_UNUSED = 5
+#: 自证钩子：置 1 时连 cpu 轨也按同一口径计入门禁（负例自证用；卡窗 ascend 轨本来就在门下）
+ENV_KERNEL_USAGE_STRICT = "SYS1_KERNEL_USAGE_STRICT"
+
+_npu_reg: dict | None = None
+
+
+def npu_requested(argv: list[str] | None = None) -> bool:
+    """这一趟是否该走 ascend 后端：命令行 `--target ascend`（asc/npu 一并认）或 env DMLAYA_ASCEND_TARGET。"""
+    argv = list(sys.argv[1:] if argv is None else argv)
+    for i, item in enumerate(argv):
+        if item in ("-h", "--help"):
+            return False
+        if item.startswith("--target"):
+            val = item.split("=", 1)[1] if "=" in item else (argv[i + 1] if i + 1 < len(argv) else "")
+            return val.strip().lower() in NPU_TARGET_ALIASES
+    raw = (os.environ.get(ascend_env.ENV_TARGET) or "").strip().lower()
+    return raw in NPU_TARGET_ALIASES
+
+
+def _npu_device_usable() -> bool:
+    """torch 侧到底认不认识 npu 这个名字——唯一硬判据是"能造出这个 device 对象"。"""
+    try:
+        torch.device("npu")
+        return True
+    except Exception:  # noqa: BLE001  没注册就是没注册，不关心原话长什么样
+        return False
+
+
+def _npu_avail_text() -> str:
+    """设备在场读数（字符串化，绝不因探测本身把脚本带崩）。
+
+    **纪律（实测踩出来的）**：绝不用 `hasattr(torch, "npu")` 或 `torch.npu` 去"先看一眼"——
+    torch 对后端模块做的是**惰性 import**，碰这个名字本身就会把 `torch_npu` 拉进来，失败时
+    它还自己吞掉异常、只留一行 `An unexpected error occurred while checking NPU availability`
+    （B_probe_h1_npu_reg.py 在 host 用"毒药 torch_npu"实测复现）。cpu 轨一次都不该惊动它，
+    所以判据换成"设备名可不可造"（`_npu_device_usable()`，本函数只在 ascend 轨被调用）。
+    """
+    if not _npu_device_usable():
+        return "False"
+    try:
+        return str(bool(torch.npu.is_available()))
+    except Exception:  # noqa: BLE001
+        return "probe-error"
+
+
+def ensure_torch_npu() -> dict:
+    """ascend 轨按需 `import torch_npu` 并复验注册结果；幂等（第二次直接复用上一笔结论）。
+
+    返回 `{"status": ok|fail, "version": .., "detail": ..}`，由 `npu_reg_line` 收成判决行。
+    刻意**不抛异常**：注册失败要由 main() 打成 `NPU-REG-FAIL` 并给退码，而不是把裸 traceback
+    丢给卡窗日志——旧版的病灶正是"失败长得不像失败"。
+    """
+    global _npu_reg
+    if _npu_reg is not None:
+        return _npu_reg
+    loaded = getattr(sys.modules.get("torch_npu"), "__version__", None)
+    if _npu_device_usable():                      # 昇腾打过补丁的 torch 构建：import 前就注册好了
+        _npu_reg = {"status": "ok", "version": loaded or "torch-builtin",
+                    "detail": "npu 已在场（未额外 import）"}
+        return _npu_reg
+    try:
+        import torch_npu  # noqa: F401  只用它注册设备类型，本件不碰它的任何算子
+    except Exception as exc:  # noqa: BLE001
+        _npu_reg = {"status": "fail", "version": "none",
+                    "detail": f"import torch_npu -> {type(exc).__name__}: {exc}"}
+        return _npu_reg
+    if _npu_device_usable():
+        _npu_reg = {"status": "ok", "version": getattr(torch_npu, "__version__", "unknown"),
+                    "detail": "torch_npu 注册成功"}
+    else:
+        _npu_reg = {"status": "fail", "version": getattr(torch_npu, "__version__", "unknown"),
+                    "detail": "import 成功但 torch.device('npu') 仍不可用"}
+    return _npu_reg
+
+
+def npu_reg_line(state: dict, target: str) -> str:
+    """把注册状态收成一行判决（token 与 card_run.sh [0] 段探针一致：`NPU-REG ok|fail|skip <version>`）。
+
+    skip（cpu 轨）时 `npu_avail=n/a` 而不是 False：这一趟压根没探测过，编一个 False 出来会把
+    "没看"和"看了说没有"混成同一行——那是另一种假绿。
+    """
+    avail = "n/a" if state["status"] == "skip" else _npu_avail_text()
+    return (f"NPU-REG {state['status']} {state['version']} target={target} "
+            f"npu_avail={avail} {state['detail']}")
+
+
+if npu_requested():          # 模块加载即注册：被 import 着用（而不只 __main__）也照样覆盖
+    ensure_torch_npu()
 
 
 def _make_inputs(seq: int, d: int, device: torch.device, gen: torch.Generator):
@@ -210,22 +318,63 @@ def main(argv: list[str] | None = None) -> int:
 
     name = ascend_env.normalize_target(args.target)
     dev_default = "npu" if name == ascend_env.TARGET_ASCEND else "cpu"
-    dev = torch.device(args.device or dev_default)
+
+    # H1：先问"这台机器的 torch 认不认 npu"，再谈设备。cpu 轨不 import，直接记 skip。
+    if name == ascend_env.TARGET_ASCEND:
+        reg = ensure_torch_npu()
+    else:
+        reg = {"status": "skip", "version": "not-imported",
+               "detail": "cpu 轨不 import torch_npu（无 npu 机器会当场 ImportError）"}
+    print(npu_reg_line(reg, name))
+
+    try:
+        dev = torch.device(args.device or dev_default)
+    except Exception as exc:  # noqa: BLE001  旧版正是在这一行裸崩，整腿零判决
+        print(f"P2-STEP-{name} FAIL: NPU-REG-FAIL 设备名不可用 {type(exc).__name__}: {exc}"
+              f"（{reg['detail']}）", file=sys.stderr)
+        return EXIT_DEVICE_UNAVAILABLE
+    if name == ascend_env.TARGET_ASCEND and dev.type == "npu" and reg["status"] != "ok":
+        print(f"P2-STEP-{name} FAIL: NPU-REG-FAIL {reg['detail']}", file=sys.stderr)
+        return EXIT_DEVICE_UNAVAILABLE
     if name == ascend_env.TARGET_ASCEND and dev.type != "npu":
         print(f"WARN: target=ascend 但 device={dev}，ascend_env.active_backend 会判成 torch_eager",
               file=sys.stderr)
 
+    # P1-1l：旁听回落公告。只挂钩子、原样转给 stderr（不吞公告、不改 warning 过滤器 ⇒
+    # 日志形态与旧版逐字一致），拿到的条数就是"内核没走成"的次数。
+    seen: list[str] = []
+    show = warnings.showwarning
+
+    def _hook(message, category, filename, lineno, file=None, line=None):
+        seen.append(str(message))
+        show(message, category, filename, lineno, file, line)
+
+    warnings.showwarning = _hook
     try:
         l0, l1, missing = run(target=name, device=dev, seed=args.seed, lr=args.lr)
     except Exception as exc:  # noqa: BLE001  顶层脚本：把 traceback 打出来再退码
         print(f"P2-STEP-{name} FAIL: {type(exc).__name__}: {exc}", file=sys.stderr)
         raise
+    finally:
+        warnings.showwarning = show
+
+    report = ops.kernel_usage_report(name, fallback_events=ops.count_fallback_events(seen))
+    print(report["line"])
+    gating = (name == ascend_env.TARGET_ASCEND
+              or os.environ.get(ENV_KERNEL_USAGE_STRICT) == "1")
+    if not report["ok"]:
+        where = (f"exit={EXIT_KERNEL_UNUSED}" if gating
+                 else f"未计入门禁（cpu 轨的 gdn_backward[cpu] 回落是已登记事实；"
+                      f"要强验就 {ENV_KERNEL_USAGE_STRICT}=1）")
+        print(f"KERNEL-USED-BLOCK: 未达项={report['failed']} ⇒ {where}", file=sys.stderr)
     if missing:
         print(f"P2-STEP-{name} FAIL: grad 缺失 {missing}", file=sys.stderr)
         return 2
     if not (l1 < l0):
         print(f"P2-STEP-{name} FAIL: loss 未下降（{l0} → {l1}）", file=sys.stderr)
         return 3
+    if gating and not report["ok"]:
+        return EXIT_KERNEL_UNUSED
     return 0
 
 

@@ -10,7 +10,8 @@
    tilelang 取张量注解只认闭包非局部名，PEP 563 会让只在注解里出现的 n/k 失去闭包单元
    （实测 NameError: name 'n' is not defined）；③ 取产物走 tilelang.compile(现场追踪的 PrimFunc)
    而非 tilelang.jit——后者在本件这种写法下只回 Kernel 不执行，且它的 call-form 缓存拿张量做
-   等值比较，换一批新张量就抛错；④ 累加器 (bn,bk) 与出口都 fp32，降位由入口层负责；⑤ 尾块
+   等值比较，换一批新张量就抛错；④ 累加器 (bn,bk) 与出口 GW 恒 fp32（归约不降位），交货降位由入口层负责；入参位宽由 `idt`
+   参数化（fp32/fp16，P1-1m），cast 只发生在标量 load 处（填装走标量、不走 DMA，故缓冲可留 fp32）；⑤ 尾块
    （token 块不满 tc 行）不赌搬运的自动边界谓词：先按 `T.min(row, m-1)` 把地址夹进合法区间，再用
    `T.if_then_else(row < m, 读值, 0.0)` 决定取不取——`if_then_else` 两侧都会求值，地址不夹就是
    越界读，而越界读在卡上的表现正是 aicore exception 507015。
@@ -39,6 +40,12 @@ from typing import Any
 import torch
 
 from ascend.kernels import ascend_env
+
+#: 昇腾侧内核位宽白名单（P1-1m）：fp32/fp16；**bf16 显式不收**（bisheng dav-2201 vector 面缺
+#: bf16 标量 cast，取证 attempts/B/b_addln_910b.py:23-24 + dump_bf16.py；口径同 gemm_asc._ASC_DTYPES）
+_ASC_DTYPES = (torch.float32, torch.float16)
+#: torch dtype → DSL 位宽名
+_TL_DT = {torch.float32: "float32", torch.float16: "float16"}
 
 #: token 轴块长：与前向 BLOCK_M 同量级，太小喂不饱并行、太大尾块浪费
 BLOCK_TC = 16
@@ -97,7 +104,8 @@ def _alloc_tile(T, shape, dtype):
     return T.alloc_local(shape, dtype)
 
 
-def dw_scalar_body(T, dY, A, GW, n: int, k: int, tc: int, bn: int, bk: int):
+def dw_scalar_body(T, dY, A, GW, n: int, k: int, tc: int, bn: int, bk: int,
+                   idt: str = "float32"):
     """可移植标量正文（D-cube1 correctness 轨）：同一份算式在 cpu/ascend 两方言下各追一遍。
 
     白话：账本 (N,K) 先切成固定的小方格，每格自己沿"这批有多少条样本"一笔笔记账；取样本时末尾
@@ -116,9 +124,13 @@ def dw_scalar_body(T, dY, A, GW, n: int, k: int, tc: int, bn: int, bk: int):
     tiles = nb * nk          # 出口块数：纯常量 ⇒ 可直接当网格上界
     blocks = min(tiles, NUM_BLOCKS)
     iters = (tiles + blocks - 1) // blocks
+    # 位宽参数化（P1-1m）：入参按实际位宽声明、累加面与出口 GW 恒 fp32（归约不降位）。缺省
+    # float32 时 `_ld` 是恒等函数 ⇒ fp32 轨生成码与参数化之前逐字相同（零回归）。
+    def _ld(e):            # 标量读：idt → fp32 累加面
+        return e if idt == "float32" else T.cast(e, "float32")
 
     @T.prim_func
-    def dw_impl(dY: T.Tensor((m, n), "float32"), A: T.Tensor((m, k), "float32"),
+    def dw_impl(dY: T.Tensor((m, n), idt), A: T.Tensor((m, k), idt),
                 GW: T.Tensor((n, k), "float32")):
         """被追踪的那一层：出口表形状是常量，token 轴串行累加、出口块按块摊开。
 
@@ -145,10 +157,10 @@ def dw_scalar_body(T, dY, A, GW, n: int, k: int, tc: int, bn: int, bk: int):
                         row = row0 + tt
                         rc = T.min(row, m - 1)
                         for i in T.serial(bn):
-                            dy_ub[tt, i] = T.if_then_else(row < m, dY[rc, iy * bn + i],
+                            dy_ub[tt, i] = T.if_then_else(row < m, _ld(dY[rc, iy * bn + i]),
                                                           T.float32(0.0))
                         for j in T.serial(bk):
-                            a_ub[tt, j] = T.if_then_else(row < m, A[rc, ix * bk + j],
+                            a_ub[tt, j] = T.if_then_else(row < m, _ld(A[rc, ix * bk + j]),
                                                          T.float32(0.0))
                     # 标量三重循环：GW[i,j] += Σ_tt dY[tt,i]·A[tt,j]（天然 trans_A，出口自然朝向）
                     for i in T.serial(bn):
@@ -165,7 +177,7 @@ def dw_scalar_body(T, dY, A, GW, n: int, k: int, tc: int, bn: int, bk: int):
     return dw_impl
 
 
-def dw_asc_impl(dY, A, GW, n: int, k: int, tc: int, bn: int, bk: int):
+def dw_asc_impl(dY, A, GW, n: int, k: int, tc: int, bn: int, bk: int, idt: str = "float32"):
     """昇腾 910B 正文＝可移植标量体（P1-1f 改道，D-cube1 correctness 轨）。
 
     与前向件同一招：共用 `dw_scalar_body`，语言模块换成 `tilelang.ascend.language`。零
@@ -177,7 +189,7 @@ def dw_asc_impl(dY, A, GW, n: int, k: int, tc: int, bn: int, bk: int):
         reconcile/S_cpu_oracle.py --ascend 与 reconcile/verify_dw.py）。
     """
     return dw_scalar_body(ascend_env.dialect(ascend_env.TARGET_ASCEND), dY, A, GW,
-                          n=n, k=k, tc=tc, bn=bn, bk=bk)
+                          n=n, k=k, tc=tc, bn=bn, bk=bk, idt=idt)
 
 
 def _largest_block(total: int) -> int | None:
@@ -207,13 +219,17 @@ def plan(dY: torch.Tensor, A: torch.Tensor, GW: torch.Tensor, target: str | None
     if name == ascend_env.TARGET_CPU:
         if dY.dtype != torch.float32 or A.dtype != torch.float32:
             return None
-    elif dY.dtype != A.dtype or dY.dtype not in (torch.float32, torch.bfloat16, torch.float16):
+    elif dY.dtype != A.dtype or dY.dtype not in _ASC_DTYPES:
         return None
     if not (dY.is_contiguous() and A.is_contiguous() and GW.is_contiguous()):
         return None
+    dt = _TL_DT.get(dY.dtype, "float32")   # plan 已判 A 与 dY 同宽、GW 恒 fp32、位宽在白名单内
     kwargs = {"n": n, "k": k, "tc": BLOCK_TC, "bn": bn, "bk": bk}
     impl = dw_asc_impl if name == ascend_env.TARGET_ASCEND else dw_cpu_impl
-    key = f"gemm_dw[{name}]|n{n}k{k}tc{BLOCK_TC}b{bn}x{bk}"
+    if name == ascend_env.TARGET_ASCEND:
+        kwargs.update(idt=dt)
+    # 键尾位宽段：同 (n,k,块) 换位宽必得新模具（防陈旧产物把 fp16 内存当 fp32 读，见 gemm_asc 同注）
+    key = f"gemm_dw[{name}]|n{n}k{k}tc{BLOCK_TC}b{bn}x{bk}d{dt}"
     return {"target": name, "key": key, "kwargs": kwargs, "impl": impl}
 
 

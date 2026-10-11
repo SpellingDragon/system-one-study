@@ -40,6 +40,7 @@ import torch
 
 from ascend.kernels import (
     add_ln_kernel,
+    ascend_env,
     attn_sw_kernel,
     gemm_bwd_dw_kernel,
     gemm_kernel,
@@ -50,6 +51,77 @@ from ascend.kernels import (
 )
 
 NEG_INF = -1e30
+
+# ------------------------------------------------------------------ 内核启用自证（P1-1l）
+#: 后端回退公告的唯一 token。文案正身在 `ascend_env.record_blocker()`
+#: （ascend/kernels/ascend_env.py:234：`方言后端 [<key>] 不可用，已回退 torch eager：…`）；
+#: 那是禁改件，所以本件不往里加计数器，只把它当"回落确实发生过"的**可观测信号**来数。
+FALLBACK_WARNING_TOKEN = "已回退 torch eager"
+
+
+def count_fallback_events(messages) -> int:
+    """数"内核回落公告"发生了几次（入参是 warnings 钩子收到的原始文案序列）。
+
+    白话：后端每把自己降级成普通 torch 写法都会喊一嗓子，本函数只数这一嗓子，不改账本、
+    不猜。口径注意：`record_blocker` 按 key 去重（同一阻塞点只公告一次），所以这里是
+    "公告次数"而不是"调用次数"——但只要它 >= 1，"这一趟有没有回落"这件事就已经定了。
+    """
+    return sum(1 for m in messages if FALLBACK_WARNING_TOKEN in str(m))
+
+
+def kernel_usage_report(target=None, *, fallback_events=0, compiled=None, blockers=None):
+    """纯函数：把"这一步真走了内核"的三路证据合成一份判决（P1-1l，堵最后一道静默假绿）。
+
+    【为什么需要它】探针/发射在卡上真失败时，`ascend_env.get_compiled()` 返回 None，入口层
+    就落回 torch 普通写法——**train_step 照样 loss 下降、照样打 P2-STEP-... PASS**。也就是说
+    "接线正确"这条判据对"内核有没有被用"完全失明。本函数把三件硬事实收成一个判决：
+      ① `compiled_keys()` 里前缀为 `<target>|` 的键 >= 1（只有真编译成功才留痕，回退不留痕）；
+      ② `blockers()` 为空（任何一次回退都必须在这本账上留字）；
+      ③ `fallback_events == 0`（回退公告的实际发生次数，调用方用 `count_fallback_events` 数出来）。
+
+    【刻意不做的事】绝不调用 `ascend_env.backend_available()` / `active_backend()`：它们会把
+    "设备不在场"当场**登记成一条新 blocker**（ascend_env.py:133），判决自己污染账本；也绝不
+    自己发 warning 或 `sys.exit`——那都是消费方（train_step.main）的活，本函数只对喂进来的
+    账本求值，所以负例可以直接喂假账自证（伪造一次回退 => 必红）。
+
+    :param target: `ascend` / `cpu`（经 `normalize_target` 归一，决定看哪个前缀的键）
+    :param fallback_events: 回落公告次数（默认 0；由调用方计数后喂进来）
+    :param compiled: 覆写"已编译键"账本；None 时读 `ascend_env.compiled_keys()`
+    :param blockers: 覆写"阻塞账"；None 时读 `ascend_env.blockers()`
+    :returns: dict(target, prefix, kernels, other_prefix_keys, n_kernels, blockers,
+              n_blockers, fallback_events, checks, ok, line)
+              其中 `line` 即判决行 `KERNEL-USED-PASS kernels=<n> blockers=<m> fallbacks=<k> target=<t>`
+              （不满足时同位置打 `KERNEL-USED-FAIL ... why=<未达项>`）。
+    """
+    name = ascend_env.normalize_target(target)
+    prefix = f"{name}|"
+    keys = tuple(ascend_env.compiled_keys() if compiled is None else compiled)
+    blk = dict(ascend_env.blockers() if blockers is None else blockers)
+    used = sorted(k for k in keys if k.startswith(prefix))
+    others = sorted(k for k in keys if not k.startswith(prefix))
+    fb = int(fallback_events)
+
+    checks = (
+        ("kernels_absent", len(used) >= 1, f"<{name}|> 前缀键 {len(used)} 枚"),
+        ("blockers_present", len(blk) == 0, f"阻塞 {len(blk)} 条"),
+        ("fallback_events", fb == 0, f"回落公告 {fb} 次"),
+    )
+    failed = [label for label, ok_item, _ in checks if not ok_item]
+    ok = not failed
+    line = (f"KERNEL-USED-{'PASS' if ok else 'FAIL'} kernels={len(used)} "
+            f"blockers={len(blk)} fallbacks={fb} target={name}")
+    if not ok:
+        line += f" why={','.join(failed)}"
+        if blk:
+            line += f" blocker_keys={sorted(blk)[:3]}"
+        if others:
+            line += f" foreign_keys={others[:3]}"
+    return {
+        "target": name, "prefix": prefix, "kernels": used, "n_kernels": len(used),
+        "other_prefix_keys": others, "blockers": blk, "n_blockers": len(blk),
+        "fallback_events": fb, "checks": {label: ok_item for label, ok_item, _ in checks},
+        "failed": failed, "ok": ok, "line": line,
+    }
 
 
 def _work_dtype(*ts: torch.Tensor) -> torch.dtype:
@@ -509,6 +581,7 @@ def lora_apply(x: torch.Tensor, a: torch.Tensor, b: torch.Tensor, scaling: float
 
 
 __all__ = (
-    "add_ln", "attn_sw", "gdn_conv", "gdn_delta", "linear", "lora_apply", "readout", "rope",
+    "add_ln", "attn_sw", "count_fallback_events", "gdn_conv", "gdn_delta", "kernel_usage_report",
+    "linear", "lora_apply", "readout", "rope",
     "_AddLnFn", "_AttnSwFn", "_GdnConvFn", "_GdnFn", "_LinearFn", "_LoraFn", "_ReadoutFn", "_RopeFn",
 )
