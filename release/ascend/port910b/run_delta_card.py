@@ -8,9 +8,13 @@ C4（P1-1w）扩 `--bwd`：把训练步里那个只"执行过"、从未逐元素
 `ascend/kernels/gdn_asc.py` 的反向）拉出来逐元素对拍——六项梯度（dq/dk/dv/dbeta/dg/dh0，
 按 F 波清单）vs **同输入** fp64 golden（fwd_exact + bwd_adjoint）；前向 o/s 复用现腿。
 判决行：
+  ITEM <dq|dk|dv|dbeta|dg|dh0|adjoint> rel= <v> verdict= <PASS|FAIL>      ← 逐项，**不再早退**
   NUM-delta_bwd PASS dq=<v> dk=<v> dv=<v> dbeta=<v> dg=<v> dh0=<v> adjoint=<v> rel_max=<v>
   NUM-delta_bwd FAIL first=<item> rel=<v> absdiff=<v> thresh=<v>
-（六项逐项都打，不只打 max；FAIL 指认首个超阈项。假绿守卫：必须见 `gdnb[` 键，否则判 FAIL。）
+（P1-1z D3：FAIL 不再早退——每项独立 try/except 各打一行 ITEM，故"只坏 dbeta"与"dbeta 只是
+首个坏的"可区分；末行 `NUM-delta_bwd` 聚合判据与阈值 2e-4 逐字不变。逐项 verdict 另把非有限值
+（nan/inf）判 FAIL 以杜绝"nan 当 PASS"，此为逐项行新增口径，聚合口径不动。
+假绿守卫：必须见 `gdnb[` 键，否则判 FAIL。）
 
 纪律：不用 out_idx 魔法（本地无法 run-verify，猜错即烧卡窗）。显式分配全部 9 张量，
 kernel 就地写 HIST/SOUT/O，逐一比对。镜像 run_numerics 里已验证的 num_gdn 喂参形态。
@@ -266,17 +270,35 @@ def _bwd_leg(gd):
     if ARGS.neg_perturb in meas:
         meas[ARGS.neg_perturb] = meas[ARGS.neg_perturb] * 1.01
 
-    vals, diff = {}, {}
-    for it in BWD_ITEMS:
-        vals[it] = relerr(meas[it], ref[it])
-        diff[it] = float(np.max(np.abs(np.asarray(meas[it]) - np.asarray(ref[it]))))
-    vals["adjoint"] = _adjoint_fd_check(gd)
-    diff["adjoint"] = None
-
     order = BWD_ITEMS + ("adjoint",)
     thr = {it: TOL_F32 for it in BWD_ITEMS}
     thr["adjoint"] = TOL_ADJ
-    first = next((it for it in order if vals[it] > thr[it]), None)
+
+    # 容错逐项判（P1-1z / D3）：FAIL **不再早退**。改前只打首个超阈项就 return，导致
+    # "只坏 dbeta" 与 "dbeta 只是第一个坏的" 无法区分（w3 窗 dbeta FAIL 后 dv/dg/dh0 状态未知）。
+    # 现在每项**独立** try/except 求 rel 并各打一行 `ITEM <name> rel= <v> verdict= <PASS|FAIL>`，
+    # 任一项的异常/数值问题都不连坐其余项；末行 `NUM-delta_bwd` 聚合判据与阈值（2e-4）**逐字不变**。
+    vals, diff = {}, {}
+    for it in order:
+        try:
+            if it == "adjoint":
+                vals[it] = _adjoint_fd_check(gd)
+                diff[it] = None
+            else:
+                vals[it] = relerr(meas[it], ref[it])
+                diff[it] = float(np.max(np.abs(np.asarray(meas[it]) - np.asarray(ref[it]))))
+        except Exception as e:  # 单项炸不连坐：记 inf 并继续（聚合口径下 inf>thr 必判 FAIL）
+            vals[it] = float("inf")
+            diff[it] = None
+            print(f"ITEM-ERR {it} {type(e).__name__}: {str(e)[:160]}")
+        v = vals[it]
+        fin = bool(np.isfinite(v))
+        ok = fin and (v <= thr[it])          # 逐项 verdict：非有限值不算过（防"nan 当 PASS"）
+        rtxt = format(v, ".3e") if fin else "nan/inf"
+        note = "" if fin else f" (非有限;聚合口径 v>{thr[it]:.0e} 不判 FAIL)"
+        print(f"ITEM {it} rel= {rtxt} verdict= {'PASS' if ok else 'FAIL'}{note}")
+
+    first = next((it for it in order if vals[it] > thr[it]), None)   # ← 聚合口径与改前逐字同
     if first is None:
         rel_max = max(vals[it] for it in BWD_ITEMS)
         body = " ".join(f"{it}={vals[it]:.2e}" for it in order)

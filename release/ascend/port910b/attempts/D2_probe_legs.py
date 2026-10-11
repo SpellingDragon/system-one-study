@@ -18,12 +18,26 @@
    · 新增刚性判据：每腿必须齐 ①`## inprocess combo=<c>` ②`SO-VERDICT so=` ③`NUM-*`；缺任一
      该腿自判 `D2-LEG-INVALID`（不许算数据），并汇总 `D2-LEGS-SUMMARY valid=k/n`。
 
+⚠ P1-1t 修复（2026-10-12，执行代理 G3）——**同进程发射桩传染**（窗三 D 段病灶；A2/窗二同款）：
+   窗三 D 段 `--combos default,A,C --card` 实测：`default` 趟把 `compile_all` 腿与两条 intrinsic 腿放在
+   **同一子进程**里顺序 exec，而 `compile_all_asc.py::main()` 会 `_install_stubs()` 把 `tilelang.compile`
+   换成"调用即抛 `_LaunchSkip`"的替身**且（非 `--products` 时）不还原** ⇒ 紧随其后的 intrinsic 腿发射
+   被前一腿的桩截断，现场为 `NUM-gemm_l1_intrinsic-FAIL _LaunchSkip:` / `NUM-dw_intrinsic-FAIL _LaunchSkip:`
+   （`legs` 不含 `compile_all` 的 `+A`/`+C` 两趟反而真执行、出 `507015`）⇒ **该趟颜色不可用**（机械面
+   `so=BASE` 仍有效）。纪律＝**一案一进程**。
+   修法：`spawn()` → `spawn_leg()`，**每腿起独立干净子进程**（`compile_all` 腿与 intrinsic 腿**永不**同进程）；
+   每腿独立 `<log-dir>/leg_<combo>_<leg>.log`，父按腿回显 + `[<combo>/<leg>] child-rc=…`，再按 combo 聚合原文
+   供既有三判据检查。**契约一字不动**：`inject`/`so=`/`NUM-` 三判决行、`D2-LEG-OK|INVALID` 语义、退出码规则
+   （有任一 INVALID ⇒ 退 1）、`--card` 语义、`SEC12_LEGS`/`COMBO_FLAGS`/指纹判读口径均不变。
+
 它做三件事，且**一个禁改件都不碰**：
   1. 注入 -DTL910B_VARIANT_x：唯一入口 = monkeypatch `tilelang.contrib.bisheng.
      get_bisheng_compile_options`（`ascend/backend.py:23` 运行时取模块属性、
      `bisheng.py:187` 同模块全局名、`libgen.py:145` 函数内 import——三处都吃这个 patch）
      ⇒ 不需要改 `patch_bisheng.py` / `card_run.sh` / 任何 `*_asc.py` / `run_numerics.py`。
-  2. 逐组（default / A / B / C …）各起**一个干净子进程**跑腿，每组**独立 TILELANG_CACHE_DIR**：
+  2. 逐组（default / A / B / C …）的**每一条腿各起一个独立干净子进程**（一案一进程：
+     `compile_all` 与 `intrinsic` 腿**永不**同进程，防发射桩传染），每组**共享一个
+     `TILELANG_CACHE_DIR`**（逐核指纹取并集，与改前同）：
         run_numerics.py --only gemm_l1_intrinsic --track card [--no-run]  ┐ 真 §12 腿
         run_numerics.py --only dw_intrinsic      --track card [--no-run]  ┘
         compile_all_asc.py --target ascend                               —— 九件回归门
@@ -257,11 +271,12 @@ def inprocess_main(a):
 
 
 # ─────────────────────────── 编排 ───────────────────────────
-def spawn(combo, legs, cache, do_run, extra_d, log_dir):
-    """起干净子进程；子进程 stdout/stderr 落**文件**（非 pipe，硬杀也留尾）+ 无条件回显。"""
-    logp = os.path.join(log_dir, "leg_%s.log" % combo_slug(combo))
+def spawn_leg(combo, leg, cache, do_run, extra_d, log_dir):
+    """起**单腿**干净子进程（一案一进程：`compile_all` 与 `intrinsic` 腿**永不**同进程 ⇒ 发射桩不跨腿传染）。
+    子进程 stdout/stderr 落**文件**（非 pipe，硬杀也留尾）+ 无条件回显。"""
+    logp = os.path.join(log_dir, "leg_%s_%s.log" % (combo_slug(combo), leg))
     cmd = [sys.executable, "-u", os.path.abspath(__file__), "--inprocess", "--combo", combo,
-           "--legs", ",".join(legs), "--cache", cache,
+           "--legs", leg, "--cache", cache,
            "--run" if do_run else "--no-run"]
     if extra_d:
         cmd += ["--extra-d", extra_d]
@@ -282,8 +297,8 @@ def spawn(combo, legs, cache, do_run, extra_d, log_dir):
     if text and not text.endswith("\n"):
         sys.stdout.write("\n")
     # 无条件打：子进程退码 + 日志落点 + 字节数（0 字节且非 0 退码 = 硬杀，不再静默）
-    print("   [%s] child-rc=%d log=%s bytes=%d%s"
-          % (combo, rc, logp, len(raw),
+    print("   [%s/%s] child-rc=%d log=%s bytes=%d%s"
+          % (combo, leg, rc, logp, len(raw),
              "   ← 子进程零输出即退出（硬杀/未启动），此腿设备现场不可信" if raw == b"" else ""),
           flush=True)
     return rc, text
@@ -353,7 +368,16 @@ def main():
         cache = os.path.join(a.cache_root, "d2_legs_%s" % combo_slug(combo))
         print("\n════════ combo=%s  legs=%s  cache=%s ════════"
               % (combo, ",".join(legs), cache))
-        rc, text = spawn(combo, legs, cache, do_run, a.extra_d, log_dir)
+        # 每腿一独立子进程（一案一进程；compile_all 装的发射桩随其进程死亡，不再传染 intrinsic 腿）。
+        # 各组共享同一 cache ⇒ 逐核指纹仍取并集（与改前同口径）。
+        rc = 0
+        texts = []
+        for leg in legs:
+            rc_leg, text_leg = spawn_leg(combo, leg, cache, do_run, a.extra_d, log_dir)
+            if rc_leg and not rc:
+                rc = rc_leg
+            texts.append(text_leg)
+        text = "".join(texts)
         kernels, aib = scan(cache)
         digs[combo] = {"cache": cache, "rc": rc, "text": text,
                        "kernels": kernels, "aib": aib, "scan": (kernels, aib)}

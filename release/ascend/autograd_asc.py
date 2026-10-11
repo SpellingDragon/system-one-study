@@ -21,8 +21,10 @@ qkv、attn_sw 只服务"无 padding、整窗因果"；带任意掩码的批内�
   本波走 fp32 闭式重算：softmax 反向 ds=p·(dp−Σdp·p)，三路透传；Metal/昇腾 flash-bwd 留后续。
 - `_GdnFn`: 内核反向齐（`gdn_kernel.backward` 在 target=ascend 上已 kernelized，target=cpu 上
   落 torch 尺子并如实登记 `gdn_backward[cpu]` blocker）。本件把 blocker 事实透传给调用方。
-- `_GdnConvFn`: **入口件无 conv_backward**（`gdn_kernel.conv_forward` 只有前向）→ 本波走
-  fp32 闭式（`torch.nn.functional.conv1d + silu` 现场重算，再借 torch 自动微分回传 dx/dw/db）。
+- `_GdnConvFn`: **反向件已补**（`gdn_conv_asc.conv_backward`）→ 昇腾 target 走 910B 标量面自研件
+  `conv_bwd_asc_impl`（翻转核的加权 gather = dx，抽头/偏置按批与时间归约 = dw/db）；其余 target 落
+  同口径纯 torch 尺子 `_bwd_eager`（**不调 `F.conv1d`**）。旧版闭式借 `F.conv1d + silu` 现场重算，
+  那条 NPU depthwise conv 反传报 `SetPrecisionMode…500001`（E3 判真缺陷），P1-1zb F4 已整体撤下。
 - `_ReadoutFn`: 内核反向齐（`letter_readout_kernel.backward(row_count, ids, dy, target)`
   = index_add 语义）；本件在 fp64 分支改走纯 torch 反向，避免内核 fp32 累加器截位。
 - `_LoraFn`: 内核反向齐（`lora_kernel.backward(dy, x, a, b, scaling, target)` → (dx, dA, dB)
@@ -44,6 +46,7 @@ from ascend.kernels import (
     attn_sw_kernel,
     gemm_bwd_dw_kernel,
     gemm_kernel,
+    gdn_conv_asc,
     gdn_kernel,
     letter_readout_kernel,
     lora_kernel,
@@ -403,11 +406,16 @@ def _gdn_torch(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, g: torch.Tenso
 
 # --------------------------------------------------------------------------- GDN short conv
 class _GdnConvFn(torch.autograd.Function):
-    """GDN 短卷积（4 抽头因果 + SiLU）的可微版：**入口件无 conv_backward** → 本波走 fp32 闭式。
+    """GDN 短卷积（4 抽头因果 + SiLU）的可微版：反向走 **gdn_conv_asc 反向件**（不再借 `F.conv1d`）。
 
-    反向处置：`gdn_kernel.conv_forward` 只有前向，`gdn_conv_asc` 里也没登记 conv_backward
-    入口。本波反向借 `torch.nn.functional.conv1d + silu` 现场重算前向（同口径、同位宽），
-    再走 torch 自动微分回传 dx/dw/db——这不是"假装内核能反"，是明写的闭式兜底。
+    反向处置（P1-1zb F4 改）：`gdn_conv_asc.conv_forward` 只有前向，故本波在姊妹件里补上反向
+    入口 `gdn_conv_asc.conv_backward`——昇腾 target 走 910B 标量面自研件 `conv_bwd_asc_impl`
+    （翻转核的加权 gather = dx，抽头/偏置按批与时间归约 = dw/db），其余 target 落同口径纯 torch
+    尺子 `_bwd_eager`（**同样不调 conv1d**，只用 pad + 加权求和 + sigmoid）。旧版闭式借
+    `torch.nn.functional.conv1d + silu` 现场重算再回传——那条 NPU depthwise conv 反传会报
+    `RuntimeError: SetPrecisionMode…500001`（E3 已判真缺陷），故整体撤下。
+
+    fp64（仅 gradcheck）走纯 torch 前向尺子 + 自动微分，与前向 fp64 分支同口径。
     """
 
     @staticmethod
@@ -422,38 +430,54 @@ class _GdnConvFn(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, dy: torch.Tensor):
-        """用同口径 torch 前向 + 自动微分回传 (dx, dw, db, None, None)。"""
+        """反向：fp64 走同口径纯 torch 前向 + 自动微分；其余交 `gdn_conv_asc.conv_backward`。
+
+        白话：倒推账不再借 torch 的 conv1d，而是交给姊妹件的自研反向（昇腾走内核、别处走手工算法）；
+        只有 fp64（gradcheck 专用）没有内核形态，仍在纯 torch 前向尺子上自动微分。
+        """
         x, w, bias = ctx.saved_tensors
-        wd = _work_dtype(x, dy)
-        leaves = [x.detach().to(wd).clone().requires_grad_(True),
-                  w.detach().to(wd).clone().requires_grad_(True)]
-        if bias is not None:
-            leaves.append(bias.detach().to(wd).clone().requires_grad_(True))
-        # 同上：Function.backward 默认 no_grad；这里要现场搭 torch 图 → 显式开回来
-        with torch.enable_grad():
-            y = _conv_silu_torch(*leaves[:3] if bias is not None else (*leaves, None), wd)
-            grads = torch.autograd.grad(y, leaves, dy.to(wd))
-        dx = grads[0].to(ctx.in_dtype)
-        dw = grads[1].to(w.dtype)
-        db = grads[2].to(bias.dtype) if bias is not None else None
+        if x.dtype == torch.float64:
+            wd = _work_dtype(x, dy)
+            leaves = [x.detach().to(wd).clone().requires_grad_(True),
+                      w.detach().to(wd).clone().requires_grad_(True)]
+            if bias is not None:
+                leaves.append(bias.detach().to(wd).clone().requires_grad_(True))
+            # 同上：Function.backward 默认 no_grad；这里要现场搭 torch 图 → 显式开回来
+            with torch.enable_grad():
+                y = _conv_silu_torch(*leaves[:3] if bias is not None else (*leaves, None), wd)
+                grads = torch.autograd.grad(y, leaves, dy.to(wd))
+            dx = grads[0].to(ctx.in_dtype)
+            dw = grads[1].to(w.dtype)
+            db = grads[2].to(bias.dtype) if bias is not None else None
+            return dx, dw, db, None, None
+        # 非 fp64：交姊妹件反向（昇腾内核 / 纯 torch 尺子），位宽在 `conv_backward` 里显式交货
+        dx, dw, db = gdn_conv_asc.conv_backward(x, w, bias, dy, ctx.target)
         return dx, dw, db, None, None
 
 
 def _conv_silu_torch(x: torch.Tensor, w: torch.Tensor, bias: torch.Tensor | None,
                      dtype: torch.dtype) -> torch.Tensor:
-    """GDN 短卷积的纯 torch 尺子（与 `gdn_conv_asc._eager` 同口径）：pad→conv1d→silu。"""
+    """GDN 短卷积的纯 torch 前向尺子（与 `gdn_conv_asc._eager` 同口径）：pad→加权求和→silu。
+
+    **刻意不调 `F.conv1d`**（E3 判该 NPU op 反传报 500001；前向尺子同族一并去依赖），
+    只用 pad + 加权求和，数学与 conv1d 逐位同口径。仅 fp64 前向（gradcheck）经此路。
+    前导维无关：内部展平成 (batch, C, L) 再算，出口收成原形（对齐旧 conv1d 的 2D/3D 兼容）。
+    """
     import torch.nn.functional as F
 
-    xs = x.to(dtype)
-    ws = w.to(dtype)
-    bs = None if bias is None else bias.to(dtype)
-    chans = xs.size(-2)
-    k = ws.size(-1)
+    shape = x.shape
+    chans, length, k = int(x.size(-2)), int(x.size(-1)), int(w.size(-1))
     pad = k - 1
-    w4 = ws.reshape(chans, 1, k)
-    xs_p = F.pad(xs, (pad, 0))               # 只在左边补零（因果）
-    y = F.conv1d(xs_p, w4, bs, groups=chans)  # pad+valid 已把长度带回 L，不再剪
-    return F.silu(y)
+    xs = x.reshape(-1, chans, length).to(dtype)
+    ws = w.reshape(chans, k).to(dtype)
+    bs = None if bias is None else bias.to(dtype)
+    xs_p = F.pad(xs, (pad, 0))                               # 只在左边补零（因果）
+    z = torch.zeros_like(xs)
+    for j in range(k):
+        z = z + ws[:, j].reshape(1, chans, 1) * xs_p[:, :, j:j + length]
+    if bs is not None:
+        z = z + bs.reshape(1, chans, 1)
+    return F.silu(z).reshape(shape)
 
 
 # --------------------------------------------------------------------------- readout
@@ -573,7 +597,7 @@ def gdn_delta(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, g: torch.Tensor
 def gdn_conv(x: torch.Tensor, w: torch.Tensor, bias: torch.Tensor | None = None,
              *, out_dtype: torch.dtype = torch.float32,
              target: str | None = None) -> torch.Tensor:
-    """可微 GDN 短卷积：见 `_GdnConvFn`（**入口件无 conv_backward → fp32 闭式兜底**）。"""
+    """可微 GDN 短卷积：见 `_GdnConvFn`（反向已补 `gdn_conv_asc.conv_backward`，不再借 `F.conv1d`）。"""
     return _GdnConvFn.apply(x, w, bias, out_dtype, target)
 
 

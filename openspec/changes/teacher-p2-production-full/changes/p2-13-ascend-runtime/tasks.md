@@ -78,4 +78,6 @@
 
 
 - [ ] **P1-1za GDN delta 反向在真机产生 nan（窗三 B 段 E3 分诊＝真缺陷）**：`GRADCHECK-gdn_delta FAIL max_rel=nan`，门分布三处口径实测良态、fp64 参考有限、host `8.569e-06` PASS ⇒ 探针无罪，坏点在 device 侧解析反传。验收＝`E3_probe_cardtriage.py --target ascend` 逐路判（数值差分路只读前向内核 vs 解析反传路唯一吃反向内核）钉死坏路 + 修 `gdn_asc.py` bwd 表达式 + 真机 gradcheck 与 delta_bwd 两判据同时绿 —— 验证：卡上两条命令
-- [ ] **P1-1zb `gdn_conv` 反传依赖 `F.conv1d` 在 NPU 栈被拒（窗三 B 段 E3 分诊＝真缺陷）**：异常原文 `RuntimeError: SetPrecisionMode…500001` @ `autograd_asc.py:434`（G-2 期 fp32 闭式回退）。验收＝**本地修**：反向改自研内核（flip/gather 走 `gdn_conv_asc` 既有机制，去 `F.conv1d` 依赖），容器 `--target ascend` 编译判决 + host 数值对拍口径不变 + `GRADCHECK-gdn_conv` 在卡上转 PASS —— 验证：`gradcheck_card.py --target ascend`
+- [ ] **P1-1zb `gdn_conv` 反传依赖 `F.conv1d` 在 NPU 栈被拒（窗三 B 段 E3 分诊＝真缺陷）**：异常原文 `RuntimeError: SetPrecisionMode…500001` @ `autograd_asc.py:434`（G-2 期 fp32 闭式回退）。**（F4 本地已修 ＋ 编排者复验：`conv1d` 零调用、host gradcheck 8/8 且 `max_rel` 与旧值逐字同、容器真编 `.o~4898B`、两条注入负例抓红、340 passed）** 验收＝**本地修**：反向改自研内核（flip/gather 走 `gdn_conv_asc` 既有机制，去 `F.conv1d` 依赖），容器 `--target ascend` 编译判决 + host 数值对拍口径不变 + `GRADCHECK-gdn_conv` 在卡上转 PASS（**仅剩卡上一枪**） —— 验证：`gradcheck_card.py --target ascend`
+
+- [x] **P1-1zb-附带（G3 工装与提案）**：`D2_probe_legs.py` 一案一进程化（`valid=3/3`＋九数逐字同，编排者复验）；跨步修复提案升级双因子 `S3_compat_proposal_v2.diff`（gap 归一 + UB 预清零，两因子进码经预处理原文证实，trunk 未动、真机判决留下窗）

@@ -75,3 +75,12 @@ STALE-DIFF>0 ⇒ H-b 真：残留含 stale ⇒ 修复须同时处理 UB 预清�
 2. `gdn_delta` gradcheck `nan`（device 侧解析反传）
 3. `gdn_conv` 反传 `SetPrecisionMode 500001`（产品 fallback 依赖 `F.conv1d`，NPU 栈不接受）
 ⇒ **P1-3（GDN 件移植，旗舰）的真实缺口就是"反向在真机上不正确"**；前向与其余七门面均已真机绿。这不是"任务无法完成"，而是**缺口被精确到 3 条**——其中 3 号可在本地修（去 `F.conv1d` 依赖，改自研内核），1/2 号需一枪占卡判（`ub/pure` 差分 + 逐项判决 + gradcheck 逐路）。
+
+
+## ⑧ 本地修复与工装修缮（F4/G3，编排者独立复验）
+- **F4（P1-1zb 本地修完）**：`gdn_conv` 反向**去 `F.conv1d`**，新增昇腾件 `conv_bwd_asc_impl`（复用前向同族 scalar 机制，`ascend|gdnconvb[ascend]|c16k4b2|c8scalar`，容器真编 `.o~4898B`/`aibin 6416B`/`so 33392B`）。**编排者复验**：`grep -c conv1d(` 两文件 **0 命中**；host `GRADCHECK-gdn_conv PASS max_rel=2.653e-05`（**与旧值逐字同**，未调阈值）、`SUMMARY ops=8 pass=8 kernel_used=8/8`；`Y-linear_prod-PROD-PASS rel=2.54e-07…` 判决行未漂移；`ITEM verdict= PASS` 七条；`pytest 340 passed`。负例两条（抽头方向反 `7.479e-01`、漏末抽头 `4.663e-01`）均当场抓红。F4 自曝一次回归并自愈（`_conv_silu_torch` 原假设 3D，gradcheck 传 2D → `IndexError`，改内收形后 340 passed）。
+  - 决策记录（备选与未采用）：①手工重算前向借 torch 反传＝旧路（NPU 拒，`500001`）；②反向塞进前向模具＝pre-activation 未留痕（撞 G-F3 或退回①）；③**采用**独立反向件 + UB 累加器。
+- **G3(a)（工装修缮）**：`D2_probe_legs.py` 改**每腿独立子进程**（`compile_all` 与 intrinsic 腿永不同进程）。**编排者容器实跑**：`--combos default,A,C` → `valid=3/3`、`LEG-VERDICT D2-LEG-OK ×3`、九数 `.o~2850/2250/3625/2106/2911/4003/1864/922/2842B` **逐字同**；`_LaunchSkip` 命中数见本节首行（应为 0）。
+- **G3(b)（双因子提案 v2，不落地）**：`attempts/S3_compat_proposal_v2.diff`（v1 gap 归一 ＋ 因子二 **UB 预清零** `vector_dup`，`blockCount==1` 跳过⇒对 SINGLE 无回归）。**两因子确实进码**由预处理原文证实：`srcStrideB/32→srcGapB/32`、`vector_dup` 三处（v1/trunk 均 0）。trunk 三处 md5 复验未变 `ca023c2e`。
+  - **诚实边界**：v2 仍是提案，**真机判决未做**；且 G3 明确 **不声称顺带修 `dbeta`**（D3 已证 `gdnb` 无 DMA，不同面）。
+- **编排者本轮两次自犯同坑（记档防再犯）**：① `grep -c` 返 0 时 exit 1 断 `&&` 链（第二次犯）；② 把 `2>/dev/null` 加在 docker exec 上，吞掉自己写错路径的报错（`/work/port910b` 应为 `/work/ascend/port910b`）——**与窗二 scp 同类错误**。结论：**任何验证命令都不得静默 stderr**。
