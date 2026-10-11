@@ -1,5 +1,10 @@
 # STATUS — filed issue #3448 and its relationship to the three drafts
 
+> **DECISION (decision-maker, 2026-10-11 evening): no further issues will be filed.** The PMC has
+> signalled it does not intend to maintain the 910 (Ascend 910B) target. The three drafts below are
+> re-scoped as **PR material, held on ice** — to be submitted as one PR package only after ALL
+> mainline tasks are complete and verified. No external action from this track until then.
+
 Last updated 2026-10-11 (agent R2, upstream feedback track). Read-only summary; **no action has
 been taken on GitHub by this track** (no comment, no new issue, no PR).
 

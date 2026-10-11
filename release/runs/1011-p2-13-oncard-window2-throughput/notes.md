@@ -63,3 +63,11 @@ runner=`window2_card.sh`（四段各自独立进程）· repo `210f078` · **A �
 - **C4（delta_bwd 腿，P1-1w 判决件）**：`run_delta_card.py --bwd` 六项梯度逐项打（`dq/dk/dv/dbeta/dg/dh0`+`adjoint`），参考侧＝fp64 解析 golden 复算（同输入同尺子，`adjoint=6.22e-10` FD 独立锚兜底）；**编排者复验**：host `NUM-delta_bwd PASS dq=7.53e-08 … dh0=6.18e-08 adjoint=6.22e-10 rel_max=1.01e-07`；负例 ×1.01 六项逐项指认全对；容器键 `gdnb[ascend]|h2k8v8|c2ubz` 在；fwd 腿 before/after 逐字同。
 - **编排者自己的坑（记入防再犯）**：`run_numerics.py --only` **不吃逗号多值**（以 `unknown target` FAIL 明拒，行为正确）；多案聚合入口是 `compile_all_asc --products`。我复验时误用逗号形态得 0 计数，单件逐跑证伪了我自己的怀疑。
 - **第三窗入口**：`release/ascend/port910b/window3_card.sh`（五段：A 验收链含 addln_prod+fp16 → B 卡上 gradcheck → C delta_bwd → D D2 变体腿 X1–X7（`P910B_REPO=/tmp/sys1/release/ascend` 已按订正口径写死）→ E S3 第二层因素 `--prefills none,zero,perm`）。预计 ≈25–30 分钟。
+
+
+## ⑨ 决策记录（决策人 2026-10-11 晚，上游回馈轨改道）
+- **决策点**：是否继续向 tile-ai/tilelang 提交 issue（#1 arity / #2 strided / #3 bf16 三份草稿）。
+- **选择**：**不再提 issue**。若回馈，则在**全部任务完成并验证之后**以 **PR** 形式整包提交；**目前不做任何对外动作**。
+- **理由**：#3448（2026-10-08 提）maintainer 无回应，PMC 已暗示不维护 910 卡——继续提 issue 无收益；回馈的真实目的（降低私 fork 长期 rebase 成本）用"验证完成后一次性 PR"达成度更高。
+- **替代方案及未采用原因**：①逐条提 issue——被本决策否决（无维护意愿下无人消化）；②现在提 PR——时机错（牌面未齐：#2 仍为 leading hypothesis、§12 真机未闭）；③彻底放弃回馈、纯私 fork——保留为兜底，但 rebase 成本随 trunk 演进单调上升，不作首选。
+- **执行面**：三份草稿（`docs/upstream/issue-*.md`）降级为 **PR 素材存档**，`STATUS.md` 加横幅；`P1-1u` 改写为后置 PR 轨（见 tasks）。主线不受影响、不等待。
