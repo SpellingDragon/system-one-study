@@ -384,6 +384,24 @@ def gdn_bwd_asc_impl(Q, K, V, G, Beta, DO, Hist, Lam, DQ, DKG, DV_, DBeta, DG, D
                 for rr in T.serial(upc):
                     h = core_id * upc + rr
 
+                    # ── 入口预清零（P1-1zg / M4）：所有 UB 槽**先写零、再进递推** ──
+                    # 修"首次发射读未初始化 UB"的 fresh 敏感（顺序探针 none≠dirty≠zero，
+                    # `w4_d3_ub.log`）。生成码静态审计（M4_probe_ubaudit.py：gdnb-ub/pure、
+                    # gdn-fwd-ub、conv 两件）八槽**皆先写后读**、无静态落点 ⇒ 读数疑落在 `.asc`
+                    # 之下（编译/运行时暂存面），故用"内核入口先写零"兜底，覆盖任何被下移/重排的
+                    # UB 首读。**语义中性**：这些槽随后都各自被显式写入，先写 0 不改任何数学结果
+                    # （host `pure` 腿不走此 body，数值逐字不变，见 M4_UBPREZERO.md）。
+                    if variant == "ub":
+                        for i in T.serial(dk):
+                            dec_ub[i] = T.float32(0.0)
+                            k_ub[i] = T.float32(0.0)
+                            q_ub[i] = T.float32(0.0)
+                        for j in T.serial(dv):
+                            u_scr[j] = T.float32(0.0)
+                            dp_scr[j] = T.float32(0.0)
+                            v_scr[j] = T.float32(0.0)
+                            do_scr[j] = T.float32(0.0)
+
                     # ── Λ 初值：末状态梯度（zero=写 0 / gm=读宿主预置的 Lam）──
                     for j in T.serial(dv):
                         for i in T.serial(dk):

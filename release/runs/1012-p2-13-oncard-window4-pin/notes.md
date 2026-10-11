@@ -39,3 +39,11 @@ repo `caf824e`；实例资源盘点（决策人要求）：**910B4 单卡、HBM 
 ⇒ **K4 对台账必答项的回答：生产训练步（train_step/train_step_real → autograd_asc.gdn_delta）在设备上走 `ub`** ⇒ dbeta 缺陷**在生产路径上**（首次发射即错）⇒ 高危。
 ⇒ **统一假说（升级为待验主线）**：GDN 族 device-only 缺陷群（dbeta 0.80 / gdn_conv 5.5e4 / gdn_delta 2.2e5）可能同为"**首次发射未初始化 UB 读**"一类——与窗三 E 段跨步 stale（H-b）同族但不同落点。**一枪可判**：每 op 发射前做一次 UB 清零发射（或预热发射丢弃首跑），三缺陷同窗复判。
 - 修正 tasks：P1-1z 修法从"变体选择"改为"**P1-1zg UB 预清零**"；变体选择无需改动（已是 ub，K4 零码改、负例 `--variant pure→c2purez` 证明开关为真）。
+
+
+## ⑨ 修复落地三连（K4 定因 → M4 修复 → L4b 判据；真机判决集中留窗七）
+- **M4（P1-1zg 修复件，已落）**：机械审计 5 模具（gdnb_ub/pure、gdn_fwd_ub、convb_bwd、convf_fwd）**全部无 read-first** ⇒ 我在 §⑧ 里写"生成码存在读-before-写"**未获证实**——机理在 `.asc` 之下（硬件首发射态/同步语义层），如实标"未定位"。修复仍按首选落**内核入口显式清零 7 个非 lam UB 槽**（`gdn_asc.py` +18 行纯新增，md5 `f3419883…`）；生成码 diff **仅新增零写**；host 四腿逐字不变、pytest 340、容器键 `c2ubz` 不变。**是否真修好由窗七判**。
+- **L4b（判据修复 + conv 归因）**：
+  - **A. 窗三 FAIL vs 窗四 PASS 的机理（pyc 考古）**：窗三 py3.10 旧判据 `nan<=x`→FAIL；窗四 `abs_err=ana_norm=+inf` ⇒ `inf<=inf=True`→**PASS 是假绿** ⇒ **窗四 gradcheck 真实是 6/8**（gdn_delta 仍坏，与 V2 分诊 2.2e5 一致）。判据已修（`isfinite` 三量门，非有限一律 FAIL；负例 `L4-NANFIX-DONE fail=0`；B3 三负例不破；8/8 回归）。注：补丁实为残缺返回的 L4 落盘（mtime 03:59），L4b 复核未重写（正确取舍，已申报）。
+  - **B. conv 审计**：`conv_bwd` 唯一槽 `dw_ub` **源码 L261/生成码 L22 已入口清零、无 read-first**；**已知坏件 gdnb 生成码同样无 read-first** ⇒ 静态审计对此缺陷类**无判别力**（机理确在更深层）⇒ conv 判**未决**，并给出**可证伪预测：UB 预清零不会修好 conv**（其 dw_ub 本就清零、无可修之物）——窗七真值表据此三臂设计（A0 基线/A1 预清零/A2 预热）。
+- **窗七一枪清单（隧道恢复即跑）**：①M4 §⑤ 复判（fresh 六项 ITEM，期望 `dbeta 8.002e-01→<2e-4`；D3 顺序探针 `none` 指纹收敛到 `zero`）②L4B 三臂真值表（conv 的 A1 不转绿＝预测命中）③窗六 `/tmp/w6_all.log` 捞档 + 4096 补跑 ④修复后 `gradcheck --target ascend` 复判（期望 8/8 真 PASS）。
