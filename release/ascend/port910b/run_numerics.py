@@ -9,13 +9,21 @@ gather/scatter）在卡上永远不会被测量——判决件量的不是产品
   ① 四条内联 case 改名 `*_intrinsic` 并标 `track=performance`，正文与判据**一字不动**（历史判决行仍可
      复跑对照；旧名 `gemm_l1`/`dw`/`addln`/`readout` 保留为**弃用别名**，fixup_card.sh /
      bundle_ondemand.sh 这类不在本波白名单里的调用行不会因此断掉）；
-  ② 新增三条产品件 case：`linear_prod` / `dw_prod` / `readout_prod`，一律经**对外入口件**
-     （`ascend.kernels.gemm_kernel` / `gemm_bwd_dw_kernel` / `letter_readout_kernel`）调用、走
+  ② 新增产品件 case：`linear_prod` / `dw_prod` / `readout_prod` / `addln_prod`，一律经**对外入口件**
+     （`ascend.kernels.gemm_kernel` / `gemm_bwd_dw_kernel` / `letter_readout_kernel` /
+     `add_ln_kernel`）调用、走
      `ascend_env` 路由（与 train_step 用的那条路一致），**判决前强制自证"这一趟真开了模具"**：
      `ascend_env.compiled_keys()` 里必须有 `ascend|...` 键。这一条是 load-bearing 的——入口件在
      plan 拒形状 / 后端不可用 / 方言别名未生效时会**静默落 torch eager**，rel 照样是 0.0（本波探针
      实测踩过：只改 `sys.modules['tilelang.ascend.language']` 不生效，`import a.b.c as T` 取的是父包
      属性）。守卫不响 = 假绿，直接判 FAIL。
+  ③ `addln_prod` 在 cpu-alias 轨额外装一层**存储层 shim**（`alloc_shared`→`alloc_local`）：add_ln 的
+     产品正文 `add_ln_asc_impl` 是 **ascend-only 写法**（4 个 `T.alloc_shared`，scope=`shared.dyn`），
+     而 c 后端的 `lower_device_kernel_launch` 只允许**一个** dynamic shared 分配
+     （`Only one dynamic shared memory allocation is allowed.`）⇒ 直连 cpu 方言编不过。gemm/dw 的
+     产品正文靠 `_alloc_tile` **按方言分叉存储层**（cpu→`alloc_local`），add_ln 件没这层分叉，故在
+     cpu-alias 轨由本工装替它做同一件事（只换存储层，**算式与判据一字不动**；ascend 发射层仍归
+     card 轨/容器编译判决）。见 `_addln_cpu_alias_storage_shim`。
 
 【三档 track 语义（同一套产品件 case，靠 --track 与 --no-run 分派）】
   card        生产 ascend 路由（target="ascend"）。有卡 ⇒ 真编真发射判数值；无卡（容器有 bisheng）⇒
@@ -275,8 +283,8 @@ def num_attnsw():
 # 关闭），位宽/形状取该文件的环境变量缺省：B_ROWS=64 B_DIM=512 B_BM=8 B_RES_FP32=1 B_OUT_FP16=1
 # B_EPS=1e-5 ⇒ RDT=float32、ODT=float16、UB~28KB。out_idx=-1 与该文件 main_() 的调用一致。
 # 这条 case 与产品件 `add_ln_asc.add_ln_asc_impl` **不是同一份正文**（产品件有 bm 收缩、fp32 交货口径、
-# 反向 ln_bwd 腿），本波未接产品件（改法只点名 gemm_l1/dw/readout 三件 + addln 同属 B 域内联），
-# 已登记为下窗后续项：见 reconcile/Y_RESULT.md §4。
+# 反向 ln_bwd 腿）——**它的判决地位已由 `addln_prod`（产品接口件）取代**：要拿 add_ln 的正确性结论请读
+# `Y-addln_prod-PROD-PASS`；本条留作 §12/intrinsic 历史对拍（results 不变、不删，避免历史判决行断链）。
 # 数值口径照其 docstring：三趟扫描、**有偏方差**（/DIM 非 /(DIM-1)）、Hout 全程 fp32 不降位宽、Y 落 fp16。
 # 阈值来自宿主机仿真（照 DSL 逐趟 fp32 标量算术重放，/tmp/g_probe/emu.py）：
 #   r_h：正确=0.0（单次 fp32 加，与参考逐位同）/ 残差路降 fp16=2.1e-4 ⇒ 1e-5 精确判别"不许降位宽"
@@ -447,6 +455,15 @@ DISC_MIN = 0.5            # 方向判别下限（与 §7/§8 两条 intrinsic ca
 #: dup-dominant 子例 0.8 ⇒ 取 0.3 作下限（留 1.3x 余量），判别比仍 ≥1e4。
 DISC_MIN_SCATTER = 0.3
 
+#: add_ln 产品件前向判据（**逐字沿用 §7 `num_addln_intrinsic` 的宿主机仿真口径，一字未改**）：
+#:   r_h：正确=0.0（单次 fp32 加，与参考逐位同）/ 残差路降 fp16=2.1e-4 ⇒ 1e-5 精确判别"不许降位宽"；
+#:   r_y：正确=1.5e-5 / 方差错用无偏=7.4e-4 ⇒ 3e-4 判别"有偏"口径；
+#:   有偏/无偏分离差须 > 2e-4（原拟 5e-3 判别不了，已收紧）。
+ADDLN_REL_H = 1e-5
+ADDLN_REL_Y = 3e-4
+ADDLN_DISC_UNB = 2e-4
+ADDLN_EPS = 1e-5
+
 #: (m, n, k, act, 说明)——m 是产品件的动态维，故意含不整除 BLOCK_M(=16) 的尾块与批 1
 LIN_SHAPES = (
     (33, 64, 32, "none", "尾块 m=33 不整除 bm=16 ⇒ 夹址填装 + 行号守卫真生效（507015 那条防线）"),
@@ -482,6 +499,14 @@ READOUT_SHAPES = (
      "dup-heavy：同行最多命中 4 次 ⇒ scatter 必须累加，不许覆盖"),
     (4, 32, [1, 1, 1, 1, 3, 3],
      "dup-dominant：4 行表 6 次抽行 ⇒ 覆盖式错参考的偏离被推到最大（判别的标定子例）"),
+)
+#: (行数 rows, 行宽 dim, 说明)——形状档**沿用 §7 addln 的档**（rows=64、dim=512；bm 由 `_pick_bm`
+#: 在 ascend 侧收缩为 16）。行数 row 不进编译键（add_ln 缓存键只含 dim/eps/bm）⇒ 两档复用同一份产物
+#: 是**产品行为**（由 reuse 判别）；尾块档（rows=33 不整除 bm=16）专激励产品件的 `if row < rows`
+#: 行号守卫——常量形状的 intrinsic case 永远量不到这条。
+ADDLN_SHAPES = (
+    (64, 512, "现 addln 档：rows=64=4×bm(bm=16)、dim=512（与 num_addln_intrinsic 同形）"),
+    (33, 512, "尾块：rows=33 不整除 bm=16 ⇒ 行号守卫真生效"),
 )
 
 
@@ -608,6 +633,33 @@ def _prod_setup():
 
     ascend_env.reset()                    # 每件从零：compiled_keys/blockers 不许串件
     return dev, restore, skip, (box if box is not None else {"src": 0})
+
+
+def _addln_cpu_alias_storage_shim():
+    """cpu-alias 轨专用（**只服务 `prod_addln`**）：把 UB 落点 `alloc_shared`→`alloc_local`。
+
+    机制（本波实测，探针 `reconcile/A4_probe_addln_compile.py`）：
+      `add_ln_asc_impl` 是 **ascend-only 正文**，用 4 个 `T.alloc_shared`（scope=`shared.dyn`，
+      tilelang/language/allocate.py:49）。c 后端的 `lower_device_kernel_launch`（src/transform/
+      lower_device_kernel_launch.cc:173）只允许**一个** dynamic shared 分配：
+      `InternalError: Only one dynamic shared memory allocation is allowed.` ⇒ 直连 cpu 方言编不过。
+      gemm/dw 的产品正文靠 `gemm_asc._alloc_tile` **按方言分叉存储层**（cpu→alloc_local），add_ln
+      件没有这层分叉（它只为昇腾写）。故在 cpu-alias 轨由本工装替它做同一件事。
+
+    边界（如实声明，不夸大）：只换**存储层**（UB vs local），算式、形状、判据一字不动；cpu-alias
+    轨本就只判"无卡时能拿到的最强数值证据"，ascend 发射层差异（真 UB）由 card 轨/容器编译判决负责。
+    本 shim 只在 `prod_addln` 内、且只在 cpu-alias 轨安装；`_prod_setup().restore()` 会把它一并还原。
+    """
+    import types
+    import tilelang.cpu.language as tcpu
+    shim = types.ModuleType("tilelang.ascend.language")
+    for nm in dir(tcpu):
+        setattr(shim, nm, getattr(tcpu, nm))
+    shim.alloc_shared = tcpu.alloc_local          # c 后端无 UB：shared.dyn → local（同 _alloc_tile 口径）
+    shim.__tilelang_dialect__ = "cpu"
+    sys.modules["tilelang.ascend.language"] = shim
+    sys.modules["tilelang.ascend"].language = shim
+    return shim
 
 
 def _call(skippable, fn):
@@ -787,8 +839,83 @@ def prod_readout():
         restore()
 
 
+def prod_addln():
+    """产品件 `add_ln_kernel.forward → add_ln_asc.add_ln_asc_impl`（残差相加 + 层内整形）。
+
+    判据**逐字沿用 §7 `num_addln_intrinsic` 的宿主机仿真口径（阈值一字未改）**，只把正文从
+    attempts/B 内联 DSL 换成产品接口件：
+      ① `r_h < 1e-5`：Hout（残差流）全程 fp32 不降位宽（降到 fp16 即 ~2e-4，精确判别）；
+      ② `r_y < 3e-4`：Y 有偏方差口径（仿真底噪 1.5e-5；Y 全零则 rel≈1 ⇒ 顺带验就地写回）；
+      ③ 有偏/无偏分离判别：`r_y < r_unb - 2e-4`（防"碰巧对"，错口径=无偏方差 ~7.4e-4）；
+      ④ 形状覆盖现 addln 档（rows=64,dim=512）+ 尾块（rows=33 ⇒ 产品件 `if row < rows` 行号守卫）；
+      ⑤ 判决前过 `_route_key("add_ln")` 假绿守卫（入口件落 eager 时 rel 也会是 0.0）；
+      ⑥ 两档同 dim ⇒ 断言 `compile_count == distinct(dim)`，证"行数不进缓存键、换批复用同一产物"
+         （产品行为；常量形状的 intrinsic case 量不到）。
+
+    与 §7 的分别：那条量的是 attempts/B 内联 DSL（`track=performance`，**不是产品件**）；旧 case
+    保留不删（并存迁移，见其 docstring 的 `[note]`），本件才是 add_ln 的**产品件判决行**。
+    """
+    import torch
+    from ascend.kernels import ascend_env, add_ln_kernel
+    dev, restore, skip, box = _prod_setup()
+    tk = _track()
+    if tk == "cpu-alias":
+        _addln_cpu_alias_storage_shim()       # add_ln 是 ascend-only 正文，host 需把 UB 映射到 local
+    worst_h, worst_y, min_unb, seen = 0.0, 0.0, None, set()
+    try:
+        torch.manual_seed(0)
+        for rows, dim, note in ADDLN_SHAPES:
+            X = torch.randn(rows, dim, device=dev, dtype=torch.float32)
+            Res = torch.randn(rows, dim, device=dev, dtype=torch.float32) + 4.0   # 大共模/小波动
+            G = torch.randn(dim, device=dev, dtype=torch.float32)
+            Bt = torch.randn(dim, device=dev, dtype=torch.float32)
+            res, only = _call(skip, lambda: add_ln_kernel.forward(
+                X, Res, G, Bt, ADDLN_EPS, torch.float16, "ascend"))       # -> (y=fp16, h=fp32)
+            if only:
+                seen.add(_route_key("add_ln"))
+                continue
+            y, h = res
+            # 参考：入参先按 kernel 实际位宽取，再全程 fp32；算式顺序照产品正文（有偏方差、三趟式）
+            xv, rv = _np(X).astype(np.float32), _np(Res).astype(np.float32)
+            gv, bv = _np(G).astype(np.float32), _np(Bt).astype(np.float32)
+            v = (xv + rv).astype(np.float32)                       # Hout：fp32 残差流
+            mu = v.mean(axis=1, keepdims=True)
+            dv = (v - mu).astype(np.float32)
+            var_b = (dv * dv).mean(axis=1, keepdims=True).astype(np.float32)   # 有偏（kernel 口径）
+            var_u = (dv * dv).sum(axis=1, keepdims=True) / (dim - 1)           # 无偏（错误口径，仅判别）
+            ref_h = v
+            ref_y = ((dv * (1.0 / np.sqrt(var_b + ADDLN_EPS)).astype(np.float32)) * gv + bv).astype(np.float16)
+            alt_y = ((dv * (1.0 / np.sqrt(var_u + ADDLN_EPS)).astype(np.float32)) * gv + bv).astype(np.float16)
+            got_y, got_h = _np(y).astype(np.float32), _np(h).astype(np.float32)
+            r_h = relerr(got_h, ref_h.astype(np.float32))
+            r_y = relerr(got_y, ref_y.astype(np.float32))
+            r_unb = relerr(got_y, alt_y.astype(np.float32))
+            assert r_h < ADDLN_REL_H, (f"rows{rows}dim{dim} Hout rel={r_h:.3e} ≥ {ADDLN_REL_H:g}"
+                                       f"（fp32 残差路应逐位同；~2e-4 即降了位宽）（{note}）")
+            assert r_y < ADDLN_REL_Y, (f"rows{rows}dim{dim} Y rel={r_y:.3e} ≥ {ADDLN_REL_Y:g}"
+                                       f"（仿真底噪 1.5e-5；若 Y 全零则 rel≈1 ⇒ 就地写回未生效）（{note}）")
+            assert r_y < r_unb - ADDLN_DISC_UNB, (f"rows{rows}dim{dim} 有偏/无偏口径判别失败 "
+                                                  f"r_y={r_y:.3e} r_unb={r_unb:.3e}（{note}）")
+            seen.add(_route_key("add_ln"))
+            worst_h = max(worst_h, r_h)
+            worst_y = max(worst_y, r_y)
+            min_unb = r_unb if min_unb is None else min(min_unb, r_unb)
+        if skip:
+            assert len(seen) >= 1, "一件都没编成"
+            return (f"Y-addln_prod-ASC-COMPILE-PASS keys={len(seen)} key={sorted(seen)[0]} "
+                    f"src~{box['src']}B track=card(no-run) note=无设备⇒只判编译")
+        want = len({dim for _r, dim, _n in ADDLN_SHAPES})
+        got_n = ascend_env.compile_count()
+        assert got_n == want, f"换批复用失败：compile_count={got_n} ≠ distinct(dim)={want}"
+        return (f"Y-addln_prod-PROD-PASS rel_y={worst_y:.2e} rel_h={worst_h:.2e} "
+                f"unb_disc={min_unb:.2e} reuse={got_n}/{want} shapes={len(ADDLN_SHAPES)} track={tk}")
+    finally:
+        restore()
+
+
 # ── 注册表：产品件在前（下窗要量的就是它们），performance-track 在后（对照/考古）────────
-PROD_TARGETS = {"linear_prod": prod_linear, "dw_prod": prod_dw, "readout_prod": prod_readout}
+PROD_TARGETS = {"linear_prod": prod_linear, "dw_prod": prod_dw, "readout_prod": prod_readout,
+                "addln_prod": prod_addln}
 PERF_TARGETS = {"gemm_direct": num_gemm_direct, "gemm_l1_intrinsic": num_gemm_l1_intrinsic,
                 "gdn": num_gdn, "dw_intrinsic": num_dw_intrinsic, "rope": num_rope,
                 "attnsw": num_attnsw, "addln_intrinsic": num_addln_intrinsic,
