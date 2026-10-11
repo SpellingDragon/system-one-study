@@ -31,3 +31,8 @@
 
 ## cube 两轨制（2026-10-10 wave2 判读所生）
 - **D-cube1**：wave2 实证 P1-1d 九参位序修复『必要不充分』（gemm_l1/dW 仍 507015）→ cube intrinsic 路的 V1/V2（stride 单位）与 GM→L1 分形布局（NZ padFuncMode）为深水区，**不再作为 P2 数值前置**。两轨制：**correctness-first**＝gemm/dW 的 ascend 实现改可移植标量体（wave2 已证该形态真机 1e-7 级可靠：delta/addln/gdn；双方言可编→cpu 跑数值 oracle、ascend 编译判决，本地闭环），P2 训练步数值里程碑与之解耦；**performance-track**＝intrinsic fractal 考古（§12 与官方 dav_c220 Matmul 构造链逐参对照）继续独立推进，成果以证据文档+可选 §12 修正交付，不阻塞 P2。被否：继续押注 intrinsic 单轨——三窗两崩已证其不可预期，P2 里程碑不该吊在最深研究问题上。
+
+## D-cube2（2026-10-11 第二窗实测后新增）性能路唯一出路是 cube；标量路定位为正确性/研究车
+**实测依据**（`runs/1011-p2-13-oncard-window2-throughput` §④）：标量路 `linear 512³ fp16 p50=294.3ms(0.912 TFLOPS)`、`attn_sw 1879.3ms`、`gdn_delta fwd/bwd 293/431ms`；外推（标注为**推断**）⇒ 24 层模型分钟级/步。
+**决策**：① 正确性验收与回归继续走标量路（已真机 exit=0）；② §12/cube 路**不得降级**（原 review 预留的"慢 50× 则降级"分支被实测三个数量级推翻，投入价值抬高）；③ 过渡期吞吐靠第二栈 `torch_npu` 原生算子兜底，与"脱离 CUDA 探索"不冲突——底座保吞吐、逐件靠 cube 替换；④ **对照腿数据一律标 `track` 且物理合理性未核者不作结论**（`intrinsic 3366 TFLOPS` 即属此类，已作废）。
+**替代方案与未采用理由**：放弃 cube 只用标量路——分钟级/步使训练不可经济；放弃 torch_npu 底座全押 cube——cube 路当前 507015 未闭，会同时失去正确性与吞吐，训练无法推进。

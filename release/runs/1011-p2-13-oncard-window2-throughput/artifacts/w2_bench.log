@@ -1,0 +1,76 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+BENCH-ENV device=npu target=ascend torch=2.7.1+cpu npu_available=True iters=3 warmup=1 budget_s=300.0 configs=12 mode=time
+2026-10-11 22:01:50  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `probe_asc` with `out_idx=[1]`
+2026-10-11 22:01:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `probe_asc`
+BENCH-linear FAIL [bf16>fp32 512x512x512] AssertionError: 假绿守卫：compiled_keys 无 ascend|*gemm[* ⇒ 本趟走的是 torch eager，不是内核（plan 拒形状 / 后端不可用 / 设备-目标不匹配）；blockers=[]
+2026-10-11 22:01:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 22:01:59  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+BENCH-linear dtype=fp16>fp16 shape=512x512x512 p50_ms=294.309 mean_ms=294.383 p95_ms=294.532 iters=3 warmup=1 tflops=0.912 mem_alloc_mb=1.0 mem_peak_mb=2.0 track=npu/ascend kernel=ascend|gemm[ascend]|n512k512b16x64x64anonedfloat16 reuse=new
+BENCH-dW FAIL [bf16>fp32 m1024xn512xk512] AssertionError: 假绿守卫：compiled_keys 无 ascend|*gemm_dw[* ⇒ 本趟走的是 torch eager，不是内核（plan 拒形状 / 后端不可用 / 设备-目标不匹配）；blockers=[]
+2026-10-11 22:02:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-11 22:02:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+BENCH-dW dtype=fp16>fp16 shape=m1024xn512xk512 p50_ms=266.069 mean_ms=266.027 p95_ms=266.085 iters=3 warmup=1 tflops=2.018 mem_alloc_mb=2.0 mem_peak_mb=4.0 track=npu/ascend kernel=ascend|gemm_dw[ascend]|n512k512tc16b64x64dfloat16 reuse=new
+2026-10-11 22:02:07  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `add_ln_impl` with `out_idx=[]`
+2026-10-11 22:02:14  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `add_ln_impl`
+BENCH-add_ln dtype=fp32 shape=rows8192xdim1024 p50_ms=17.113 mean_ms=17.211 p95_ms=17.379 iters=3 warmup=1 tflops=na mem_alloc_mb=64.0 mem_peak_mb=128.0 track=npu/ascend kernel=ascend|add_ln[ascend]|d1024e1e-05b8 reuse=new
+2026-10-11 22:02:15  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `rope_impl` with `out_idx=[]`
+2026-10-11 22:02:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `rope_impl`
+BENCH-rope dtype=fp32 shape=tok4096xh8xd128 p50_ms=11.717 mean_ms=11.931 p95_ms=12.338 iters=3 warmup=1 tflops=na mem_alloc_mb=51.0 mem_peak_mb=51.0 track=npu/ascend kernel=ascend|rope[ascend]|h8d128s2g1qfloat32afloat32 reuse=new
+2026-10-11 22:02:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `attn_impl` with `out_idx=[]`
+2026-10-11 22:02:20  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `attn_impl`
+BENCH-attn_sw dtype=fp32 shape=h8xseq1024xd128w512 p50_ms=1879.313 mean_ms=1865.583 p95_ms=1880.030 iters=3 warmup=1 tflops=0.858 mem_alloc_mb=12.0 mem_peak_mb=16.0 track=npu/ascend kernel=ascend|attn_sw[ascend]|h8d128w512b16x16 reuse=new
+2026-10-11 22:02:28  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `conv_impl` with `out_idx=[]`
+2026-10-11 22:02:30  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `conv_impl`
+BENCH-gdn_conv dtype=fp32 shape=C1024xL2048xk4 p50_ms=23.223 mean_ms=23.306 p95_ms=23.449 iters=3 warmup=1 tflops=0.722 mem_alloc_mb=8.0 mem_peak_mb=16.0 track=npu/ascend kernel=ascend|gdnconv[ascend]|c1024k4b1|c8scalare reuse=new
+2026-10-11 22:02:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_impl` with `out_idx=[]`
+2026-10-11 22:02:33  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_impl`
+BENCH-gdn_delta_fwd dtype=fp32 shape=h8xseq512xk64xv64 p50_ms=293.228 mean_ms=293.252 p95_ms=293.838 iters=3 warmup=1 tflops=0.229 mem_alloc_mb=4.0 mem_peak_mb=69.3 track=npu/ascend kernel=ascend|gdn[ascend]|h8k64v64|c8ubh reuse=new
+[22:02:37] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+2026-10-11 22:02:35  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_bwd_impl` with `out_idx=[]`
+2026-10-11 22:02:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_bwd_impl`
+BENCH-gdn_delta_bwd dtype=fp32 shape=h8xseq512xk64xv64 p50_ms=431.310 mean_ms=431.249 p95_ms=431.357 iters=3 warmup=1 tflops=0.156 mem_alloc_mb=5.0 mem_peak_mb=76.5 track=npu/ascend kernel=ascend|gdnb[ascend]|h8k64v64|c8ubz reuse=new
+2026-10-11 22:02:42  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 22:02:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+BENCH-linear_intrinsic dtype=fp32 shape=512x512x512 p50_ms=0.080 mean_ms=0.100 p95_ms=0.139 iters=3 warmup=1 tflops=3365.919 mem_alloc_mb=3.0 mem_peak_mb=5.0 track=npu/ascend kernel=ascend|out-of-band-cube-archive reuse=new
+2026-10-11 22:02:45  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-11 22:02:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+BENCH-dW_intrinsic FAIL [fp32 m1024xn512xk512] RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+BENCH-QUOTE op=linear dtype=fp16>fp16 shape=512x512x512 unit=token work_per_call=512 calls_per_h=12232.0 unit_per_h=6262802.6 gflop_per_h=3283.5 basis=p50 track=npu
+BENCH-QUOTE op=dW dtype=fp16>fp16 shape=m1024xn512xk512 unit=token work_per_call=1024 calls_per_h=13530.3 unit_per_h=13855076.8 gflop_per_h=7264.1 basis=p50 track=npu
+BENCH-QUOTE op=add_ln dtype=fp32 shape=rows8192xdim1024 unit=token work_per_call=8192 calls_per_h=210362.7 unit_per_h=1723291518.6 basis=p50 track=npu
+BENCH-QUOTE op=rope dtype=fp32 shape=tok4096xh8xd128 unit=token work_per_call=4096 calls_per_h=307250.9 unit_per_h=1258499534.5 basis=p50 track=npu
+BENCH-QUOTE op=attn_sw dtype=fp32 shape=h8xseq1024xd128w512 unit=token work_per_call=1024 calls_per_h=1915.6 unit_per_h=1961567.8 gflop_per_h=3087.3 basis=p50 track=npu
+BENCH-QUOTE op=gdn_conv dtype=fp32 shape=C1024xL2048xk4 unit=token work_per_call=2048 calls_per_h=155017.3 unit_per_h=317475527.6 gflop_per_h=2600.8 basis=p50 track=npu
+BENCH-QUOTE op=gdn_delta_fwd dtype=fp32 shape=h8xseq512xk64xv64 unit=token work_per_call=512 calls_per_h=12277.1 unit_per_h=6285894.8 gflop_per_h=823.9 basis=p50 track=npu
+BENCH-QUOTE op=gdn_delta_bwd dtype=fp32 shape=h8xseq512xk64xv64 unit=token work_per_call=512 calls_per_h=8346.7 unit_per_h=4273490.4 gflop_per_h=560.1 basis=p50 track=npu
+BENCH-QUOTE op=linear_intrinsic dtype=fp32 shape=512x512x512 unit=token work_per_call=512 calls_per_h=45140491.5 unit_per_h=23111931637.7 gflop_per_h=12117308.4 basis=p50 track=npu
+BENCH-ABLATE op=linear dtype=fp16>fp16/fp32 shape=512x512x512 scalar_p50_ms=294.309 intrinsic_p50_ms=0.080 ratio=3690.3x track=npu
+BENCH-SUMMARY ops=12 ok=9 fail=3 wall_s=59.5 skip=0 fail_core=2 fail_ref=1 fail_inj=0 track=npu/ascend iters=3 warmup=1
+BENCH-NOTE price-authority=orchestrator(本脚本不定价) formula='¥/1k_token = ¥per_h × 1000 ÷ unit_per_h' formula='卡时 = Σ(每步该op调用次数 ÷ calls_per_h)' formula='熔断 = 卡时 × ¥per_h 对比 ¥600（D12：¥600 ÷ ¥20/h = 30 卡时，引用非定价）'
+BENCH-NOTE mold-dtype=报价表的 dtype 列务必与 kernel= 字段互证：同形状换位宽后若键名不变、或行尾出现 same-mold-as= ⇒ 该行量到的是别档位宽的模具，须按位宽分趟进程重采；自证工具 ascend/kernels/reconcile/E2_probe_mold.py，实测记录见 reconcile/E2_RESULT.md
+BENCH-NOTE basis='tflops@p50' stats='p50(mean,p95)' sync='torch.npu.synchronize 每次前后夹计' warmup='预热不计入' unit_per_h='每小时可完成工作量（报价直接抄这一列）'
+BENCH-NOTE ablation='标量路(op) vs intrinsic 路(op_intrinsic，K 波 Cube/l0tr 存档件，kernels/reconcile/S_perf_track_cube.py，非产品件)' ⇒ G9 三栈消融数据；对照腿已知 507015/V 系未证真 ⇒ 其 FAIL 计入 fail_ref 不计入 fail_core
+BENCH-NOTE dtype-gap=P1-1m 未收：bf16 标量 cast 缺件、向量面/递推面内核只吃 fp32 ⇒ bf16/fp16 行只证可发射与吞吐，不证数值（数值判据归 run_numerics.py）
+[W1011 22:02:48.002576297 compiler_depend.ts:595] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 23976] 2026-10-11-22:02:48.338.399 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeUsedDevices)
+[W1011 22:02:48.003711913 compiler_depend.ts:577] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 23976] 2026-10-11-22:02:48.339.752 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeDevice)

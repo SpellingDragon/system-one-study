@@ -1,0 +1,108 @@
+=== A 主验收链（card_run.sh，bench 腿默认关）===
+W2-A-EXIT=0
+NPU-REG ok 2.7.1.post2 avail=True count=1 torch=2.7.1+cpu
+Y-linear_prod-PROD-PASS rel=1.59e-07 dir_disc=1.43e+00 reuse=4/4 relu_neg_clipped=787 shapes=5 track=card
+Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+NUM-delta_fwd PASS rel_o=7.51e-08 rel_s=6.03e-08
+ASC-PROD-linear_prod PASS Y-linear_prod-PROD-PASS rel=1.59e-07 dir_disc=1.43e+00 reuse=4/4 relu_neg_clipped=787 shapes=5 track=card
+ASC-PROD-dw_prod PASS Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+ASC-PROD-readout_prod PASS Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+P2-STEP-ascend loss0=1.077804 loss1=0.969059 reduced=True params_grad_ok=True
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+P2-STEP-ascend loss0=0.975384 loss1=0.896910 reduced=True params_grad_ok=True
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+DTYPE-TRACE fp16 params=16 fp16=16 fp32_accum=true fallback=0
+CASE-KERNELS-TGZ track=gating tmo=180s
+KERNELS-TGZ /tmp/sys1_kernels.tgz size=561148B entries=329 kernels=47
+CASE-KERNELS-TGZ VERDICT-PASS rc=0 track=gating tally(pass=10 fail=0 adv=3) log=/tmp/sys1_legs/KERNELS-TGZ.log
+CASE-KERNELS-TGZ VERDICT-PASS rc=0 track=gating
+ASC-PROD-linear_prod PASS Y-linear_prod-PROD-PASS rel=1.59e-07 dir_disc=1.43e+00 reuse=4/4 relu_neg_clipped=787 shapes=5 track=card
+ASC-PROD-dw_prod PASS Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+ASC-PROD-readout_prod PASS Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+KERNELS-TGZ /tmp/sys1_kernels.tgz size=561148B entries=329 kernels=47
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+LOGS /tmp/sys1_legs (每条腿原文一份，补看：grep -E '^Y-|^NUM-|^ASC-|^P2-STEP|^KERNEL-USED|^DTYPE-TRACE' /tmp/sys1_legs/<腿>.log)
+RUNNER-DONE SUMMARY pass=10 fail=0 skipped_legs=1 degraded=0 advisory_fail=3 exit=0
+=== B 吞吐/报价（E2 工装；超预算自 SKIP，不出结论只出数）===
+W2-B-EXIT=1
+BENCH-QUOTE op=linear dtype=fp16>fp16 shape=512x512x512 unit=token work_per_call=512 calls_per_h=12232.0 unit_per_h=6262802.6 gflop_per_h=3283.5 basis=p50 track=npu
+BENCH-QUOTE op=dW dtype=fp16>fp16 shape=m1024xn512xk512 unit=token work_per_call=1024 calls_per_h=13530.3 unit_per_h=13855076.8 gflop_per_h=7264.1 basis=p50 track=npu
+BENCH-QUOTE op=add_ln dtype=fp32 shape=rows8192xdim1024 unit=token work_per_call=8192 calls_per_h=210362.7 unit_per_h=1723291518.6 basis=p50 track=npu
+BENCH-QUOTE op=rope dtype=fp32 shape=tok4096xh8xd128 unit=token work_per_call=4096 calls_per_h=307250.9 unit_per_h=1258499534.5 basis=p50 track=npu
+BENCH-QUOTE op=attn_sw dtype=fp32 shape=h8xseq1024xd128w512 unit=token work_per_call=1024 calls_per_h=1915.6 unit_per_h=1961567.8 gflop_per_h=3087.3 basis=p50 track=npu
+BENCH-QUOTE op=gdn_conv dtype=fp32 shape=C1024xL2048xk4 unit=token work_per_call=2048 calls_per_h=155017.3 unit_per_h=317475527.6 gflop_per_h=2600.8 basis=p50 track=npu
+BENCH-QUOTE op=gdn_delta_fwd dtype=fp32 shape=h8xseq512xk64xv64 unit=token work_per_call=512 calls_per_h=12277.1 unit_per_h=6285894.8 gflop_per_h=823.9 basis=p50 track=npu
+BENCH-QUOTE op=gdn_delta_bwd dtype=fp32 shape=h8xseq512xk64xv64 unit=token work_per_call=512 calls_per_h=8346.7 unit_per_h=4273490.4 gflop_per_h=560.1 basis=p50 track=npu
+BENCH-QUOTE op=linear_intrinsic dtype=fp32 shape=512x512x512 unit=token work_per_call=512 calls_per_h=45140491.5 unit_per_h=23111931637.7 gflop_per_h=12117308.4 basis=p50 track=npu
+BENCH-ABLATE op=linear dtype=fp16>fp16/fp32 shape=512x512x512 scalar_p50_ms=294.309 intrinsic_p50_ms=0.080 ratio=3690.3x track=npu
+BENCH-SUMMARY ops=12 ok=9 fail=3 wall_s=59.5 skip=0 fail_core=2 fail_ref=1 fail_inj=0 track=npu/ascend iters=3 warmup=1
+BENCH-NOTE price-authority=orchestrator(本脚本不定价) formula='¥/1k_token = ¥per_h × 1000 ÷ unit_per_h' formula='卡时 = Σ(每步该op调用次数 ÷ calls_per_h)' formula='熔断 = 卡时 × ¥per_h 对比 ¥600（D12：¥600 ÷ ¥20/h = 30 卡时，引用非定价）'
+BENCH-ENV device=npu target=ascend torch=2.7.1+cpu npu_available=True iters=3 warmup=1 budget_s=300.0 configs=12 mode=time
+BENCH-linear FAIL [bf16>fp32 512x512x512] AssertionError: 假绿守卫：compiled_keys 无 ascend|*gemm[* ⇒ 本趟走的是 torch eager，不是内核（plan 拒形状 / 后端不可用 / 设备-目标不匹配）；blockers=[]
+BENCH-linear dtype=fp16>fp16 shape=512x512x512 p50_ms=294.309 mean_ms=294.383 p95_ms=294.532 iters=3 warmup=1 tflops=0.912 mem_alloc_mb=1.0 mem_peak_mb=2.0 track=npu/ascend kernel=ascend|gemm[ascend]|n512k512b16x64x64anonedfloat16 reuse=new
+BENCH-dW FAIL [bf16>fp32 m1024xn512xk512] AssertionError: 假绿守卫：compiled_keys 无 ascend|*gemm_dw[* ⇒ 本趟走的是 torch eager，不是内核（plan 拒形状 / 后端不可用 / 设备-目标不匹配）；blockers=[]
+BENCH-dW dtype=fp16>fp16 shape=m1024xn512xk512 p50_ms=266.069 mean_ms=266.027 p95_ms=266.085 iters=3 warmup=1 tflops=2.018 mem_alloc_mb=2.0 mem_peak_mb=4.0 track=npu/ascend kernel=ascend|gemm_dw[ascend]|n512k512tc16b64x64dfloat16 reuse=new
+BENCH-add_ln dtype=fp32 shape=rows8192xdim1024 p50_ms=17.113 mean_ms=17.211 p95_ms=17.379 iters=3 warmup=1 tflops=na mem_alloc_mb=64.0 mem_peak_mb=128.0 track=npu/ascend kernel=ascend|add_ln[ascend]|d1024e1e-05b8 reuse=new
+BENCH-rope dtype=fp32 shape=tok4096xh8xd128 p50_ms=11.717 mean_ms=11.931 p95_ms=12.338 iters=3 warmup=1 tflops=na mem_alloc_mb=51.0 mem_peak_mb=51.0 track=npu/ascend kernel=ascend|rope[ascend]|h8d128s2g1qfloat32afloat32 reuse=new
+BENCH-attn_sw dtype=fp32 shape=h8xseq1024xd128w512 p50_ms=1879.313 mean_ms=1865.583 p95_ms=1880.030 iters=3 warmup=1 tflops=0.858 mem_alloc_mb=12.0 mem_peak_mb=16.0 track=npu/ascend kernel=ascend|attn_sw[ascend]|h8d128w512b16x16 reuse=new
+BENCH-gdn_conv dtype=fp32 shape=C1024xL2048xk4 p50_ms=23.223 mean_ms=23.306 p95_ms=23.449 iters=3 warmup=1 tflops=0.722 mem_alloc_mb=8.0 mem_peak_mb=16.0 track=npu/ascend kernel=ascend|gdnconv[ascend]|c1024k4b1|c8scalare reuse=new
+BENCH-gdn_delta_fwd dtype=fp32 shape=h8xseq512xk64xv64 p50_ms=293.228 mean_ms=293.252 p95_ms=293.838 iters=3 warmup=1 tflops=0.229 mem_alloc_mb=4.0 mem_peak_mb=69.3 track=npu/ascend kernel=ascend|gdn[ascend]|h8k64v64|c8ubh reuse=new
+BENCH-gdn_delta_bwd dtype=fp32 shape=h8xseq512xk64xv64 p50_ms=431.310 mean_ms=431.249 p95_ms=431.357 iters=3 warmup=1 tflops=0.156 mem_alloc_mb=5.0 mem_peak_mb=76.5 track=npu/ascend kernel=ascend|gdnb[ascend]|h8k64v64|c8ubz reuse=new
+BENCH-linear_intrinsic dtype=fp32 shape=512x512x512 p50_ms=0.080 mean_ms=0.100 p95_ms=0.139 iters=3 warmup=1 tflops=3365.919 mem_alloc_mb=3.0 mem_peak_mb=5.0 track=npu/ascend kernel=ascend|out-of-band-cube-archive reuse=new
+BENCH-dW_intrinsic FAIL [fp32 m1024xn512xk512] RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+--- 卡上时间戳 ---
+2026-10-11 22:02:53
+=== C 跨步装填语义一枪（pitch vs gap，U2 强钉梯）===
+W2-C-EXIT=1
+U2-DMA-READOUT dev=npu m=16 n=96 ks=['48', '96', '32'] | W[i][j]=i*1000+j, A=onehot ⇒ C[p][n]=门牌号
+U2-BK-POLICY dev=npu 强钉 bk=16（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=48 /none bn=32 bk=16 nb=3 nk=3 dma=strided  probes=16×n96 | OK=0 行错位=1536 列错位=1353 UNATTRIBUTED(越界/stale)=0
+U2-CANDIDATE k=48 /none 失配(升序)：Z(dstStride被忽略) mismatch=45 读越界=0 写越界块=0  G(双gap) mismatch=384 读越界=0 写越界块=768  Gd(目的gap) mismatch=768 读越界=0 写越界块=768  Gs(源gap) mismatch=1408 读越界=128 写越界块=0  P(pitch,pitch) mismatch=1536 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=1536 读越界=0 写越界块=0
+U2-DISCRIMINATE k=48 /none 与 P 同解的其它候选=无 ⇒ 判别力=强
+U2-READOUT-VERDICT k=48 /none 硬件实际装填语义 = Z(dstStride被忽略)（mismatch=45）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+U2-BK-POLICY dev=npu 强钉 bk=16（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=48 /relu bn=32 bk=16 nb=3 nk=3 dma=strided  probes=16×n96 | OK=0 行错位=1536 列错位=1353 UNATTRIBUTED(越界/stale)=0
+U2-CANDIDATE k=48 /relu 失配(升序)：Z(dstStride被忽略) mismatch=45 读越界=0 写越界块=0  G(双gap) mismatch=384 读越界=0 写越界块=768  Gd(目的gap) mismatch=768 读越界=0 写越界块=768  Gs(源gap) mismatch=1408 读越界=128 写越界块=0  P(pitch,pitch) mismatch=1536 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=1536 读越界=0 写越界块=0
+U2-DISCRIMINATE k=48 /relu 与 P 同解的其它候选=无 ⇒ 判别力=强
+U2-READOUT-VERDICT k=48 /relu 硬件实际装填语义 = Z(dstStride被忽略)（mismatch=45）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+U2-BK-POLICY dev=npu 强钉 bk=32（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=96 /none bn=32 bk=32 nb=3 nk=3 dma=strided  probes=16×n96 | OK=24 行错位=872 列错位=752 UNATTRIBUTED(越界/stale)=640
+U2-CANDIDATE k=96 /none 失配(升序)：Z(dstStride被忽略) mismatch=48 读越界=0 写越界块=0  G(双gap) mismatch=384 读越界=0 写越界块=1536  Gd(目的gap) mismatch=696 读越界=0 写越界块=1536  Gs(源gap) mismatch=1380 读越界=256 写越界块=0  C(srcStride被忽略) mismatch=1504 读越界=0 写越界块=0  P(pitch,pitch) mismatch=1512 读越界=0 写越界块=0
+U2-DISCRIMINATE k=96 /none 与 P 同解的其它候选=无 ⇒ 判别力=强
+U2-READOUT-VERDICT k=96 /none 硬件实际装填语义 = Z(dstStride被忽略)（mismatch=48）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+U2-BK-POLICY dev=npu 强钉 bk=32（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=96 /relu bn=32 bk=32 nb=3 nk=3 dma=strided  probes=16×n96 | OK=24 行错位=360 列错位=240 UNATTRIBUTED(越界/stale)=1152
+U2-CANDIDATE k=96 /relu 失配(升序)：Z(dstStride被忽略) mismatch=48 读越界=0 写越界块=0  G(双gap) mismatch=384 读越界=0 写越界块=1536  Gd(目的gap) mismatch=696 读越界=0 写越界块=1536  Gs(源gap) mismatch=1384 读越界=256 写越界块=0  P(pitch,pitch) mismatch=1512 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=1512 读越界=0 写越界块=0
+U2-DISCRIMINATE k=96 /relu 与 P 同解的其它候选=无 ⇒ 判别力=强
+U2-READOUT-VERDICT k=96 /relu 硬件实际装填语义 = Z(dstStride被忽略)（mismatch=48）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+U2-BK-POLICY dev=npu 强钉 bk=32（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=32 /none bn=32 bk=32 nb=3 nk=1 dma=single   probes=16×n96 | OK=1536 行错位=0 列错位=0 UNATTRIBUTED(越界/stale)=0
+U2-CANDIDATE k=32 /none 失配(升序)：P(pitch,pitch) mismatch=0 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=0 读越界=0 写越界块=0  G(双gap) mismatch=0 读越界=0 写越界块=1536  Z(dstStride被忽略) mismatch=48 读越界=0 写越界块=0  Gd(目的gap) mismatch=720 读越界=0 写越界块=1536  Gs(源gap) mismatch=1232 读越界=512 写越界块=0
+U2-DISCRIMINATE k=32 /none 与 P 同解的其它候选=['C(srcStride被忽略)', 'G(双gap)'] ⇒ 判别力=弱（该档不能区分语义，须靠跨步档）
+U2-READOUT-VERDICT k=32 /none 硬件实际装填语义 = P(pitch,pitch)（mismatch=0）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+U2-BK-POLICY dev=npu 强钉 bk=32（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=32 /relu bn=32 bk=32 nb=3 nk=1 dma=single   probes=16×n96 | OK=1536 行错位=0 列错位=0 UNATTRIBUTED(越界/stale)=0
+U2-CANDIDATE k=32 /relu 失配(升序)：P(pitch,pitch) mismatch=0 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=0 读越界=0 写越界块=0  G(双gap) mismatch=0 读越界=0 写越界块=1536  Z(dstStride被忽略) mismatch=48 读越界=0 写越界块=0  Gd(目的gap) mismatch=720 读越界=0 写越界块=1536  Gs(源gap) mismatch=1232 读越界=512 写越界块=0
+U2-DISCRIMINATE k=32 /relu 与 P 同解的其它候选=['C(srcStride被忽略)', 'G(双gap)'] ⇒ 判别力=弱（该档不能区分语义，须靠跨步档）
+U2-READOUT-VERDICT k=32 /relu 硬件实际装填语义 = P(pitch,pitch)（mismatch=0）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+U2-DMA-READOUT-DONE unexpected=4（dev=npu）
+--- 卡上时间戳 ---
+2026-10-11 22:04:02
+=== D 反事实：撤 bk 避让纪律，fp16 必须复现 nan，随后还原 ===
+W2-D0-EXIT=0 md5_after_revert=a0e7f19e
+W2-D1-EXIT=3
+P2-STEP-ascend FAIL: loss 未下降（0.9753959774971008 → nan）
+P2-STEP-ascend loss0=0.975396 loss1=nan reduced=False params_grad_ok=True
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+DTYPE-TRACE fp16 params=16 fp16=16 fp32_accum=true fallback=0
+W2-D2-restore-EXIT=0 md5_restored=6ef882df
+1
+=== 现场保全：打包生成码与四段日志 ===
+W2-TGZ size=8114B
+W2-DONE

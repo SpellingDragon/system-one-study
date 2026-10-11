@@ -1,0 +1,54 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+U2-DMA-READOUT dev=npu m=16 n=96 ks=['48', '96', '32'] | W[i][j]=i*1000+j, A=onehot ⇒ C[p][n]=门牌号
+2026-10-11 22:03:06  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `probe_asc` with `out_idx=[1]`
+2026-10-11 22:03:07  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `probe_asc`
+2026-10-11 22:03:08  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 22:03:15  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+U2-BK-POLICY dev=npu 强钉 bk=16（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=48 /none bn=32 bk=16 nb=3 nk=3 dma=strided  probes=16×n96 | OK=0 行错位=1536 列错位=1353 UNATTRIBUTED(越界/stale)=0
+U2-CANDIDATE k=48 /none 失配(升序)：Z(dstStride被忽略) mismatch=45 读越界=0 写越界块=0  G(双gap) mismatch=384 读越界=0 写越界块=768  Gd(目的gap) mismatch=768 读越界=0 写越界块=768  Gs(源gap) mismatch=1408 读越界=128 写越界块=0  P(pitch,pitch) mismatch=1536 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=1536 读越界=0 写越界块=0
+U2-DISCRIMINATE k=48 /none 与 P 同解的其它候选=无 ⇒ 判别力=强
+U2-READOUT-VERDICT k=48 /none 硬件实际装填语义 = Z(dstStride被忽略)（mismatch=45）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+2026-10-11 22:03:16  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 22:03:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+U2-BK-POLICY dev=npu 强钉 bk=16（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=48 /relu bn=32 bk=16 nb=3 nk=3 dma=strided  probes=16×n96 | OK=0 行错位=1536 列错位=1353 UNATTRIBUTED(越界/stale)=0
+U2-CANDIDATE k=48 /relu 失配(升序)：Z(dstStride被忽略) mismatch=45 读越界=0 写越界块=0  G(双gap) mismatch=384 读越界=0 写越界块=768  Gd(目的gap) mismatch=768 读越界=0 写越界块=768  Gs(源gap) mismatch=1408 读越界=128 写越界块=0  P(pitch,pitch) mismatch=1536 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=1536 读越界=0 写越界块=0
+U2-DISCRIMINATE k=48 /relu 与 P 同解的其它候选=无 ⇒ 判别力=强
+U2-READOUT-VERDICT k=48 /relu 硬件实际装填语义 = Z(dstStride被忽略)（mismatch=45）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+2026-10-11 22:03:25  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 22:03:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+U2-BK-POLICY dev=npu 强钉 bk=32（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=96 /none bn=32 bk=32 nb=3 nk=3 dma=strided  probes=16×n96 | OK=24 行错位=872 列错位=752 UNATTRIBUTED(越界/stale)=640
+U2-CANDIDATE k=96 /none 失配(升序)：Z(dstStride被忽略) mismatch=48 读越界=0 写越界块=0  G(双gap) mismatch=384 读越界=0 写越界块=1536  Gd(目的gap) mismatch=696 读越界=0 写越界块=1536  Gs(源gap) mismatch=1380 读越界=256 写越界块=0  C(srcStride被忽略) mismatch=1504 读越界=0 写越界块=0  P(pitch,pitch) mismatch=1512 读越界=0 写越界块=0
+U2-DISCRIMINATE k=96 /none 与 P 同解的其它候选=无 ⇒ 判别力=强
+U2-READOUT-VERDICT k=96 /none 硬件实际装填语义 = Z(dstStride被忽略)（mismatch=48）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+2026-10-11 22:03:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 22:03:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+U2-BK-POLICY dev=npu 强钉 bk=32（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=96 /relu bn=32 bk=32 nb=3 nk=3 dma=strided  probes=16×n96 | OK=24 行错位=360 列错位=240 UNATTRIBUTED(越界/stale)=1152
+U2-CANDIDATE k=96 /relu 失配(升序)：Z(dstStride被忽略) mismatch=48 读越界=0 写越界块=0  G(双gap) mismatch=384 读越界=0 写越界块=1536  Gd(目的gap) mismatch=696 读越界=0 写越界块=1536  Gs(源gap) mismatch=1384 读越界=256 写越界块=0  P(pitch,pitch) mismatch=1512 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=1512 读越界=0 写越界块=0
+U2-DISCRIMINATE k=96 /relu 与 P 同解的其它候选=无 ⇒ 判别力=强
+U2-READOUT-VERDICT k=96 /relu 硬件实际装填语义 = Z(dstStride被忽略)（mismatch=48）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+2026-10-11 22:03:40  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 22:03:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+U2-BK-POLICY dev=npu 强钉 bk=32（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=32 /none bn=32 bk=32 nb=3 nk=1 dma=single   probes=16×n96 | OK=1536 行错位=0 列错位=0 UNATTRIBUTED(越界/stale)=0
+U2-CANDIDATE k=32 /none 失配(升序)：P(pitch,pitch) mismatch=0 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=0 读越界=0 写越界块=0  G(双gap) mismatch=0 读越界=0 写越界块=1536  Z(dstStride被忽略) mismatch=48 读越界=0 写越界块=0  Gd(目的gap) mismatch=720 读越界=0 写越界块=1536  Gs(源gap) mismatch=1232 读越界=512 写越界块=0
+U2-DISCRIMINATE k=32 /none 与 P 同解的其它候选=['C(srcStride被忽略)', 'G(双gap)'] ⇒ 判别力=弱（该档不能区分语义，须靠跨步档）
+U2-READOUT-VERDICT k=32 /none 硬件实际装填语义 = P(pitch,pitch)（mismatch=0）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+2026-10-11 22:03:48  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 22:03:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+U2-BK-POLICY dev=npu 强钉 bk=32（ladder 值，不经 plan；plan 若选整行连续则产品面不可达此形态，本探针仍可判）
+U2-MEASURE k=32 /relu bn=32 bk=32 nb=3 nk=1 dma=single   probes=16×n96 | OK=1536 行错位=0 列错位=0 UNATTRIBUTED(越界/stale)=0
+U2-CANDIDATE k=32 /relu 失配(升序)：P(pitch,pitch) mismatch=0 读越界=0 写越界块=0  C(srcStride被忽略) mismatch=0 读越界=0 写越界块=0  G(双gap) mismatch=0 读越界=0 写越界块=1536  Z(dstStride被忽略) mismatch=48 读越界=0 写越界块=0  Gd(目的gap) mismatch=720 读越界=0 写越界块=1536  Gs(源gap) mismatch=1232 读越界=512 写越界块=0
+U2-DISCRIMINATE k=32 /relu 与 P 同解的其它候选=['C(srcStride被忽略)', 'G(双gap)'] ⇒ 判别力=弱（该档不能区分语义，须靠跨步档）
+U2-READOUT-VERDICT k=32 /relu 硬件实际装填语义 = P(pitch,pitch)（mismatch=0）；若非 P ⇒ 跨步 DMA 语义错位坐实（compat 不在白名单，须上报裁决）
+U2-DMA-READOUT-DONE unexpected=4（dev=npu）
