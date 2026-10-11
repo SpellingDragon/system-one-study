@@ -1,0 +1,33 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+[20:03:51] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+2026-10-11 20:03:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `probe_asc` with `out_idx=[1]`
+2026-10-11 20:03:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `probe_asc`
+2026-10-11 20:03:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `add_ln_impl` with `out_idx=[]`
+2026-10-11 20:03:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `add_ln_impl`
+2026-10-11 20:03:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 20:03:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+2026-10-11 20:03:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `rope_impl` with `out_idx=[]`
+2026-10-11 20:03:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `rope_impl`
+2026-10-11 20:03:42  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `attn_impl` with `out_idx=[]`
+2026-10-11 20:03:45  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `attn_impl`
+2026-10-11 20:03:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_impl` with `out_idx=[]`
+2026-10-11 20:03:48  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_impl`
+2026-10-11 20:03:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_bwd_impl` with `out_idx=[]`
+2026-10-11 20:03:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_bwd_impl`
+2026-10-11 20:03:55  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 20:04:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+2026-10-11 20:04:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-11 20:04:07  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+2026-10-11 20:04:08  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `ln_bwd_impl` with `out_idx=[]`
+2026-10-11 20:04:29  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `ln_bwd_impl`
+P2-STEP-ascend loss0=1.082224 loss1=0.945310 reduced=True params_grad_ok=True
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+DTYPE-TRACE fp32 params=16 fp16=0 fp32_accum=true fallback=0

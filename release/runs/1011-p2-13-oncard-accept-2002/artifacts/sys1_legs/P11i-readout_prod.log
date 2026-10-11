@@ -1,0 +1,21 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+2026-10-11 19:58:29  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gather_impl` with `out_idx=[]`
+2026-10-11 19:58:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gather_impl`
+2026-10-11 19:58:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `scatter_impl` with `out_idx=[]`
+2026-10-11 19:58:34  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `scatter_impl`
+2026-10-11 19:58:35  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gather_impl` with `out_idx=[]`
+2026-10-11 19:58:38  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gather_impl`
+2026-10-11 19:58:38  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `scatter_impl` with `out_idx=[]`
+2026-10-11 19:58:40  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `scatter_impl`
+2026-10-11 19:58:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gather_impl` with `out_idx=[]`
+2026-10-11 19:58:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gather_impl`
+2026-10-11 19:58:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `scatter_impl` with `out_idx=[]`
+2026-10-11 19:58:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `scatter_impl`
+Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card

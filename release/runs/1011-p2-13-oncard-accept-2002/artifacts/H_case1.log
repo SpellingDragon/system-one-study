@@ -1,0 +1,18 @@
+H-CASE1 dev=npu track=card skip=False REL_TOL=2e-05
+2026-10-11 20:10:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 20:10:45  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+H-VAR m16n96k48/none rel=1.150e+00 rel_vs_pre=1.150e+00 nan=0 inf=0 neg_out=830 zero_out=0 zero_ref=0 worst_at=(12, 60) got=15.24771 ref=-15.37733 compiled=1 | CTRL same multi-block shape relu OFF
+2026-10-11 20:10:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 20:10:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+H-VAR m16n32k16/relu rel=9.091e-08 rel_vs_pre=7.353e-01 nan=0 inf=0 neg_out=0 zero_out=281 zero_ref=281 worst_at=(9, 1) got=8.66782 ref=8.66782 compiled=2 | CTRL single bn+bk block relu ON
+2026-10-11 20:10:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 20:11:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+H-VAR m16n96k32/relu rel=1.159e-07 rel_vs_pre=7.026e-01 nan=0 inf=0 neg_out=0 zero_out=764 zero_ref=764 worst_at=(8, 94) got=12.21877 ref=12.21878 compiled=3 | CTRL n multi-block k=32 relu ON
+2026-10-11 20:11:03  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 20:11:10  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+H-VAR m16n64k64/relu rel=1.551e-07 rel_vs_pre=7.027e-01 nan=0 inf=0 neg_out=0 zero_out=489 zero_ref=489 worst_at=(4, 31) got=9.90459 ref=9.90460 compiled=4 | CTRL n=64 k=64 relu ON
+H-VAR m1n64k64/relu rel=1.243e-07 rel_vs_pre=5.959e-01 nan=0 inf=0 neg_out=0 zero_out=25 zero_ref=25 worst_at=(0, 14) got=11.61071 ref=11.61071 compiled=4 | CTRL LIN_SHAPES 5th case relu ON
+2026-10-11 20:11:11  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 20:11:18  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+H-VAR m16n96k48/relu rel=nan rel_vs_pre=nan nan=96 inf=0 neg_out=0 zero_out=747 zero_ref=767 worst_at=(0, 21) got=nan ref=3.26122 compiled=5 | REPRO the failing sub-case
+H-CASE1-DONE exceptions=0

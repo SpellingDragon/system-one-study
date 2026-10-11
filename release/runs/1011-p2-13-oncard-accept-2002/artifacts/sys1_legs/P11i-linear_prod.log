@@ -1,0 +1,15 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+2026-10-11 19:57:08  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 19:57:14  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+2026-10-11 19:57:15  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 19:57:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+2026-10-11 19:57:23  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-11 19:57:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+Y-linear_prod-PROD-FAIL AssertionError: m16n96k48/relu rel=1.803e+00 ≥ 2e-05（多块组合 bn=32/bk=16 + relu 出口分支）

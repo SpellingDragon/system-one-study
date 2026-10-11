@@ -1,0 +1,41 @@
+H-CASE2 wrapped ops: add_ln,attn_sw,count_fallback_events,gdn_conv,gdn_delta,kernel_usage_report,linear,lora_apply,readout,rope
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+H-OP 001 linear in[in nan=0 inf=0 absmax=3.4766 dt=torch.float16] out[out nan=0 inf=0 absmax=1.7842 dt=torch.float16] => ok
+H-OP 002 add_ln in[in nan=0 inf=0 absmax=3.4766 dt=torch.float16] out[out nan=0 inf=0 absmax=4.0767 dt=torch.float16,torch.float32] => ok
+H-OP 003 linear in[in nan=0 inf=0 absmax=3.3613 dt=torch.float16] out[out nan=0 inf=0 absmax=2.4883 dt=torch.float16] => ok
+H-OP 004 rope in[in nan=0 inf=0 absmax=2.4883 dt=torch.float16,torch.float32] out[out nan=0 inf=0 absmax=2.5176 dt=torch.float16] => ok
+H-OP 005 attn_sw in[in nan=0 inf=0 absmax=2.5176 dt=torch.float16] out[out nan=0 inf=0 absmax=1.1602 dt=torch.float16] => ok
+H-OP 006 linear in[in nan=0 inf=0 absmax=1.1602 dt=torch.float16] out[out nan=0 inf=0 absmax=0.45068 dt=torch.float16] => ok
+H-OP 007 linear in[in nan=0 inf=0 absmax=0.45068 dt=torch.float16] out[out nan=0 inf=0 absmax=0.35303 dt=torch.float16] => ok
+H-OP 008 linear in[in nan=0 inf=0 absmax=0.45068 dt=torch.float16] out[out nan=0 inf=0 absmax=0.19678 dt=torch.float16] => ok
+H-OP 009 linear in[in nan=0 inf=0 absmax=0.45068 dt=torch.float16] out[out nan=0 inf=0 absmax=0.24268 dt=torch.float16] => ok
+H-OP 010 linear in[in nan=0 inf=0 absmax=0.45068 dt=torch.float16] out[out nan=0 inf=0 absmax=0.23901 dt=torch.float16] => ok
+H-OP 011 linear in[in nan=0 inf=0 absmax=0.45068 dt=torch.float16] out[out nan=0 inf=0 absmax=0.10706 dt=torch.float16] => ok
+H-OP 012 gdn_delta in[in nan=0 inf=0 absmax=0.81982 dt=torch.float16] out[out nan=0 inf=0 absmax=0.0083084 dt=torch.float16] => ok
+H-OP 013 linear in[in nan=0 inf=0 absmax=0.32935 dt=torch.float16] out[out nan=0 inf=0 absmax=0.0021667 dt=torch.float16] => ok
+H-OP 014 lora_apply in[in nan=0 inf=0 absmax=0.45288 dt=torch.float16] out[out nan=0 inf=0 absmax=0.015823 dt=torch.float16] => ok
+H-OP 015 readout in[in nan=0 inf=0 absmax=0.45093 dt=torch.float16] out[out nan=0 inf=0 absmax=0.45093 dt=torch.float16] => ok
+[20:13:50] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+H-OP 016 linear in[in nan=1056 inf=0 absmax=3.4766 dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => FIRST_BAD
+H-OP 017 add_ln in[in nan=544 inf=0 absmax=nan dt=torch.float16] out[out nan=1024 inf=0 absmax=nan dt=torch.float16,torch.float32] => BAD
+H-OP 018 linear in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=1536 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 019 rope in[in nan=1536 inf=0 absmax=nan dt=torch.float16,torch.float32] out[out nan=1536 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 020 attn_sw in[in nan=1536 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 021 linear in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 022 linear in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 023 linear in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 024 linear in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 025 linear in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 026 linear in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=32 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 027 gdn_delta in[in nan=2080 inf=0 absmax=nan dt=torch.float16] out[out nan=128 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 028 linear in[in nan=128 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 029 lora_apply in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+H-OP 030 readout in[in nan=512 inf=0 absmax=nan dt=torch.float16] out[out nan=512 inf=0 absmax=nan dt=torch.float16] => BAD
+P2-STEP-ascend loss0=0.975363 loss1=nan reduced=False params_grad_ok=True
+H-OP 031 count_fallback_events in[none] out[none] => ok
+H-OP 032 kernel_usage_report in[none] out[none] => ok
+P2-STEP-ascend FAIL: loss 未下降（0.9753625392913818 → nan）
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+DTYPE-TRACE fp16 params=16 fp16=16 fp32_accum=true fallback=0
+H-CASE2-RC=3 first_bad_op=linear ops_called=32
+H-CASE2 fp16_acc_violations=0 sample=[]

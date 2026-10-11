@@ -1,0 +1,17 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+2026-10-11 19:57:50  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-11 19:57:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+2026-10-11 19:57:55  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-11 19:58:00  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+2026-10-11 19:58:00  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-11 19:58:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+2026-10-11 19:58:06  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-11 19:58:11  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card

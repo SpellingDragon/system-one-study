@@ -1,0 +1,30 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+2026-10-11 19:59:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dW_l0tr` with `out_idx=-1`
+2026-10-11 19:59:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dW_l0tr`
+NUM-dw_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+[ERROR] 2026-10-11-19:59:27 (PID:16395, Device:0, RankID:-1) ERR00100 PTA call acl api failed
+[Error]: The aicore execution is abnormal. 
+        Rec
+[W1011 19:59:27.881804836 compiler_depend.ts:595] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 16395] 2026-10-11-19:59:27.061.701 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeUsedDevices)
+[W1011 19:59:27.882795223 compiler_depend.ts:577] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 16395] 2026-10-11-19:59:27.062.945 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeDevice)

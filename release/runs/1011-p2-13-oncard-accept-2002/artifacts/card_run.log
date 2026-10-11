@@ -1,0 +1,183 @@
+=== [0] env ===
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+NPU-REG ok 2.7.1.post2 avail=True count=1 torch=2.7.1+cpu
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+torch 2.7.1+cpu npu_avail True
+WARNING: There was an error checking the latest version of pip.
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+tilelang 0.1.15
+=== [1] repo @latest ===
+4b43a3f p2-13(P1-1l/m/n/o+fp16 leg): card window now verifies the shipping dtype, with self-proving gates
+=== [2] overlay 910B templates + bisheng inject ===
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+TLROOT=/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang
+PIP_SRC(桩头落点根)=/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang/src   TPL(模板落点)=/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang/src/tl_templates/ascend
+-rw-r----- 1 ma-user ma-group 428 Oct 11 19:56 /home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang/src/c_api/asc_simd.h
+OVERLAY-OK headers=5 tpl=12
+compat §12+fill: 7
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+C-BISHENG-PATCHED /home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang/contrib/bisheng.py (root=/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux)
+  -> result = ["-O2", "-fPIC", "-std=c++20", "-DTL_PORT910B_NATIVE_TYPES", "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/asc/impl",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/asc/include",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/tikcpp/tikcfw",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/tikcpp/tikcfw/impl",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/tikcpp/tikcfw/interface",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/tikcpp/tikcfw/lib",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascendc/include/basic_api",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascendc/include/highlevel_api",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/include", "-mllvm", "-cce-aicore-dcpreload-args=false"]
+INJECT-OK
+=== [3] numerics（产品件判决 = 下窗要的东西；intrinsic = 性能对照轨）===
+CASE-P11i-linear_prod track=gating tmo=900s
+Y-linear_prod-PROD-FAIL AssertionError: m16n96k48/relu rel=1.803e+00 ≥ 2e-05（多块组合 bn=32/bk=16 + relu 出口分支）
+Y-linear_prod-PROD-FAIL AssertionError: m16n96k48/relu rel=1.803e+00 ≥ 2e-05（多块组合 bn=32/bk=16 + relu 出口分支）
+CASE-P11i-linear_prod VERDICT-FAIL rc=1 track=gating tally(pass=0 fail=1 adv=0) log=/tmp/sys1_legs/P11i-linear_prod.log
+CASE-P11i-dw_prod track=gating tmo=900s
+Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+CASE-P11i-dw_prod VERDICT-PASS rc=0 track=gating tally(pass=1 fail=1 adv=0) log=/tmp/sys1_legs/P11i-dw_prod.log
+CASE-P11i-readout_prod track=gating tmo=900s
+Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+CASE-P11i-readout_prod VERDICT-PASS rc=0 track=gating tally(pass=2 fail=1 adv=0) log=/tmp/sys1_legs/P11i-readout_prod.log
+CASE-PERF-gemm_l1_intrinsic track=advisory tmo=500s
+NUM-gemm_l1_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+NUM-gemm_l1_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+CASE-PERF-gemm_l1_intrinsic VERDICT-FAIL rc=1 track=advisory tally(pass=2 fail=1 adv=1) log=/tmp/sys1_legs/PERF-gemm_l1_intrinsic.log
+CASE-PERF-dw_intrinsic track=advisory tmo=500s
+NUM-dw_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+NUM-dw_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+CASE-PERF-dw_intrinsic VERDICT-FAIL rc=1 track=advisory tally(pass=2 fail=1 adv=2) log=/tmp/sys1_legs/PERF-dw_intrinsic.log
+CASE-PERF-readout_intrinsic track=advisory tmo=500s
+NUM-readout_intrinsic-FAIL AssertionError: rel=0.29128614739180697（仿真底噪 4.0e-7；若 S 全零则 rel≈1）
+NUM-readout_intrinsic-FAIL AssertionError: rel=0.29128614739180697（仿真底噪 4.0e-7；若 S 全零则 rel≈1）
+CASE-PERF-readout_intrinsic VERDICT-FAIL rc=1 track=advisory tally(pass=2 fail=1 adv=3) log=/tmp/sys1_legs/PERF-readout_intrinsic.log
+CASE-PERF-addln_intrinsic track=advisory tmo=500s
+NUM-addln_intrinsic-PASS rel_y=1.66e-05 rel_h=0.00e+00 unb_disc=7.48e-04 track=performance
+CASE-PERF-addln_intrinsic VERDICT-PASS rc=0 track=advisory tally(pass=3 fail=1 adv=3) log=/tmp/sys1_legs/PERF-addln_intrinsic.log
+CASE-PERF-gdn track=advisory tmo=500s
+NUM-gdn-PASS rel=6.35e-08
+CASE-PERF-gdn VERDICT-PASS rc=0 track=advisory tally(pass=4 fail=1 adv=3) log=/tmp/sys1_legs/PERF-gdn.log
+CASE-delta track=gating tmo=500s
+NUM-delta_fwd PASS rel_o=7.51e-08 rel_s=6.03e-08
+CASE-delta VERDICT-PASS rc=0 track=gating tally(pass=5 fail=1 adv=3) log=/tmp/sys1_legs/delta.log
+CASE-ASC-products track=gating tmo=1200s
+ASC-gemm PASS .o~2850B keys=1 first=ascend|gemm[ascend]|n32k32b16x32x32anonedfloat32
+ASC-gemm_bwd_dw PASS .o~2250B keys=1 first=ascend|gemm_dw[ascend]|n32k32tc16b32x32dfloat32
+ASC-add_ln PASS .o~3625B keys=1 first=ascend|add_ln[ascend]|d64e1e-05b16
+ASC-rope PASS .o~2106B keys=1 first=ascend|rope[ascend]|h2d8s2g1qfloat32afloat32
+ASC-attn_sw PASS .o~2911B keys=1 first=ascend|attn_sw[ascend]|h2d16w8b16x16
+ASC-gdn PASS .o~4003B keys=1 first=ascend|gdn[ascend]|h2k16v8|c8ubh
+ASC-gdn_conv PASS .o~1864B keys=1 first=ascend|gdnconv[ascend]|c16k4b2|c8scalare
+ASC-letter_readout PASS .o~922B keys=1 first=ascend|gather[ascend]|d64
+ASC-lora PASS .o~2842B keys=1 first=ascend|gemm[ascend]|n16k32b16x16x32anonedfloat32
+—— products 腿 track=card no_run=False cases=11（case 正身与阈值全在 run_numerics.py，本件不复制判据）——
+ASC-PROD-linear_prod FAIL AssertionError: m16n96k48/relu rel=1.807e+01 ≥ 2e-05（多块组合 bn=32/bk=16 + relu 出口分支）
+ASC-PROD-dw_prod PASS Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+ASC-PROD-readout_prod PASS Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+ASC-PERF-gemm_direct FAIL AssertionError: rel=nan
+ASC-PERF-gemm_l1_intrinsic FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015 [ERROR] 2026-10-11-20:02:00 (PID:19816, Device:0, RankID:-1) ERR00100 PTA call acl api failed [Error]: The aicore execution is abnormal. Rec
+ASC-PERF-gdn FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-dw_intrinsic FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-rope FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-attnsw FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-addln_intrinsic FAIL RuntimeError: The Inner error is reported as above. The process exits for this inner error, and the current working operator name is aclnnInplaceNormal. Since the operator is called asynchronously, the stacktrace may be inaccurate. If you want to get the accurate stacktrace, please set the environment variable AS
+ASC-PERF-readout_intrinsic FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+—— 产品腿 PASS=2 FAIL=1 | 对照腿(performance-track) PASS=0 FAIL=8 SKIP=0 [non-blocking] ——
+—— 汇总 target=ascend 接口腿 PASS=9 FAIL=0 产品腿 PASS=2 FAIL=1 对照腿 PASS=0 FAIL=8 SKIP=0 —— 门禁失败数=1
+ASC-PROD-linear_prod FAIL AssertionError: m16n96k48/relu rel=1.807e+01 ≥ 2e-05（多块组合 bn=32/bk=16 + relu 出口分支）
+ASC-PERF-gemm_direct FAIL AssertionError: rel=nan
+ASC-PERF-gemm_l1_intrinsic FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015 [ERROR] 2026-10-11-20:02:00 (PID:19816, Device:0, RankID:-1) ERR00100 PTA call acl api failed [Error]: The aicore execution is abnormal. Rec
+ASC-PERF-gdn FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-dw_intrinsic FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-rope FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-attnsw FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+[E1011 20:02:05.314957419 compiler_depend.ts:444] operator():build/CMakeFiles/torch_npu.dir/compiler_depend.ts:39 NPU function error: call aclnnInplaceNormal failed, error code is 507015
+CASE-ASC-products VERDICT-FAIL rc=1 track=gating tally(pass=5 fail=2 adv=3) log=/tmp/sys1_legs/ASC-products.log
+=== [4] mixed-stack train step on npu (P2 首步 + P1-1l 内核自证 + F2 位宽档) ===
+CASE-trainstep track=gating tmo=900s
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+P2-STEP-ascend loss0=1.082224 loss1=0.945310 reduced=True params_grad_ok=True
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+CASE-trainstep VERDICT-PASS rc=0 track=gating tally(pass=6 fail=2 adv=3) log=/tmp/sys1_legs/trainstep.log
+CASE-trainstep-fp16 track=gating tmo=900s
+P2-STEP-ascend FAIL: loss 未下降（0.9753735065460205 → nan）
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+P2-STEP-ascend loss0=0.975374 loss1=nan reduced=False params_grad_ok=True
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+DTYPE-TRACE fp16 params=16 fp16=16 fp32_accum=true fallback=0
+CASE-trainstep-fp16 VERDICT-FAIL rc=3 track=gating tally(pass=6 fail=3 adv=3) log=/tmp/sys1_legs/trainstep-fp16.log
+=== [4b] bench（可选腿：SYS1_BENCH=1 且 E2 交付件在场才跑）===
+CASE-BENCH SKIP SYS1_BENCH 未设（默认不进窗，保验收优先）
+=== [4c] 增采 C：内核缓存打包（零额外编译，事后验 §12 位序 / T.Cube）===
+CASE-KERNELS-TGZ track=gating tmo=180s
+KERNELS-TGZ /tmp/sys1_kernels.tgz size=552236B entries=322 kernels=46
+CASE-KERNELS-TGZ VERDICT-PASS rc=0 track=gating tally(pass=7 fail=3 adv=3) log=/tmp/sys1_legs/KERNELS-TGZ.log
+=== [5] verdict summary ===
+CASE-P11i-linear_prod VERDICT-FAIL rc=1 track=gating
+CASE-P11i-dw_prod VERDICT-PASS rc=0 track=gating
+CASE-P11i-readout_prod VERDICT-PASS rc=0 track=gating
+CASE-PERF-gemm_l1_intrinsic VERDICT-FAIL rc=1 track=advisory
+CASE-PERF-dw_intrinsic VERDICT-FAIL rc=1 track=advisory
+CASE-PERF-readout_intrinsic VERDICT-FAIL rc=1 track=advisory
+CASE-PERF-addln_intrinsic VERDICT-PASS rc=0 track=advisory
+CASE-PERF-gdn VERDICT-PASS rc=0 track=advisory
+CASE-delta VERDICT-PASS rc=0 track=gating
+CASE-ASC-products VERDICT-FAIL rc=1 track=gating
+CASE-trainstep VERDICT-PASS rc=0 track=gating
+CASE-trainstep-fp16 VERDICT-FAIL rc=3 track=gating
+CASE-KERNELS-TGZ VERDICT-PASS rc=0 track=gating
+VERDICT-SCAN-BEGIN
+ASC-gemm PASS .o~2850B keys=1 first=ascend|gemm[ascend]|n32k32b16x32x32anonedfloat32
+ASC-gemm_bwd_dw PASS .o~2250B keys=1 first=ascend|gemm_dw[ascend]|n32k32tc16b32x32dfloat32
+ASC-add_ln PASS .o~3625B keys=1 first=ascend|add_ln[ascend]|d64e1e-05b16
+ASC-rope PASS .o~2106B keys=1 first=ascend|rope[ascend]|h2d8s2g1qfloat32afloat32
+ASC-attn_sw PASS .o~2911B keys=1 first=ascend|attn_sw[ascend]|h2d16w8b16x16
+ASC-gdn PASS .o~4003B keys=1 first=ascend|gdn[ascend]|h2k16v8|c8ubh
+ASC-gdn_conv PASS .o~1864B keys=1 first=ascend|gdnconv[ascend]|c16k4b2|c8scalare
+ASC-letter_readout PASS .o~922B keys=1 first=ascend|gather[ascend]|d64
+ASC-lora PASS .o~2842B keys=1 first=ascend|gemm[ascend]|n16k32b16x16x32anonedfloat32
+ASC-PROD-linear_prod FAIL AssertionError: m16n96k48/relu rel=1.807e+01 ≥ 2e-05（多块组合 bn=32/bk=16 + relu 出口分支）
+ASC-PROD-dw_prod PASS Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+ASC-PROD-readout_prod PASS Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+ASC-PERF-gemm_direct FAIL AssertionError: rel=nan
+ASC-PERF-gemm_l1_intrinsic FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015 [ERROR] 2026-10-11-20:02:00 (PID:19816, Device:0, RankID:-1) ERR00100 PTA call acl api failed [Error]: The aicore execution is abnormal. Rec
+ASC-PERF-gdn FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-dw_intrinsic FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-rope FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-attnsw FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+ASC-PERF-addln_intrinsic FAIL RuntimeError: The Inner error is reported as above. The process exits for this inner error, and the current working operator name is aclnnInplaceNormal. Since the operator is called asynchronously, the stacktrace may be inaccurate. If you want to get the accurate stacktrace, please set the environment variable AS
+ASC-PERF-readout_intrinsic FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+KERNELS-TGZ /tmp/sys1_kernels.tgz size=552236B entries=322 kernels=46
+NUM-dw_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+NUM-gemm_l1_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+VERDICT-SCAN-END
+SUMMARY-DEGRADED note=无设备 命中=0 行
+LOGS /tmp/sys1_legs (每条腿原文一份，补看：grep -E '^Y-|^NUM-|^ASC-|^P2-STEP|^KERNEL-USED|^DTYPE-TRACE' /tmp/sys1_legs/<腿>.log)
+RUNNER-DONE SUMMARY pass=7 fail=3 skipped_legs=1 degraded=0 advisory_fail=3 exit=1
