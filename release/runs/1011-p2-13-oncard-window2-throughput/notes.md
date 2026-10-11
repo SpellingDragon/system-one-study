@@ -35,3 +35,12 @@ runner=`window2_card.sh`（四段各自独立进程）· repo `210f078` · **A �
 2. 我 review 时预留的分支"若慢 50× 则 cube 路降级为研究项"被实测**推翻方向**：慢 3 个数量级 ⇒ **§12/cube 路不能降级，它是唯一性能出路**，投入价值被这份数据抬高。
 3. 过渡期性能兜底仍是第二栈（`torch_npu` 原生算子）——这与"探索脱离 CUDA"不冲突：底座先保吞吐，逐件替换靠 cube 路修好。
 4. 下一枪已备好（**全部不需开卡**）：① 核对 intrinsic 计时真伪（离线 431 条目）② 追 45/48 残留失配的第二层因素 ③ 据 `dstStride 被忽略` 定 compat 层修法（影响面＝所有 `blockCount>1` 件）。
+
+
+## ⑥ 勘误（离线复核推翻本台账 §③ 与 §④ 各一条，追加不改写）
+1. **§③ 的"硬件忽略 `dstStride`"裁决不成立——是探针度量的伪影**（S3 复算）：U2 打分器的 `nn` **从不统计"实测为有限值而候选预测 NaN"**，于是"只敢提交 48 格"的候选天然获胜；且台账叙述"每突发连续写"（该行为应编码成 `(k,bk)`＝P）与真正胜出的候选 `(k,0)`（目的指针**完全不前移**）**自相矛盾**。⇒ **撤回该结论**，改为：**一手 ISA 证据显示 `srcStride`/`dstStride` 与 `srcGap`/`dstGap` 是同一 union 别名**（`kernel_struct_data_copy.h:34-60`，注释 "will be deprecated, use srcGap instead"）、`srcMaxOffset = nBurst*lenBurst*unit + (nBurst-1)*srcStride*unit`（`kernel_check_data_copy_util.h:346-351`）、`gmGapValue=(gStride3-gShape4)*sizeof`（`TLoad.hpp:69-72`）⇒ **该参数语义是 gap 而非 pitch，我们按 pitch 喂参才是错**（H-c 判真；SINGLE 档下 `gap=pitch−blockLen=0` 故恒等，这也解释了为何只有跨步档出问题）。
+2. **§④ 的"3366 TFLOPS 物理不可能"这句话本身是错的**（V2）：`bench_card.py` 的 `tflops` 字段除以 `1e9` 却标 `tflops=` ⇒ **单位虚高 1000×**，真实读数是 **3.37 TFLOP/s**，在 910B1 实测峰值 **363.7 TFLOPS**（`platform_config/Ascend910B1.ini`: `ai_core_cnt=24 × cube_freq=1850 × 16×16×16 × 2`）以内。⇒ **作废理由换成更硬的一条：那枚 `linear_intrinsic` 件是死代码**——`__mix__(1,2)` 下正文被 `if (ASC_IS_AIV)`（容器实测 `ASC_IS_AIV=0` @ `port910b_compat.h:568`）包成 `if(0){...}`，**从未执行**，0.080ms 量的是空发射。`dW_intrinsic` 则真执行且 507015（坏件）。⇒ **三栈消融当前无任何可引用数据**；且我的"慢 3 个数量级"外推**不成立于对照侧**，标量侧绝对数仍成立（`512³ fp16 294ms`）。
+3. **计数更正**：§④ 的"标量侧 9 条 ok"应为 **8 条标量 + 1 条假绿**（`ok=9` 里含 `linear_intrinsic`）。
+4. **已落工装修正**（V2）：计时前置**数值自证**（未过 ⇒ `BENCH-<op> NOTIMED reason=...`，不出 `p50/tflops/QUOTE`，负例两条自证）+ `BENCH-ABLATE verified=` + 峰值闸 + **`tflops` 单位改 `/1e12`** + gdn 门输入良态化（原用 `randn` 使参考自身 `nan`）。回归 `340 passed`、cpu 轨 `BENCH-SUMMARY` 照出。
+5. **S3 的否定性结论（重要，防后续再犯）**：三维穷举 `sp∈[0,96]×dp∈[0,48]×soff∈[-32,32]`＝**308,945 组零命中**（最小 L1=167）⇒ **单一几何模型解释不了 k=48 的 `(0,1536,1353,0)`**，残留里至少含一个非几何成分（最可能 H-b：`w_ub[0,512)` 全文无初始化，归档 `:12-48` 只清了 c_ub/a_ub；**未直测，标 ❓**）。
+6. **提案不下地**（S3 交付 `attempts/S3_compat_proposal.diff`，gap 归一，`patch --dry-run` 通过、trunk md5 复验未变）：**等下窗按 `S3_probe_nextshot.py` 一枪判 H-b/H-e 再落**——理由：产品 plan 现恒 `bk==k`（M2 避让），此改动对当前产品路径**无可观测收益**，而"改了但没判决"会污染基线。

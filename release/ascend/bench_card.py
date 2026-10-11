@@ -32,6 +32,21 @@ notes。本件**不做数值判决**（数值归 `port910b/run_numerics.py`）�
     并把该键打进 `kernel=` 字段；守卫不响 ⇒ 该配置进 FAIL 而不是进表；
  ⑤ 计时包裹的是**接口 home 入口件**（`ascend/kernels/*_kernel.py`），即 `train_step` 经
     `autograd_asc` 消费的同一份内核与同一条路由；autograd 记账开销不计入（报价按 op 计）。
+ ⑥ **数值自证硬前置（P1-1t 收尾新增，本波正身）**：任何腿（含 `*_intrinsic` 对照腿）在计时**之前**
+    必须过数值对拍——核函数输出对 torch 参考（入口件 `target="cpu"` 的尺子路，或存档件的 torch
+    矩阵式）算相对 L2 误差，不过阈值就**拒绝计时**。未带对拍的腿打
+    `BENCH-<op> NOTIMED reason=no-numeric-selfproof`，对拍挂的腿打
+    `... NOTIMED reason=numeric-mismatch(rel=...)`；**两条都不产 `p50/tflops/BENCH-QUOTE`**。
+    动机（第二窗实证）：`*_intrinsic` 对照腿的存档 Cube 形态落成 `__mix__(1,2)` 死代码，卡上
+    "跑"出 0.080ms / 3365.919 "tflops" 的物理不可能数——那正是**没有数值前置**时假绿数进表的
+    写照。自证工具 `kernels/reconcile/V2_probe_intrinsic_truth.py`，定档
+    `kernels/reconcile/V2_THROUGHPUT_TRUTH.md`。
+    `--selftest-notimed`（无对拍腿 ⇒ 必须 NOTIMED）与 `--selftest-mismatch`（对拍必挂腿 ⇒ 必须
+    NOTIMED）负例自证这条硬闸真生效。
+ ⑦ **tflops 单位修正（P1-1t 收尾新增）**：`bench_line` 的 `tflops=` 原按 `/1e9` 折算（实为
+    GFLOP/s）却标 TFLOPS ⇒ 1000× 虚高；本波改回 `/1e12`（真 TFLOP/s），并把单位写进
+    `BENCH-NOTE`。第二窗"3365.919 tflops"一半由此错标造成（真值 3.37 TFLOP/s），另一半是死
+    代码腿的空转时间（见 ⑥ 与 `reconcile/V2_THROUGHPUT_TRUTH.md`）。
 
 【标量 vs intrinsic 并排（G9 三栈消融）】`--intrinsic auto` 追加 `*_intrinsic` 对照腿：linear/dW
 用 K 波 Cube/l0tr **存档形态**（`kernels/reconcile/S_perf_track_cube.py`，P1-1f 改道前的 intrinsic
@@ -137,7 +152,12 @@ def _build_linear(m, n, k, in_dt, out_dt):
         W = torch.randn(n, k, device=device, dtype=in_dt)
         b = torch.randn(n, device=device, dtype=torch.float32)
         call = lambda: gemm_kernel.forward(A, W, b, "none", out_dt, target)  # noqa: E731
-        return call, 2.0 * m * n * k, ("token", m)
+
+        def verify():
+            # 参考 = 入口件自身的 torch 尺子路（target="cpu" ⇒ active_backend 判 eager，fp32 累加后降位宽）
+            ref = gemm_kernel.forward(A, W, b, "none", out_dt, "cpu")
+            return _verify_vs(call(), ref, _NUM_TOL[out_dt])
+        return call, 2.0 * m * n * k, ("token", m), verify
     return setup
 
 
@@ -148,7 +168,11 @@ def _build_dw(m, n, k, in_dt, out_dt):
         X = torch.randn(m, k, device=device, dtype=in_dt)
         call = lambda: gemm_bwd_dw_kernel.backward(dY, X, out_dtype=out_dt,  # noqa: E731
                                                    target=target)
-        return call, 2.0 * m * n * k, ("token", m)
+
+        def verify():
+            ref = gemm_bwd_dw_kernel.backward(dY, X, out_dtype=out_dt, target="cpu")
+            return _verify_vs(call(), ref, _NUM_TOL[out_dt])
+        return call, 2.0 * m * n * k, ("token", m), verify
     return setup
 
 
@@ -160,7 +184,11 @@ def _build_add_ln(rows, dim):
         b = torch.zeros(dim, device=device, dtype=torch.float32)
         call = lambda: add_ln_kernel.forward(x, res, g, b, 1e-5, torch.float32,  # noqa: E731
                                              target)
-        return call, None, ("token", rows)          # LN=归约+逐元素，无乘加口径 ⇒ tflops=na
+
+        def verify():
+            ref = add_ln_kernel.forward(x, res, g, b, 1e-5, torch.float32, "cpu")
+            return _verify_vs_pair(call(), ref, _NUM_TOL[torch.float32])
+        return call, None, ("token", rows), verify      # LN=归约+逐元素，无乘加口径 ⇒ tflops=na
     return setup
 
 
@@ -171,7 +199,14 @@ def _build_rope(tokens, heads, dim):
         sin = torch.randn(tokens, dim // 2, device=device, dtype=torch.float32)
         call = lambda: rope_kernel.forward(qkv, cos, sin, rope_kernel.DEFAULT_SLOTS,  # noqa: E731
                                            target)
-        return call, None, ("token", tokens)
+
+        def verify():
+            # rope 是**就地**语义（改 qkv 并交回同一个对象）⇒ 参考要喂在调用前的副本上
+            base = qkv.clone()
+            got = call()
+            ref = rope_kernel.forward(base, cos, sin, rope_kernel.DEFAULT_SLOTS, "cpu")
+            return _verify_vs(got, ref, _NUM_TOL[torch.float32])
+        return call, None, ("token", tokens), verify
     return setup
 
 
@@ -182,8 +217,12 @@ def _build_attn_sw(heads, seq, dim, window):
         v = torch.randn(heads, seq, dim, device=device, dtype=torch.float32)
         call = lambda: attn_sw_kernel.forward(q, k, v, window, None,          # noqa: E731
                                               torch.float32, target)
+
+        def verify():
+            ref = attn_sw_kernel.forward(q, k, v, window, None, torch.float32, "cpu")
+            return _verify_vs(call(), ref, _NUM_TOL[torch.float32])
         pairs = _window_pairs(seq, window)
-        return call, 4.0 * heads * pairs * dim, ("token", seq)   # QK^T 与 PV 两段乘加
+        return call, 4.0 * heads * pairs * dim, ("token", seq), verify   # QK^T 与 PV 两段乘加
     return setup
 
 
@@ -193,31 +232,53 @@ def _build_conv(chans, length):
         w = torch.randn(chans, gdn_kernel.CONV_KERNEL, device=device, dtype=torch.float32)
         b = torch.randn(chans, device=device, dtype=torch.float32)
         call = lambda: gdn_kernel.conv_forward(x, w, b, torch.float32, target)  # noqa: E731
-        return call, 2.0 * chans * length * gdn_kernel.CONV_KERNEL, ("token", length)
+
+        def verify():
+            ref = gdn_kernel.conv_forward(x, w, b, torch.float32, "cpu")
+            return _verify_vs(call(), ref, _NUM_TOL[torch.float32])
+        return call, 2.0 * chans * length * gdn_kernel.CONV_KERNEL, ("token", length), verify
     return setup
 
 
 def _build_delta_fwd(heads, seq, dk, dv):
     def setup(device, target):
         q, k, gate = (_rand3(heads, seq, dk, device), _rand3(heads, seq, dk, device),
-                      _rand3(heads, seq, dk, device))
+                      _gate3(heads, seq, dk, device))   # 门取非正分布 ⇒ 递推稳定（见 _gate3）
         v = _rand3(heads, seq, dv, device)
-        beta = torch.rand(heads, seq, device=device, dtype=torch.float32)
+        beta = torch.rand(heads, seq, device=device, dtype=torch.float32) / dk  # β~1/dk ⇒ 递推收缩
         call = lambda: gdn_kernel.forward(q, k, v, gate, beta, torch.float32,  # noqa: E731
                                           target)
-        return call, 4.0 * heads * seq * dv * dk, ("token", seq)
+
+        def verify():
+            ref = gdn_kernel.forward(q, k, v, gate, beta, torch.float32, "cpu")
+            return _verify_vs(call(), ref, _NUM_TOL[torch.float32])
+        return call, 4.0 * heads * seq * dv * dk, ("token", seq), verify
     return setup
 
 
 def _build_delta_bwd(heads, seq, dk, dv):
     def setup(device, target):
         q, k, gate = (_rand3(heads, seq, dk, device), _rand3(heads, seq, dk, device),
-                      _rand3(heads, seq, dk, device))
+                      _gate3(heads, seq, dk, device))   # 门取非正分布 ⇒ 递推稳定（见 _gate3）
         v = _rand3(heads, seq, dv, device)
-        beta = torch.rand(heads, seq, device=device, dtype=torch.float32)
+        beta = torch.rand(heads, seq, device=device, dtype=torch.float32) / dk  # β~1/dk ⇒ 递推收缩
         dout = _rand3(heads, seq, dv, device)
         call = lambda: gdn_kernel.backward(q, k, v, gate, beta, dout, target)   # noqa: E731
-        return call, 4.0 * heads * seq * dv * dk, ("token", seq)
+
+        def verify():
+            # 反向交回梯度元组（dq,dk,dv,dg,dbeta）⇒ 逐项对拍，全过才算过
+            ref = gdn_kernel.backward(q, k, v, gate, beta, dout, "cpu")
+            got = call()
+            if len(got) != len(ref):
+                return False, f"arity-got={len(got)} ref={len(ref)}"
+            worst_ok, worst = True, "rel=-"
+            for i, (gi, ri) in enumerate(zip(got, ref)):
+                ok, d = _verify_vs(gi, ri, _NUM_TOL[torch.float32])
+                worst = f"[{i}]{d}"
+                if not ok:
+                    return False, worst
+            return worst_ok, worst
+        return call, 4.0 * heads * seq * dv * dk, ("token", seq), verify
     return setup
 
 
@@ -230,6 +291,17 @@ FACTORIES = {"add_ln": _build_add_ln, "rope": _build_rope, "attn_sw": _build_att
 def _rand3(h, s, d, device):
     """(heads, seq, width) 的 fp32 输入。递推门用 randn 即可——本件只量时间不判数值。"""
     return torch.randn(h, s, d, device=device, dtype=torch.float32)
+
+
+def _gate3(h, s, d, device):
+    """递推门（gdn 的 `g`）的**数值安全**输入：g ≤ 0 ⇒ `exp(g) ∈ (0,1]`，状态不溢出。
+
+    动机（P1-1t 收尾）：gdn 递推是 `S *= exp(g[t])`；若 g 取 `randn`（`_rand3`），`exp(randn)`
+    在 seq=512 步后必爆成 `inf`→`nan`，此时**连 torch 参考自身都是 nan**，数值自证退化成
+    `rel=nan`（正确内核也被误判 NOTIMED）。故递推门单独给非正分布，让"数值自证"对 gdn 腿可用。
+    只改门的分布、不改形状/工作量 ⇒ 计时口径不变（这些内核控制流与数据无关）。
+    """
+    return -torch.rand(h, s, d, device=device, dtype=torch.float32)
 
 
 def _window_pairs(seq, window):
@@ -321,8 +393,64 @@ def _cube_setup(kind, m, n, k):
             args = (dY, A, GW)
         kern = tilelang.compile(prog, out_idx=[], **ascend_env.compile_kwargs(target))
         call = lambda: kern(*args)  # noqa: E731
-        return call, 2.0 * m * n * k, ("token", m)
+
+        def verify():
+            # 存档形态 fp32 声明、出口写回 args 里的 C/GW ⇒ 直接用 torch 矩阵式对拍（独立尺子）。
+            # 语义（读 S_perf_track_cube 正文）：gemm C = A @ Wᵀ + b；dW GW = dYᵀ @ A。
+            call()                       # 就地写回 C / GW
+            if kind == "gemm":
+                ref = A @ W.t() + b
+                return _verify_vs(C, ref, _NUM_TOL[torch.float32])
+            ref = dY.t() @ A
+            return _verify_vs(GW, ref, _NUM_TOL[torch.float32])
+        return call, 2.0 * m * n * k, ("token", m), verify
     return setup
+
+
+# ────────────────────────────────────────────────────────── 数值自证（计时硬前置）
+# 判据（P1-1t 收尾）：计时前必须先用 torch 参考对本腿输出对拍，不过阈值 ⇒ 拒绝计时、打 NOTIMED。
+# 参考来源两条，都是**独立于被测内核**的尺子：
+#   * 入口件腿：同一入口件以 `target="cpu"` 再算一遍（`*_asc` 的 `_eager` 尺子路，fp32 累加后降位宽）；
+#   * intrinsic 对照腿：存档形态本就 fp32 声明，直接用 torch 矩阵式对拍。
+# 相对 L2 误差按出口位宽给容差（fp32 紧、低精度松）；死代码/空转件输出是未初始化内存，
+# rel ~ O(1)，任何容差都拦得住。
+_NUM_TOL = {torch.float32: 1e-2, torch.float16: 3e-2, torch.bfloat16: 3e-2}
+
+
+def _rel_l2(got, ref):
+    """相对 L2 误差（fp64 归约）；形状不符 ⇒ inf。"""
+    import numpy as np
+    a = np.asarray(got, dtype=np.float64).ravel()
+    b = np.asarray(ref, dtype=np.float64).ravel()
+    if a.shape != b.shape:
+        return float("inf")
+    return float(np.linalg.norm(a - b) / (np.linalg.norm(b) + 1e-12))
+
+
+@torch.no_grad()
+def _verify_vs(got, ref, tol):
+    """对拍核函数输出 `got` 与 torch 参考 `ref`。返回 `(ok, detail)`；异常一律判不过。"""
+    try:
+        if isinstance(got, (tuple, list)):        # add_ln 交回 (y, h)
+            got = got[0]
+        if isinstance(ref, (tuple, list)):
+            ref = ref[0]
+        rel = _rel_l2(got.detach().float().cpu().numpy(), ref.detach().float().cpu().numpy())
+    except Exception as exc:                                  # noqa: BLE001
+        return False, f"verify-raised:{type(exc).__name__}"
+    return (rel <= tol), f"rel={rel:.3e} tol={tol:g}"
+
+
+def _verify_vs_pair(got, ref, tol):
+    """`add_ln` 的交货是 (y, h) 两个张量 ⇒ 逐张对拍，两张都过才算过。"""
+    try:
+        gy, gh = got
+        ry, rh = ref
+    except Exception as exc:                                  # noqa: BLE001
+        return False, f"verify-raised:{type(exc).__name__}"
+    ok_y, d_y = _verify_vs(gy, ry, tol)
+    ok_h, d_h = _verify_vs(gh, rh, tol)
+    return (ok_y and ok_h), f"y:{d_y} h:{d_h}"
 
 
 # ────────────────────────────────────────────────────────── 计时核心
@@ -413,29 +541,46 @@ def _route_key(substr, target, before, cnt0):
 
 # ────────────────────────────────────────────────────────── 行格式
 def _fmt(v):
+    if v is None:
+        return "na"                                   # 缺腿（None）⇒ na，别拿 None 去格式化
     return "na" if (v != v) else f"{v:.3f}"          # NaN ⇒ na（不给假数）
 
 
 def bench_line(op, dtype, shape, st, flops, iters, warmup, device, target, key, reuse, note):
     """契约行：`BENCH-<op> dtype= shape= p50_ms= mean_ms= p95_ms= iters= warmup= tflops=
-    mem_alloc_mb= mem_peak_mb=`，后随本件自证的附加字段 track/kernel/reuse/note。"""
+    mem_alloc_mb= mem_peak_mb= verified=`，后随本件自证的附加字段 track/kernel/reuse/note。
+
+    `verified=true` 恒成立：本行只在数值对拍（`run_one` 硬前置）通过后才可能被打出。
+    """
     tf = "na"
     if flops is not None and st["p50"] == st["p50"] and st["p50"] > 0:
-        tf = f"{flops / (st['p50'] / 1e3) / 1e9:.3f}"          # TFLOPS 口径 = p50（中位数）
+        # TFLOPS 口径 = p50（中位数）。**单位是 TFLOP/s = /1e12**（P1-1t 收尾修正：原写 /1e9
+        # 是 GFLOP/s 却标 tflops= ⇒ 1000× 虚高；第二窗"3365.919 tflops"一半是这处错标造成）。
+        tf = f"{flops / (st['p50'] / 1e3) / 1e12:.6f}"
     alloc, peak = _mem_mb(device)
     parts = [f"BENCH-{op}", f"dtype={dtype}", f"shape={shape}",
              f"p50_ms={_fmt(st['p50'])}", f"mean_ms={_fmt(st['mean'])}",
              f"p95_ms={_fmt(st['p95'])}", f"iters={iters}", f"warmup={warmup}",
              f"tflops={tf}", f"mem_alloc_mb={alloc}", f"mem_peak_mb={peak}",
+             f"verified=true",
              f"track={device}/{target}", f"kernel={key}", f"reuse={reuse}"]
     if note:
         parts.append(f"note={note}")
     return " ".join(parts)
 
 
+def notimed_line(op, dtype, shape, reason, device, target):
+    """未过数值自证 ⇒ **拒绝出数**：只报 NOTIMED + 原因，绝不产 p50/tflops/BENCH-QUOTE。
+
+    这是 P1-1t 收尾的硬闸落点（动机：第二窗死代码腿"跑"出 3365.919 假 tflops 进表）。
+    """
+    return (f"BENCH-{op} NOTIMED dtype={dtype} shape={shape} reason={reason} "
+            f"track={device}/{target}")
+
+
 def quote_line(op, dtype, shape, p50, unit_name, work_per_call, flops):
     """把 p50 换成"每小时可完成工作量"——D12 分段记账要的物理量（本件不乘价格）。"""
-    if not (p50 > 0) or p50 != p50:
+    if p50 is None or not (p50 > 0) or p50 != p50:
         return None
     calls_h = 3600.0 / (p50 / 1e3)
     g = "" if flops is None else f" gflop_per_h={flops * calls_h / 1e9:.1f}"
@@ -444,12 +589,18 @@ def quote_line(op, dtype, shape, p50, unit_name, work_per_call, flops):
             f"unit_per_h={calls_h * work_per_call:.1f}{g} basis=p50 track=npu")
 
 
-def ablate_line(base, dtype, shape, ms_scalar, ms_intr, intr_dtype):
-    """标量路 vs intrinsic 路并排（G9 三栈消融行）。任一腿没成 ⇒ ratio=na，绝不硬凑。"""
-    r = "na" if not (ms_scalar and ms_intr and ms_intr > 0) else f"{ms_scalar / ms_intr:.1f}x"
-    return (f"BENCH-ABLATE op={base} dtype={dtype}/{intr_dtype} shape={shape} "
+def ablate_line(base, dtype, shape, ms_scalar, ms_intr, intr_dtype, verified):
+    """标量路 vs intrinsic 路并排（G9 三栈消融行）。任一腿没成 ⇒ ratio=na，绝不硬凑。
+
+    `verified` 为真**仅当两腿都过了数值自证**（⇒ 都真计了时）；否则 ratio=na 且 verified=false
+    ——把"数字不可用"写在行里，杜绝死代码腿的假比值（第二窗 3690.3x）再被引用。
+    """
+    both = bool(ms_scalar and ms_intr and ms_intr > 0)
+    r = f"{ms_scalar / ms_intr:.1f}x" if both else "na"
+    dt = "n/a" if intr_dtype is None else f"{dtype}/{intr_dtype}"
+    return (f"BENCH-ABLATE op={base} dtype={dt} shape={shape} "
             f"scalar_p50_ms={_fmt(ms_scalar)} intrinsic_p50_ms={_fmt(ms_intr)} ratio={r} "
-            f"track=npu")
+            f"verified={'true' if verified else 'false'} track=npu")
 
 
 # ────────────────────────────────────────────────────────── 容器档：只证"计时包裹的是真件"
@@ -515,7 +666,7 @@ def compile_check(cfg, device, target):
     restore_gate = _stub_device_gate()
     restore_compile, box = _install_launch_skip()
     try:
-        call, _flops, _unit = setup(device, target)
+        call, _flops, _unit, _verify = setup(device, target)
         try:
             call()                            # 真编译在装配/首调里；发射必抛 _LaunchSkip
         except _LaunchSkip:
@@ -540,16 +691,33 @@ def compile_check(cfg, device, target):
 
 
 # ────────────────────────────────────────────────────────── 单配置执行
-def run_one(cfg, device, target, iters, warmup, sync):
-    """跑一个配置：装配 → 夹计 → 守卫 → 返回 (BENCH 行, p50, flops, unit, work)。
+class _NotTimed(RuntimeError):
+    """未过数值自证 ⇒ **拒绝计时**（不是失败、也不是成功）：`reason` 原样进 NOTIMED 行。"""
 
-    异常一律上抛给调用方隔离（`BENCH-<op> FAIL`），本函数自己不吞异常。
+    def __init__(self, reason):
+        super().__init__(reason)
+        self.reason = reason
+
+
+def run_one(cfg, device, target, iters, warmup, sync):
+    """跑一个配置：装配 → **数值自证** → 夹计 → 守卫 → 返回 (BENCH 行, p50, flops, unit, work)。
+
+    **数值自证是计时硬前置**（P1-1t 收尾，本波正身）：`verify()` 缺失或不过 ⇒ 抛 `_NotTimed`，
+    由调用方打成 `BENCH-<op> NOTIMED`，**绝不产 p50/tflops/BENCH-QUOTE**。
+    动机：第二窗死代码腿（`__mix__` 落死）"跑"出 0.080ms/3365.919 假 tflops 进表——
+    有数值前置就拦得住（死代码输出是未初始化内存，rel~O(1)）。
+    其余异常一律上抛给调用方隔离（`BENCH-<op> FAIL`），本函数自己不吞异常。
     """
     op, dtype, shape, _tier, substr, setup = cfg
-    before = set(ascend_env.compiled_keys())
+    before = set(ascend_env.compiled_keys())      # 必须在 setup/verify 之前（保 reuse=new 语义）
     cnt0 = ascend_env.compile_count()
     _reset_peak(device)
-    call, flops, (unit_name, work_per_call) = setup(device, target)
+    call, flops, (unit_name, work_per_call), verify = setup(device, target)
+    if verify is None:                            # 没带对拍的腿 = 没有自证 ⇒ 拒绝计时
+        raise _NotTimed("no-numeric-selfproof")
+    ok_v, detail = verify()
+    if not ok_v:                                  # 对拍挂了的腿 ⇒ 拒绝计时（数字不可信）
+        raise _NotTimed(f"numeric-mismatch({detail})")
     samples = measure(call, iters, warmup, sync)
     key, reuse = _route_key(substr, target, before, cnt0)
     st = _stats(samples)
@@ -565,6 +733,26 @@ def run_one(cfg, device, target, iters, warmup, sync):
 def _boom(_device, _target):
     """`--selftest-fail` 的合成配置：**装配阶段就抛**，证明连"还没开始计时"的失败也不中断表。"""
     raise RuntimeError("注入的失败：验证 BENCH 单件异常隔离（其余 op 必须照跑）")
+
+
+def _notimed_selftest(device, _target):
+    """`--selftest-notimed`：合成一条**无对拍**腿（`verify=None`）⇒ 硬闸必须打 NOTIMED。
+
+    负例自证：没有数值自证的腿**不得**产 p50/tflops/QUOTE（这正是第二窗假数的入口）。
+    """
+    x = torch.ones(8, 8, device=device, dtype=torch.float32)
+    return (lambda: x * 2.0), None, ("token", 8), None
+
+
+def _mismatch_selftest(device, _target):
+    """`--selftest-mismatch`：合成一条**对拍必挂**腿（交了 x*2 却拿 x*3 当参考）⇒ 必须 NOTIMED。"""
+    x = torch.ones(8, 8, device=device, dtype=torch.float32)
+    call = lambda: x * 2.0  # noqa: E731
+
+    def verify():
+        return _verify_vs(call(), x * 3.0, _NUM_TOL[torch.float32])
+
+    return call, None, ("token", 8), verify
 
 
 def _first_line(exc):
@@ -598,6 +786,10 @@ def _parse_args(argv):
                     help="容器档：只装配+真编译证『计时包裹的是真件』，不计时（无设备可用）")
     ap.add_argument("--selftest-fail", action="store_true",
                     help="在第 4 条配置处注入一条必然异常，自证异常隔离不中断整表")
+    ap.add_argument("--selftest-notimed", action="store_true",
+                    help="注入一条**无对拍**腿（verify=None）⇒ 硬闸必须打 NOTIMED（负例自证）")
+    ap.add_argument("--selftest-mismatch", action="store_true",
+                    help="注入一条**对拍必挂**腿 ⇒ 硬闸必须打 NOTIMED（负例自证）")
     ap.add_argument("--list-ops", action="store_true", help="列出配置矩阵后退出")
     return ap.parse_args(argv)
 
@@ -636,6 +828,12 @@ def main(argv=None):
         cfgs = [c for c in cfgs if c[0] in want or c[0].replace("_intrinsic", "") in want]
     if args.selftest_fail:
         cfgs.insert(min(3, len(cfgs)), ("selftest", "n/a", "n/a", 0, "", _boom))
+    if args.selftest_notimed:
+        cfgs.insert(min(3, len(cfgs)),
+                    ("selftest_notimed", "n/a", "n/a", 0, "", _notimed_selftest))
+    if args.selftest_mismatch:
+        cfgs.insert(min(3, len(cfgs)),
+                    ("selftest_mismatch", "n/a", "n/a", 0, "", _mismatch_selftest))
 
     iters, warmup = args.iters, args.warmup
     if args.quick and args.iters == 20:                  # 用户没显式点名 iters 时才降档
@@ -649,7 +847,7 @@ def main(argv=None):
           f"configs={len(cfgs)} mode={'compile-check' if args.compile_check else 'time'}")
 
     t0 = time.perf_counter()
-    ok = fail = skipped = fail_ref = fail_inj = 0
+    ok = fail = skipped = notimed = fail_ref = fail_inj = 0
     scalar_ms, intr_ms, quotes = {}, {}, []
     for cfg in cfgs:
         op, dtype, shape = cfg[0], cfg[1], cfg[2]
@@ -676,6 +874,9 @@ def main(argv=None):
                     if q:
                         quotes.append(q)
             ok += 1
+        except _NotTimed as exc:   # 未过数值自证 ⇒ 拒绝出数（既非成功亦非失败，绝不产 p50/QUOTE）
+            print(notimed_line(op, dtype, shape, exc.reason, device, target), flush=True)
+            notimed += 1
         except Exception as exc:  # noqa: BLE001  单次异常不中断整表（任务书纪律②）
             print(f"BENCH-{op} FAIL [{dtype} {shape}] {_first_line(exc)}", flush=True)
             fail += 1
@@ -687,13 +888,16 @@ def main(argv=None):
     wall = time.perf_counter() - t0
     for q in quotes:
         print(q, flush=True)
-    if device == "npu" and intr_ms:
+    if device == "npu" and (intr_ms or scalar_ms):
         for (base, shape, dtype), ms in scalar_ms.items():
-            got = intr_ms.get((base, shape))
-            if base in ("linear", "dW") and got:
-                print(ablate_line(base, dtype, shape, ms, got[0], got[1]), flush=True)
+            if base not in ("linear", "dW"):
+                continue
+            got = intr_ms.get((base, shape))          # 只在 intrinsic 腿**过了数值自证**时才有
+            i_ms, i_dt = got if got else (None, None)
+            print(ablate_line(base, dtype, shape, ms, i_ms, i_dt,
+                              verified=got is not None), flush=True)
 
-    print(f"BENCH-SUMMARY ops={len(cfgs)} ok={ok} fail={fail} wall_s={wall:.1f} "
+    print(f"BENCH-SUMMARY ops={len(cfgs)} ok={ok} fail={fail} notimed={notimed} wall_s={wall:.1f} "
           f"skip={skipped} fail_core={fail - fail_ref - fail_inj} fail_ref={fail_ref} fail_inj={fail_inj} "
           f"track={device}/{target} iters={iters} warmup={warmup}", flush=True)
     _emit_notes(device, target, args.compile_check)
@@ -710,11 +914,18 @@ def _emit_notes(device, target, compile_check):
           "formula='熔断 = 卡时 × ¥per_h 对比 ¥600（D12：¥600 ÷ ¥20/h = 30 卡时，引用非定价）'")
     print("BENCH-NOTE mold-dtype=报价表的 dtype 列务必与 kernel= 字段互证：同形状换位宽后若键名不变、或行尾出现 same-mold-as= ⇒ 该行量到的是别档位宽的模具，须按位宽分趟进程重采；自证工具 ascend/kernels/reconcile/E2_probe_mold.py，实测记录见 reconcile/E2_RESULT.md")
     print("BENCH-NOTE basis='tflops@p50' stats='p50(mean,p95)' "
+          "tflops_unit='TFLOP/s（=flops/(p50/1e3)/1e12；P1-1t 收尾从 /1e9 修正，原为 1000× 虚高）' "
           "sync='torch.npu.synchronize 每次前后夹计' warmup='预热不计入' "
           "unit_per_h='每小时可完成工作量（报价直接抄这一列）'")
     print("BENCH-NOTE ablation='标量路(op) vs intrinsic 路(op_intrinsic，K 波 Cube/l0tr 存档件，"
           "kernels/reconcile/S_perf_track_cube.py，非产品件)' ⇒ G9 三栈消融数据；"
           "对照腿已知 507015/V 系未证真 ⇒ 其 FAIL 计入 fail_ref 不计入 fail_core")
+    print("BENCH-NOTE numeric-gate=计时硬前置：每腿先过数值对拍（P1-1t 收尾）——未带对拍 ⇒ "
+          "`BENCH-<op> NOTIMED reason=no-numeric-selfproof`，对拍挂 ⇒ "
+          "`reason=numeric-mismatch(rel=...)`，**两条都不产 p50/tflops/BENCH-QUOTE**；"
+          "带数字的 BENCH 行尾 `verified=true`，ABLATE 行 `verified=<true|false>`（两腿都过自证才 true）")
+    print("BENCH-NOTE numeric-gate-selfproof='--selftest-notimed'（无对拍腿）与 "
+          "'--selftest-mismatch'（对拍必挂腿）应各打一条 NOTIMED——负例自证硬闸真生效")
     if compile_check:
         print("BENCH-NOTE mode=compile-check 无设备⇒只证『计时包裹的是真编译产物』（发射已桩掉），"
               "本档不产任何耗时/吞吐结论")
