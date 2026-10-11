@@ -98,3 +98,12 @@ STALE-DIFF>0 ⇒ H-b 真：残留含 stale ⇒ 修复须同时处理 UB 预清�
 - **§12 考古（P1-1d/P1-1s）的战略价值降级**：私 fork 在 main 仓上模拟 950 内联函数打到 910B，本质是在复刻适配仓已原生解决的层次；若适配仓实测可用，§12 轨可转为"对齐适配仓"而非继续私养。
 - **P1-3（GDN 旗舰）出现第二条完成路径**：上游 chunk 族（含 bwd）实测 + 我们的可信判决件（gradcheck/delta_bwd/dtype 矩阵）做验收——比继续调我们手写反向在 `ub` 档的三个真机缺陷可能更快更稳。
 - **不变**：窗四仍值得跑（15–20 分钟，把三个 GDN 反向缺陷的责任面钉死，无论底座换不换都是知识）；标量正确性链与判决件体系是**可迁移资产**。
+
+
+## ⑪ H2 底座评估结论（refs/tilelang-ascend 实测，报告 265 行已入库）
+- **构建**：容器 `cann910b-l`（CANN 8.5.0）全量 `cmake+make` **17.1 分钟通过**（修三处环境：lld 关、装 Cython、降并行）；TVM vendored（pin `c2921fd`）。
+- **dav-2201 编译面（实测）**：gemm 3.4s OK；**GDN 六件全部编译通过**（各 2.5–2.9s，bisheng 命令行实含 `--npu-arch=dav-2201 -xasc`）。注意：AscendC 路**硬编码 dav-2201、不看 `ASCEND_NPU_ARCH`**（`libgen.py:155`）。#1830 的编译侧仅 A5/dav-3510 路复现（`Unsupported NPU architecture`）；**PTO 路在 CANN 8.5 编不过**（pto-isa 头失配 `RoundAType` ×6）——PTO 需更新 CANN 才可用。
+- **GDN chunk 族树内形态（修正我 §⑩ 的口径）**：`examples/linear_attention_and_rnn/gdn/*.py` **仅 fwd 六件、fp16、examples 级**；**`chunk_delta_h/chunk_o_bwd/WY` 等 PR（#1799/#1802/#1827）尚未合入 `ascendc_pto`**——"含反向已上游化"是**错的**，反向还在路上。
+- **迁移成本（实测）**：tilelang-ascend **无 `tilelang/ascend/` 包**、`T.alloc_local` 已移除、`target` 合法值无 `"ascend"`、`T.gemm_v0` 与我方原语不等价 ⇒ 我方九件**通用原语可平移、分歧原语须重写**；`TILELANG_CACHE_DIR` 兼容；判决件需适配探针目标。
+- **H2 建议（编排者附议）**：**B+C 而非 A**——底座不切（我方正确性链/训练集成/判决件是已验证资产，且对方 #1830 未闭、PTO 对 CANN 8.5 失配）；采其 GDN chunk fwd 作为**性能参照与算法来源**，bwd 等 PR 合入后再评估；佐证材料（bf16 复现/跨步语义）回馈到 tilelang-ascend。
+- **战略红利（V2 留下的空档由此补上）**：三栈消融的"cube 栈"数据一直是空的（intrinsic 死代码作废）——**tilelang-ascend 的 gemm/GDN 在卡上的真跑数据就是缺失的那一栈**。窗五若跑，顺带补齐 G9 叙事的性能面。
