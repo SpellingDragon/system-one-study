@@ -49,3 +49,29 @@ STALE-DIFF>0 ⇒ H-b 真：残留含 stale ⇒ 修复须同时处理 UB 预清�
 - 主线**未被阻断**：正确性链、四产品件、两档训练步、gradcheck 六件、delta fwd 全绿；新缺陷定位到 **GDN 反向 `dbeta`（device-only）**。
 - 成本：16.5 分钟 ≈ ¥5.5。累计开卡约 8 窗 ≈ 3.5–4 卡时（¥70–80），距 ¥600 熔断线仍远。
 - 下一步（**全部不占卡**）：①`dbeta` 缺陷离线取证（用本窗 48 枚生成码归档 + 双因子假设）②B 段 2 FAIL 的探针/产品分诊 ③D2 default 趟拆进程（一案一进程纪律回归）④compat 双因子修复提案更新（`S3_compat_proposal.diff` + UB 预清零）⑤真形档 0.8B 窗（等你，R6/R7 前置）。
+
+
+## ⑦ 离线分诊与取证（D3/E3 两路，编排者判读）
+### A. **我的同源假设被证伪（如实撤回）**
+我在 §⑤ 写过"可检验推论：若 GDN 反向也走多突发跨步装填，则 `dbeta` 与 E 段机制同源"。D3 生成码取证（三份产物现场复现，md5 `8b11e54e/5393f4be/7092e74e`）：
+- `gdnb[ascend]` **0 条 DMA**；`db_acc/dq_acc/dk_acc/da_acc` **皆寄存器**、与 `dg/dh0` 不共享缓冲；UB 八槽**先写后读**（`firstW<firstR`）、`lam_ub` 入口清零
+⇒ **该内核内没有 stale 落点**，`dbeta` 与跨步/stale **结构上不同面**。**假设撤回**（它当时已标 ❓，未污染结论；教训＝"同窗共存"不等于"同源"）。
+
+### B. `dbeta` 责任面收窄（D3）
+- 工装改造：`run_delta_card.py` 加**容错逐项判**（`ITEM <name> rel= verdict=` 七条，聚合行与 fwd 行**逐字不变**；host 复跑六项仍 `1e-7`、负例 ×1.01 逐项可指认）⇒ 下窗可见"只坏 dbeta 还是多项坏"。
+- **关键发现＝variant 混淆**：host 腿走 `pure`、C 段真机腿走 `ub`；而 `--variant ub` 在 cpu 后端**编译即报错**（`Only one dynamic shared memory allocation is allowed`）⇒ 我此前的"host 过 / device 挂"对比**跨了两个不同档**，"设备侧共享代码写错"前提**不成立**。
+- 生成码层面 `dbeta` 在 `ub/pure/cpu` 三方**代数同构**（`db_acc += du*(v−p)`，无独立写法、无缺 `float32` 累加）⇒ 责任面收窄到 **`ub` 档的设备执行态**，最后一层必须占卡（D3 已备 `D3_NEXTSHOT_dbeta.md` S1/S2/S3 一枪判三事）。
+
+### C. gradcheck 两件 FAIL 均判**真缺陷**（E3 证清探针）
+| 件 | 卡上原文 | 分诊 |
+|---|---|---|
+| `gdn_delta` | `FAIL max_rel=nan` | **真缺陷**：无异常⇒算完含 nan；门分布三处口径实测**均良态**（gradcheck `max=-0.0022≤0, seq=4`；bench V2 `_gate3`；C4 seed=11 `max=-0.093`），fp64 参考有限 `max_abs=8.23`、host fp32-vs-fp64 `1.68e-07` ⇒ **探针无罪**，坏点在 device 侧内核 |
+| `gdn_conv` | `FAIL max_rel=n/a` | **真缺陷**：`n/a`＝**异常被吞**（`run_one:271-280` 见 exc⇒rel=None⇒`_line:330` 打 `n/a`）；异常原文 `RuntimeError: SetPrecisionMode…500001`，抛点＝产品反向闭式 **`autograd_asc.py:434 → F.conv1d`**（torch_npu/ACL 对该 depthwise-conv 反传不接受）⇒ 与输入分布无关 |
+⇒ **窗三 B 段 `fail=2` 保持指控力**，探针输入分布一字未改（改了会把真缺陷洗成噪声——这是正确的取舍）。
+另：E3 报一处既有隐患（`B3_probe_negatives.py` L82 `None` 格式化崩，仅 no-kernel 分支触发）；容器 py3.10 下 cpu 后端不可用（`Forward references must evaluate to types`），host 8/8 基线只在 mac py3.12 成立——**跨环境复现须认这个差**。
+
+### D. 窗三后缺陷台账（全部集中在 **GDN 反向**）
+1. `dbeta` 真机 `rel=0.5997`（`ub` 档设备执行态）
+2. `gdn_delta` gradcheck `nan`（device 侧解析反传）
+3. `gdn_conv` 反传 `SetPrecisionMode 500001`（产品 fallback 依赖 `F.conv1d`，NPU 栈不接受）
+⇒ **P1-3（GDN 件移植，旗舰）的真实缺口就是"反向在真机上不正确"**；前向与其余七门面均已真机绿。这不是"任务无法完成"，而是**缺口被精确到 3 条**——其中 3 号可在本地修（去 `F.conv1d` 依赖，改自研内核），1/2 号需一枪占卡判（`ub/pure` 差分 + 逐项判决 + gradcheck 逐路）。
