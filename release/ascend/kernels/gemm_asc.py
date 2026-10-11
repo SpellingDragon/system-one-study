@@ -232,6 +232,44 @@ def _largest_block(total: int) -> int | None:
     return None
 
 
+# ── P1-1p / P1-1q：W 块装填档的选择纪律 ────────────────────────────────────────
+# 取证出处：release/runs/1011-p2-13-oncard-accept-2002/artifacts/sys1_kernels.tgz（归档真机生成码）
+# 与 reconcile/M2_FP16_NAN_EVIDENCE.md。要点是生成码原文可复核的两点对置，不是推测：
+#   · `bk < k` 时 `T.copy(W[mx*bn, ko*bk], w_ub)` 编成**多突发跨步 GM→UB DMA**，单突发宽 = bk*字节宽。
+#     卡上实测出错的两枚同形：`ea1059e6…` device_kernel.asc:31（fp16 dA n32k96bk32 ⇒ 32 突发 ×64B、
+#     跨距 192B）＝P1-1p 的 NaN 起点；`5d732a8f…` :31（fp32 n96k48bk16 ⇒ 同一组 32/64/192/64）＝P1-1q
+#     的真机错值。经 compat `TL910B_BYTES_TO_BLK`（port910b_compat.h:599，÷32）换算即
+#     (blockLen, srcStride, dstStride) = (2, 6, 2) 个 32B 块。
+#   · `bk == k` 时 tilelang `src/ascend/op/copy.cc` 的 `plan_single_row` 折叠成**整块单发连续**
+#     （blockCount=1），同位宽在卡上实测清白：fp16 前向 `8f30a21f…`/`e07da648…` 各 `1×2048B`
+#     （H 案同窗前向 15 次调用零 NaN 零 inf），fp32 见 `3249db2f…` `1×8192B`、`32d6c39c…` `1×16384B`。
+_MIN_STRIDED_BURST_B = 128
+#: 动态 UB 预算 = 归档里**已在卡上编出产物**的最大申报值（`32d6c39c…` host_kernel.c 申报 24576B；
+#: 与 reconcile/S_RESULT.md 算过的 gemm 最坏档 24KB 同量级）。是工程预算，不是硬件规范。
+_UB_BUDGET_B = 24576
+
+
+def _ub_bytes(bm: int, bn: int, bk: int, elem: int) -> int:
+    """`gemm_scalar_body` 每核块的 UB 需求：a_ub(bm×bk, 恒 fp32) + w_ub(bn×bk, 随源位宽)
+    + c_ub(bm×bn, fp32)。与生成码里 `buf_dyn_shmem` 的分块一一对应（对账见取证探针）。"""
+    return bm * bk * 4 + bn * bk * elem + bm * bn * 4
+
+
+def _pick_bk_ascend(bm: int, bn: int, k: int, elem: int) -> int | None:
+    """ascend 轨的 K 块宽选择：**先试整行连续（bk==k ⇒ 单发突发档）**。
+
+    白话：竖条整块一次取进小格子这种做法在卡上是证过清白的；切成几段、跨步去取，段宽只剩 64 字节
+    的两处实测都错了。所以能整块取就整块取；整块取装不下小格子才退回分段，且分段只允许每段够宽
+    （>=128 字节）的那几种；两条都不满足就交 None，由入口层换普通写法（不硬凑）。
+    """
+    if _ub_bytes(bm, bn, k, elem) <= _UB_BUDGET_B:
+        return k
+    ladder = _largest_block(k)
+    if ladder is not None and ladder * elem >= _MIN_STRIDED_BURST_B:
+        return ladder
+    return None
+
+
 def plan(A: torch.Tensor, W: torch.Tensor, bias: torch.Tensor | None, C: torch.Tensor,
          act: str, target: str | None = None) -> dict[str, Any] | None:
     """判断这组形状/口径能不能交给方言内核；能则返回编译参数与缓存键，否则返回 None（不硬凑）。
@@ -259,6 +297,12 @@ def plan(A: torch.Tensor, W: torch.Tensor, bias: torch.Tensor | None, C: torch.T
     if A.dtype != W.dtype or not (A.is_contiguous() and W.is_contiguous() and C.is_contiguous()):
         return None
     dt = _TL_DT.get(A.dtype, "float32")   # plan 已判 C.dtype == A.dtype 且位宽在白名单内 ⇒ 单段位宽
+    if name == ascend_env.TARGET_ASCEND:
+        # 装填档纪律（P1-1p/P1-1q，取证见 `_pick_bk_ascend` 上方）：只动 bk 的取法，
+        # 接口/正文算式/交货位宽不动；cpu 轨（产物里没有该 DMA 面）维持 ladder 原样。
+        bk = _pick_bk_ascend(BLOCK_M, bn, k, 2 if dt == "float16" else 4)
+        if bk is None:
+            return None
     kwargs = {"n": n, "k": k, "bm": BLOCK_M, "bn": bn, "bk": bk, "act_mode": ACT_MODE[act]}
     impl = gemm_asc_impl if name == ascend_env.TARGET_ASCEND else gemm_cpu_impl
     if name == ascend_env.TARGET_ASCEND:
