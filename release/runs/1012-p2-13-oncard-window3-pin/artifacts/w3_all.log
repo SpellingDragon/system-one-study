@@ -1,0 +1,89 @@
+=== A 验收链（card_run.sh）===
+W3-A-EXIT=0
+Y-linear_prod-PROD-PASS rel=1.59e-07 dir_disc=1.43e+00 reuse=4/4 relu_neg_clipped=787 shapes=5 track=card
+Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+NUM-delta_fwd PASS rel_o=7.51e-08 rel_s=6.03e-08
+ASC-PROD-linear_prod PASS Y-linear_prod-PROD-PASS rel=1.59e-07 dir_disc=1.43e+00 reuse=4/4 relu_neg_clipped=787 shapes=5 track=card
+ASC-PROD-dw_prod PASS Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+ASC-PROD-readout_prod PASS Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+ASC-PROD-addln_prod PASS Y-addln_prod-PROD-PASS rel_y=1.98e-05 rel_h=0.00e+00 unb_disc=7.46e-04 reuse=1/1 shapes=2 track=card
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+P2-STEP-ascend loss0=1.084437 loss1=0.941315 reduced=True params_grad_ok=True
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+P2-STEP-ascend loss0=0.975380 loss1=0.896960 reduced=True params_grad_ok=True
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+DTYPE-TRACE fp16 params=16 fp16=16 fp32_accum=true fallback=0
+CASE-KERNELS-TGZ track=gating tmo=180s
+KERNELS-TGZ /tmp/sys1_kernels.tgz size=574211B entries=336 kernels=48
+CASE-KERNELS-TGZ VERDICT-PASS rc=0 track=gating tally(pass=10 fail=0 adv=3) log=/tmp/sys1_legs/KERNELS-TGZ.log
+CASE-KERNELS-TGZ VERDICT-PASS rc=0 track=gating
+ASC-PROD-linear_prod PASS Y-linear_prod-PROD-PASS rel=1.59e-07 dir_disc=1.43e+00 reuse=4/4 relu_neg_clipped=787 shapes=5 track=card
+ASC-PROD-dw_prod PASS Y-dw_prod-PROD-PASS rel=1.36e-07 dir_disc=1.39e+00 reuse=4/4 shapes=4 track=card
+ASC-PROD-readout_prod PASS Y-readout_prod-PROD-PASS rel=0.00e+00 fwd=0.00e+00 bwd=0.00e+00 bitexact=True reuse=6/6 shapes=5 track=card
+ASC-PROD-addln_prod PASS Y-addln_prod-PROD-PASS rel_y=1.98e-05 rel_h=0.00e+00 unb_disc=7.46e-04 reuse=1/1 shapes=2 track=card
+KERNELS-TGZ /tmp/sys1_kernels.tgz size=574211B entries=336 kernels=48
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+NPU-REG ok 2.7.1.post2 target=ascend npu_avail=True npu 已在场（未额外 import）
+KERNEL-USED-PASS kernels=13 blockers=0 fallbacks=0 target=ascend
+LOGS /tmp/sys1_legs (每条腿原文一份，补看：grep -E '^Y-|^NUM-|^ASC-|^P2-STEP|^KERNEL-USED|^DTYPE-TRACE' /tmp/sys1_legs/<腿>.log)
+RUNNER-DONE SUMMARY pass=10 fail=0 skipped_legs=1 degraded=0 advisory_fail=3 exit=0
+=== B 卡上 gradcheck（8 门面 × KERNEL-USED 绑定）===
+W3-B-EXIT=1
+GRADCHECK-linear PASS max_rel=1.225e-05 eps=0.05
+GRADCHECK-add_ln PASS max_rel=2.007e-05 eps=0.02
+GRADCHECK-rope PASS max_rel=1.231e-05 eps=0.05
+GRADCHECK-attn_sw PASS max_rel=2.535e-05 eps=0.02
+GRADCHECK-gdn_delta FAIL max_rel=nan eps=0.01
+GRADCHECK-gdn_conv FAIL max_rel=n/a eps=0.01
+GRADCHECK-readout PASS max_rel=3.540e-06 eps=0.05
+GRADCHECK-lora_apply PASS max_rel=3.826e-06 eps=0.05
+GRADCHECK-SUMMARY ops=8 pass=6 fail=2 invalid=0 kernel_used=8/8
+--- ts ---
+2026-10-12 00:15:36
+=== C delta 反向六项梯度真机判决 ===
+W3-C-EXIT=1
+NUM-delta_fwd PASS rel_o=7.51e-08 rel_s=6.03e-08
+NUM-delta_bwd FAIL first=dbeta rel=5.997e-01 absdiff=4.435e+00 thresh=2e-04
+--- ts ---
+2026-10-12 00:16:06
+=== D D2 变体腿（X1–X7 真值表；REPO 口径已订正为 release/ascend）===
+W3-D-EXIT=0
+NUM-gemm_l1_intrinsic-FAIL _LaunchSkip: 
+NUM-dw_intrinsic-FAIL _LaunchSkip: 
+   [default] child-rc=1 log=/tmp/d2_card/d2_logs/leg_default.log bytes=5509
+NUM-gemm_l1_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+NUM-dw_intrinsic-FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+   [A] child-rc=1 log=/tmp/d2_card/d2_logs/leg_A.log bytes=4289
+NUM-gemm_l1_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+NUM-dw_intrinsic-FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+   [C] child-rc=1 log=/tmp/d2_card/d2_logs/leg_C.log bytes=4289
+[default] SO-VERDICT so=BASE  （无 --baseline ⇒ 本腿为窗内参照（其余腿与它比）；asc_fp=2e302e446203ddce so_fp=7dcd321adcf3c6ce）
+[default] LEG-VERDICT D2-LEG-OK（三判决行齐：inject+so+num）
+[A] SO-VERDICT so=DIFF  （机器码变了：dW_l0tr_kernel#0,main_kernel#0；asc_fp=c3362af42df8abbe so_fp=cd1e7d7adb93811d）
+[A] LEG-VERDICT D2-LEG-OK（三判决行齐：inject+so+num）
+[C] SO-VERDICT so=DIFF  （机器码变了：main_kernel#0；asc_fp=c3362af42df8abbe so_fp=5b683fd982c95dc1）
+[C] LEG-VERDICT D2-LEG-OK（三判决行齐：inject+so+num）
+D2-LEGS-SUMMARY valid=3/3 combos=default,A,C invalid=（无）
+--- ts ---
+2026-10-12 00:17:48
+=== E 跨步第二层因素一枪（H-b 预填对照 / H-e）===
+W3-E-EXIT=0
+S3-NEXT dev=npu m=16 n=96 ks=48,96,32 acts=none,relu prefills=none,zero,perm
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+  STALE-DIFF 与 none 不同的 prefill=无 ⇒ H-b 未被本实验触发（残留与上次 UB 内容无关）
+  STALE-DIFF 与 none 不同的 prefill=无 ⇒ H-b 未被本实验触发（残留与上次 UB 内容无关）
+S3-NEXT-TRUTH（把实测对到下表判机制）:
+  · 所有候选 mm+nn>0（含 sym=0 的最优仍>0）⇒ 非单一几何 ⇒ 看 STALE-DIFF。
+  · STALE-DIFF>0 ⇒ H-b 真：残留含 stale ⇒ 修复须同时处理 UB 预清零/落趟拆解。
+  · STALE-DIFF=0 且无候选命中 ⇒ 退提案 B（每突发单发连续 DMA，blockSize 语义无关）。
+--- ts ---
+2026-10-12 00:18:54
+=== 现场保全 ===
+W3-TGZ size=8861B
+W3-DONE

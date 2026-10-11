@@ -1,0 +1,77 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+S3-NEXT dev=npu m=16 n=96 ks=48,96,32 acts=none,relu prefills=none,zero,perm
+---- k=48/none bn=32 bk=16 nb=3 nk=3 dma=strided ----
+2026-10-12 00:17:59  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `probe_asc` with `out_idx=[1]`
+2026-10-12 00:18:01  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `probe_asc`
+2026-10-12 00:18:02  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 00:18:08  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+  PREFILL=none MEASURE OK=0 行=1415 列=1239 UNATTR=121 fp=e2b05a17
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1536|0  C(srcStride被忽略)=1536|0  G(双gap)=384|647  Gs(源gap)=1408|109  Gd(目的gap)=768|647  Z(dstStride被忽略)=45|1367  Zc(dst连续,src pitch)=1536|0
+  PREFILL=zero MEASURE OK=0 行=1429 列=1253 UNATTR=107 fp=a61878e4
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1536|0  C(srcStride被忽略)=1536|0  G(双gap)=384|661  Gs(源gap)=1408|113  Gd(目的gap)=768|661  Z(dstStride被忽略)=45|1381  Zc(dst连续,src pitch)=1536|0
+  PREFILL=perm MEASURE OK=0 行=1404 列=1231 UNATTR=132 fp=3a9f3ab7
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1536|0  C(srcStride被忽略)=1536|0  G(双gap)=384|636  Gs(源gap)=1408|109  Gd(目的gap)=768|636  Z(dstStride被忽略)=45|1356  Zc(dst连续,src pitch)=1536|0
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+---- k=48/relu bn=32 bk=16 nb=3 nk=3 dma=strided ----
+2026-10-12 00:18:09  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 00:18:16  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+  PREFILL=none MEASURE OK=0 行=1536 列=1351 UNATTR=0 fp=6a807b12
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1536|0  C(srcStride被忽略)=1536|0  G(双gap)=384|768  Gs(源gap)=1408|128  Gd(目的gap)=768|768  Z(dstStride被忽略)=45|1488  Zc(dst连续,src pitch)=1536|0
+  PREFILL=zero MEASURE OK=0 行=1536 列=1357 UNATTR=0 fp=9754a2f2
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1536|0  C(srcStride被忽略)=1536|0  G(双gap)=384|768  Gs(源gap)=1408|128  Gd(目的gap)=768|768  Z(dstStride被忽略)=45|1488  Zc(dst连续,src pitch)=1536|0
+  PREFILL=perm MEASURE OK=0 行=1536 列=1355 UNATTR=0 fp=5be8117f
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1536|0  C(srcStride被忽略)=1536|0  G(双gap)=384|768  Gs(源gap)=1408|128  Gd(目的gap)=768|768  Z(dstStride被忽略)=45|1488  Zc(dst连续,src pitch)=1536|0
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+---- k=96/none bn=32 bk=32 nb=3 nk=3 dma=strided ----
+2026-10-12 00:18:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 00:18:23  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+  PREFILL=none MEASURE OK=25 行=642 列=514 UNATTR=869 fp=b2ff4806
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1511|0  C(srcStride被忽略)=1505|0  G(双gap)=384|283  Gs(源gap)=1384|58  Gd(目的gap)=696|283  Z(dstStride被忽略)=48|643  Zc(dst连续,src pitch)=1511|0
+  PREFILL=zero MEASURE OK=24 行=625 列=496 UNATTR=887 fp=82eff399
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1512|0  C(srcStride被忽略)=1509|0  G(双gap)=384|265  Gs(源gap)=1384|58  Gd(目的gap)=696|265  Z(dstStride被忽略)=48|625  Zc(dst连续,src pitch)=1512|0
+  PREFILL=perm MEASURE OK=24 行=746 列=594 UNATTR=766 fp=eda3ece1
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1512|0  C(srcStride被忽略)=1512|0  G(双gap)=384|386  Gs(源gap)=1384|64  Gd(目的gap)=696|386  Z(dstStride被忽略)=48|746  Zc(dst连续,src pitch)=1512|0
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+---- k=96/relu bn=32 bk=32 nb=3 nk=3 dma=strided ----
+2026-10-12 00:18:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 00:18:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+  PREFILL=none MEASURE OK=24 行=822 列=596 UNATTR=690 fp=50e4ca7b
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1512|0  C(srcStride被忽略)=1480|0  G(双gap)=384|462  Gs(源gap)=1384|64  Gd(目的gap)=696|462  Z(dstStride被忽略)=48|822  Zc(dst连续,src pitch)=1512|0
+  PREFILL=zero MEASURE OK=32 行=736 列=496 UNATTR=768 fp=6c7f7440
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1504|0  C(srcStride被忽略)=1496|0  G(双gap)=384|384  Gs(源gap)=1384|64  Gd(目的gap)=696|384  Z(dstStride被忽略)=48|744  Zc(dst连续,src pitch)=1504|0
+  PREFILL=perm MEASURE OK=24 行=877 列=709 UNATTR=635 fp=0608c2a9
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=1512|0  C(srcStride被忽略)=1511|0  G(双gap)=384|517  Gs(源gap)=1384|88  Gd(目的gap)=696|517  Z(dstStride被忽略)=48|877  Zc(dst连续,src pitch)=1512|0
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+---- k=32/none bn=32 bk=32 nb=3 nk=1 dma=single ----
+2026-10-12 00:18:32  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 00:18:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+  PREFILL=none MEASURE OK=1536 行=0 列=0 UNATTR=0 fp=333b8a00
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=0|0  C(srcStride被忽略)=0|0  G(双gap)=0|768  Gs(源gap)=1232|256  Gd(目的gap)=720|768  Z(dstStride被忽略)=48|1488  Zc(dst连续,src pitch)=0|0
+  PREFILL=zero MEASURE OK=1536 行=0 列=0 UNATTR=0 fp=333b8a00
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=0|0  C(srcStride被忽略)=0|0  G(双gap)=0|768  Gs(源gap)=1232|256  Gd(目的gap)=720|768  Z(dstStride被忽略)=48|1488  Zc(dst连续,src pitch)=0|0
+  PREFILL=perm MEASURE OK=1536 行=0 列=0 UNATTR=0 fp=333b8a00
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=0|0  C(srcStride被忽略)=0|0  G(双gap)=0|768  Gs(源gap)=1232|256  Gd(目的gap)=720|768  Z(dstStride被忽略)=48|1488  Zc(dst连续,src pitch)=0|0
+  STALE-DIFF 与 none 不同的 prefill=无 ⇒ H-b 未被本实验触发（残留与上次 UB 内容无关）
+---- k=32/relu bn=32 bk=32 nb=3 nk=1 dma=single ----
+2026-10-12 00:18:40  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 00:18:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+  PREFILL=none MEASURE OK=1536 行=0 列=0 UNATTR=0 fp=333b8a00
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=0|0  C(srcStride被忽略)=0|0  G(双gap)=0|768  Gs(源gap)=1232|256  Gd(目的gap)=720|768  Z(dstStride被忽略)=48|1488  Zc(dst连续,src pitch)=0|0
+  PREFILL=zero MEASURE OK=1536 行=0 列=0 UNATTR=0 fp=333b8a00
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=0|0  C(srcStride被忽略)=0|0  G(双gap)=0|768  Gs(源gap)=1232|256  Gd(目的gap)=720|768  Z(dstStride被忽略)=48|1488  Zc(dst连续,src pitch)=0|0
+  PREFILL=perm MEASURE OK=1536 行=0 列=0 UNATTR=0 fp=333b8a00
+      cands(U2步法 mm+nn | S3对称sym): P(pitch,pitch)=0|0  C(srcStride被忽略)=0|0  G(双gap)=0|768  Gs(源gap)=1232|256  Gd(目的gap)=720|768  Z(dstStride被忽略)=48|1488  Zc(dst连续,src pitch)=0|0
+  STALE-DIFF 与 none 不同的 prefill=无 ⇒ H-b 未被本实验触发（残留与上次 UB 内容无关）
+S3-NEXT-TRUTH（把实测对到下表判机制）:
+  · 某候选 mm+nn==0 且 sym==0 → 该语义即硬件真值；若=P ⇒ 提案A(§6)语义成立、H-b 无关。
+  · 若 =G(双gap) ⇒ 硬件忠实 gap、codegen 喂 pitch ⇒ 提案A 为必要修复。
+  · 所有候选 mm+nn>0（含 sym=0 的最优仍>0）⇒ 非单一几何 ⇒ 看 STALE-DIFF。
+  · STALE-DIFF>0 ⇒ H-b 真：残留含 stale ⇒ 修复须同时处理 UB 预清零/落趟拆解。
+  · STALE-DIFF=0 且无候选命中 ⇒ 退提案 B（每突发单发连续 DMA，blockSize 语义无关）。

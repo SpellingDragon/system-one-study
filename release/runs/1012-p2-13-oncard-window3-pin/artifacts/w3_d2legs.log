@@ -1,0 +1,194 @@
+== D2-PRECHECK P910B_REPO=/tmp/sys1/release/ascend run=True cache_root=/tmp/d2_card
+D2-PRECHECK-OK runner=compile_all+gemm_l1_intrinsic+dw_intrinsic 全部在场
+
+════════ combo=default  legs=compile_all,gemm_l1_intrinsic,dw_intrinsic  cache=/tmp/d2_card/d2_legs_default ════════
+D2-CHILD-START combo=default cache=/tmp/d2_card/d2_legs_default run=True legs=compile_all,gemm_l1_intrinsic,dw_intrinsic
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+## inprocess combo=default flags=（默认 OFF） cache=/tmp/d2_card/d2_legs_default tilelang=0.1.15
+   $ tmp/sys1/release/ascend/compile_all_asc.py --target ascend
+=== compile_all_asc target=ascend tilelang=0.1.15 ops=9 ===
+2026-10-12 00:16:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 00:16:23  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+ASC-gemm PASS .o~2850B keys=1 first=ascend|gemm[ascend]|n32k32b16x32x32anonedfloat32
+2026-10-12 00:16:23  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-12 00:16:28  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+ASC-gemm_bwd_dw PASS .o~2250B keys=1 first=ascend|gemm_dw[ascend]|n32k32tc16b32x32dfloat32
+2026-10-12 00:16:28  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `add_ln_impl` with `out_idx=[]`
+2026-10-12 00:16:34  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `add_ln_impl`
+ASC-add_ln PASS .o~3625B keys=1 first=ascend|add_ln[ascend]|d64e1e-05b16
+2026-10-12 00:16:34  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `rope_impl` with `out_idx=[]`
+2026-10-12 00:16:36  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `rope_impl`
+ASC-rope PASS .o~2106B keys=1 first=ascend|rope[ascend]|h2d8s2g1qfloat32afloat32
+2026-10-12 00:16:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `attn_impl` with `out_idx=[]`
+2026-10-12 00:16:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `attn_impl`
+ASC-attn_sw PASS .o~2911B keys=1 first=ascend|attn_sw[ascend]|h2d16w8b16x16
+2026-10-12 00:16:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_impl` with `out_idx=[]`
+2026-10-12 00:16:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_impl`
+ASC-gdn PASS .o~4003B keys=1 first=ascend|gdn[ascend]|h2k16v8|c8ubh
+2026-10-12 00:16:42  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `conv_impl` with `out_idx=[]`
+2026-10-12 00:16:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `conv_impl`
+ASC-gdn_conv PASS .o~1864B keys=1 first=ascend|gdnconv[ascend]|c16k4b2|c8scalare
+2026-10-12 00:16:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gather_impl` with `out_idx=[]`
+2026-10-12 00:16:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gather_impl`
+ASC-letter_readout PASS .o~922B keys=1 first=ascend|gather[ascend]|d64
+2026-10-12 00:16:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 00:16:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+ASC-lora PASS .o~2842B keys=1 first=ascend|gemm[ascend]|n16k32b16x16x32anonedfloat32
+—— 汇总 target=ascend 接口腿 PASS=9 FAIL=0 —— 门禁失败数=0
+   -> exit rc=0
+   $ tmp/sys1/release/ascend/port910b/run_numerics.py --only gemm_l1_intrinsic --track card
+2026-10-12 00:16:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `main` with `out_idx=-1`
+2026-10-12 00:16:55  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `main`
+NUM-gemm_l1_intrinsic-FAIL _LaunchSkip: 
+   -> exit rc=1
+   $ tmp/sys1/release/ascend/port910b/run_numerics.py --only dw_intrinsic --track card
+2026-10-12 00:16:57  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dW_l0tr` with `out_idx=-1`
+2026-10-12 00:16:59  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dW_l0tr`
+NUM-dw_intrinsic-FAIL _LaunchSkip: 
+   -> exit rc=1
+   [default] child-rc=1 log=/tmp/d2_card/d2_logs/leg_default.log bytes=5509
+   [default] 每核指纹（asc=源码面 so=机器码面）：
+        add_ln_impl_kernel#0   asc=  3625B 6ad797ffbcbd2757 | so=  70440B 9a668606a0563aa4
+        attn_impl_kernel#0     asc=  2911B cadb48007a896fe1 | so=  70440B 346c4bbb662937f2
+        conv_impl_kernel#0     asc=  1864B f453ab66ff64639c | so=  70440B a0b4b329e322fa7b
+        dW_l0tr_kernel#0       asc=  1574B 1569104470443842 | so=  70488B 49c99faa5ccc4c74
+        dw_impl_kernel#0       asc=  2250B 1ecd75d797ee9e45 | so=  70432B a3dc409d0f547cf2
+        gather_impl_kernel#0   asc=   922B fda05a97f3379151 | so=  70440B 98f71b448c2bedd7
+        gdn_impl_kernel#0      asc=  4003B da3dcaf1dd20db1f | so=  70440B 65214ad941c5c002
+        gemm_impl_kernel#0     asc=  2850B 7b19bab1fa1c1270 | so=  70440B 833eb4ec4f285472
+        gemm_impl_kernel#1     asc=  2842B 7ca7150dcfa7d3f7 | so=  70440B c5f381cfbb5f7e8d
+        main_kernel#0          asc=  1163B f9a8026fd6c65dfe | so=  70432B 0b9aa28b82c64a76
+        rope_impl_kernel#0     asc=  2106B 8e7e9f96f1d20797 | so=  70440B 6daa90f33627d4bf
+        aibin 11 件 总=70368B fp=eaf68ea1aa97f201
+   [default] spawn rc=1
+
+════════ combo=A  legs=gemm_l1_intrinsic,dw_intrinsic  cache=/tmp/d2_card/d2_legs_A ════════
+D2-CHILD-START combo=A cache=/tmp/d2_card/d2_legs_A run=True legs=gemm_l1_intrinsic,dw_intrinsic
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+## inprocess combo=A flags=['-DTL910B_VARIANT_A'] cache=/tmp/d2_card/d2_legs_A tilelang=0.1.15
+   $ tmp/sys1/release/ascend/port910b/run_numerics.py --only gemm_l1_intrinsic --track card
+2026-10-12 00:17:15  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `main` with `out_idx=-1`
+2026-10-12 00:17:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `main`
+NUM-gemm_l1_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+[ERROR] 2026-10-12-00:17:20 (PID:27987, Device:0, RankID:-1) ERR00100 PTA call acl api failed
+[Error]: The aicore execution is abnormal. 
+        Rec
+   -> exit rc=1
+   $ tmp/sys1/release/ascend/port910b/run_numerics.py --only dw_intrinsic --track card
+2026-10-12 00:17:20  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dW_l0tr` with `out_idx=-1`
+2026-10-12 00:17:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dW_l0tr`
+[W1012 00:17:22.042824299 compiler_depend.ts:58] Warning: EE9999: Inner Error!
+EE9999[PID: 27987] 2026-10-12-00:17:22.376.814 (EE9999):  rtStreamSynchronize execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       synchronize stream failed, runtime result = 507015[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function copy_between_host_and_device_opapi)
+NUM-dw_intrinsic-FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+   -> exit rc=1
+[W1012 00:17:22.046176426 compiler_depend.ts:595] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 27987] 2026-10-12-00:17:22.381.842 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeUsedDevices)
+[W1012 00:17:22.047594863 compiler_depend.ts:577] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 27987] 2026-10-12-00:17:22.383.450 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeDevice)
+   [A] child-rc=1 log=/tmp/d2_card/d2_logs/leg_A.log bytes=4289
+   [A] 每核指纹（asc=源码面 so=机器码面）：
+        dW_l0tr_kernel#0       asc=  1574B 1569104470443842 | so=  70488B c325aaea3ad488e0
+        main_kernel#0          asc=  1163B f9a8026fd6c65dfe | so=  70432B a7e2230a18e61ac3
+        aibin 2 件 总=12768B fp=6504ac1356daf4bd
+   [A] spawn rc=1
+
+════════ combo=C  legs=gemm_l1_intrinsic,dw_intrinsic  cache=/tmp/d2_card/d2_legs_C ════════
+D2-CHILD-START combo=C cache=/tmp/d2_card/d2_legs_C run=True legs=gemm_l1_intrinsic,dw_intrinsic
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+## inprocess combo=C flags=['-DTL910B_VARIANT_C'] cache=/tmp/d2_card/d2_legs_C tilelang=0.1.15
+   $ tmp/sys1/release/ascend/port910b/run_numerics.py --only gemm_l1_intrinsic --track card
+2026-10-12 00:17:36  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `main` with `out_idx=-1`
+2026-10-12 00:17:38  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `main`
+NUM-gemm_l1_intrinsic-FAIL RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507015
+[ERROR] 2026-10-12-00:17:41 (PID:28670, Device:0, RankID:-1) ERR00100 PTA call acl api failed
+[Error]: The aicore execution is abnormal. 
+        Rec
+   -> exit rc=1
+   $ tmp/sys1/release/ascend/port910b/run_numerics.py --only dw_intrinsic --track card
+2026-10-12 00:17:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dW_l0tr` with `out_idx=-1`
+2026-10-12 00:17:42  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dW_l0tr`
+[W1012 00:17:43.993262946 compiler_depend.ts:58] Warning: EE9999: Inner Error!
+EE9999[PID: 28670] 2026-10-12-00:17:43.327.691 (EE9999):  rtStreamSynchronize execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       synchronize stream failed, runtime result = 507015[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function copy_between_host_and_device_opapi)
+NUM-dw_intrinsic-FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+   -> exit rc=1
+[W1012 00:17:43.996214080 compiler_depend.ts:595] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 28670] 2026-10-12-00:17:43.331.913 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeUsedDevices)
+[W1012 00:17:43.997621957 compiler_depend.ts:577] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 28670] 2026-10-12-00:17:43.333.461 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeDevice)
+   [C] child-rc=1 log=/tmp/d2_card/d2_logs/leg_C.log bytes=4289
+   [C] 每核指纹（asc=源码面 so=机器码面）：
+        dW_l0tr_kernel#0       asc=  1574B 1569104470443842 | so=  70488B 49c99faa5ccc4c74
+        main_kernel#0          asc=  1163B f9a8026fd6c65dfe | so=  70432B 2add3d826586e050
+        aibin 2 件 总=12768B fp=e5df58aa62d7d3ff
+   [C] spawn rc=1
+[default] SO-VERDICT so=BASE  （无 --baseline ⇒ 本腿为窗内参照（其余腿与它比）；asc_fp=2e302e446203ddce so_fp=7dcd321adcf3c6ce）
+[default] LEG-VERDICT D2-LEG-OK（三判决行齐：inject+so+num）
+[A] SO-VERDICT so=DIFF  （机器码变了：dW_l0tr_kernel#0,main_kernel#0；asc_fp=c3362af42df8abbe so_fp=cd1e7d7adb93811d）
+[A] LEG-VERDICT D2-LEG-OK（三判决行齐：inject+so+num）
+[C] SO-VERDICT so=DIFF  （机器码变了：main_kernel#0；asc_fp=c3362af42df8abbe so_fp=5b683fd982c95dc1）
+[C] LEG-VERDICT D2-LEG-OK（三判决行齐：inject+so+num）
+
+D2-LEGS-SUMMARY valid=3/3 combos=default,A,C invalid=（无）
+
+════════ 结论表 ════════
+ [+A vs default]
+        [A] dW_l0tr_kernel#0       asc=SAME so=DIFF  ← 机器码变了
+        [A] main_kernel#0          asc=SAME so=DIFF  ← 机器码变了
+        [A] aibin 集合交集 0/11（cur/base）
+   ⇒ 变体 A：机器码面**有反应**（活开关）
+ [+C vs default]
+        [C] dW_l0tr_kernel#0       asc=SAME so=SAME
+        [C] main_kernel#0          asc=SAME so=DIFF  ← 机器码变了
+        [C] aibin 集合交集 1/11（cur/base）
+   ⇒ 变体 C：机器码面**有反应**（活开关）
