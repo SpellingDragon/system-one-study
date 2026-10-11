@@ -1,0 +1,85 @@
+OVERLAY-OK headers=5 tpl=12
+INJECT-OK
+STOP-AFTER-2 OVERLAY-OK
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+W4-ENV TLPKG=/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang hdr_md5=ca023c2e
+=== V1 卡上 gradcheck（F4 conv 反向修复的判决）===
+W4-V1-EXIT=1
+GRADCHECK-linear PASS max_rel=1.225e-05 eps=0.05
+GRADCHECK-add_ln PASS max_rel=2.007e-05 eps=0.02
+GRADCHECK-rope PASS max_rel=1.231e-05 eps=0.05
+GRADCHECK-attn_sw PASS max_rel=2.535e-05 eps=0.02
+GRADCHECK-gdn_delta PASS max_rel=nan eps=0.01
+GRADCHECK-gdn_conv FAIL max_rel=5.538e+04 eps=0.01
+GRADCHECK-readout PASS max_rel=3.540e-06 eps=0.05
+GRADCHECK-lora_apply PASS max_rel=3.826e-06 eps=0.05
+GRADCHECK-SUMMARY ops=8 pass=7 fail=1 invalid=0 kernel_used=8/8
+=== V2 E3 逐路分诊（gdn_delta 坏路 + gdn_conv 现状）===
+W4-V2-EXIT=0
+E3-TRIAGE-gdn_delta BEGIN target=ascend device=npu eps=0.01 shapes=[(2, 4, 8), (2, 4, 8), (2, 4, 8), (2, 4, 8), (2, 4)]
+E3-TRIAGE-gdn_delta FWD finite=True nan=0 inf=0 maxabs=5.096
+E3-TRIAGE-gdn_delta VERDICT=clean rel=2.2100e+05 pass=False
+E3-TRIAGE-gdn_conv BEGIN target=ascend device=npu eps=0.01 shapes=[(2, 8, 6), (8, 4), (8,)]
+E3-TRIAGE-gdn_conv FWD finite=True nan=0 inf=0 maxabs=3
+E3-TRIAGE-gdn_conv VERDICT=clean rel=1.1636e+02 pass=False
+=== V3 delta_bwd 逐项判（是否只坏 dbeta）===
+W4-V3-EXIT=1
+NUM-delta_fwd PASS rel_o=7.51e-08 rel_s=6.03e-08
+ITEM dq rel= 6.999e-08 verdict= PASS
+ITEM dk rel= 9.322e-08 verdict= PASS
+ITEM dv rel= 6.629e-08 verdict= PASS
+ITEM dbeta rel= 8.002e-01 verdict= FAIL
+ITEM dg rel= 1.016e-07 verdict= PASS
+ITEM dh0 rel= 6.176e-08 verdict= PASS
+ITEM adjoint rel= 5.999e-10 verdict= PASS
+NUM-delta_bwd FAIL first=dbeta rel=8.002e-01 absdiff=7.342e+00 thresh=2e-04
+=== V4 D3 ub/pure 两档差分（dbeta 责任面）===
+W4-V4-ub-EXIT=0
+D3-ORDER dev=npu variant=ub target=ascend
+gdnb keys = ['ascend|gdnb[ascend]|h2k8v8|c2ubz']
+ITEM dq rel= 6.999e-08 verdict= PASS
+ITEM dk rel= 9.322e-08 verdict= PASS
+ITEM dv rel= 6.629e-08 verdict= PASS
+ITEM dbeta rel= 1.018e-07 verdict= PASS
+ITEM dg rel= 1.016e-07 verdict= PASS
+ITEM dh0 rel= 6.176e-08 verdict= PASS
+DBETA-FP  clean 三跑指纹（none / after-dirty / after-zero）:
+  none   dbeta-fp=e609a6ab
+  dirty  dbeta-fp=2a507f3e
+  zero   dbeta-fp=45266aef
+W4-V4-pure-EXIT=0
+D3-ORDER dev=npu variant=pure target=ascend
+gdnb keys = ['ascend|gdnb[ascend]|h2k8v8|c2purez']
+ITEM dq rel= 7.551e-08 verdict= PASS
+ITEM dk rel= 6.437e-08 verdict= PASS
+ITEM dv rel= 6.629e-08 verdict= PASS
+ITEM dbeta rel= 8.002e-01 verdict= FAIL
+ITEM dg rel= 9.571e-08 verdict= PASS
+ITEM dh0 rel= 6.176e-08 verdict= PASS
+DBETA-FP  clean 三跑指纹（none / after-dirty / after-zero）:
+  none   dbeta-fp=e609a6ab
+  dirty  dbeta-fp=e609a6ab
+  zero   dbeta-fp=e609a6ab
+=== V5 双因子提案 v2 判决（补丁前后各一趟）===
+W4-V5-BASE-EXIT=0
+  STALE-DIFF 与 none 不同的 prefill=['zero'] ⇒ H-b 真（UB 残留受上次发射影响）
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+  STALE-DIFF 与 none 不同的 prefill=['zero', 'perm'] ⇒ H-b 真（UB 残留受上次发射影响）
+  STALE-DIFF 与 none 不同的 prefill=无 ⇒ H-b 未被本实验触发（残留与上次 UB 内容无关）
+  STALE-DIFF 与 none 不同的 prefill=无 ⇒ H-b 未被本实验触发（残留与上次 UB 内容无关）
+  · 所有候选 mm+nn>0（含 sym=0 的最优仍>0）⇒ 非单一几何 ⇒ 看 STALE-DIFF。
+  · STALE-DIFF>0 ⇒ H-b 真：残留含 stale ⇒ 修复须同时处理 UB 预清零/落趟拆解。
+W4-V5-PATCHED mode=p1 md5=dabd4751
+W4-V5-AFTER-EXIT=1
+W4-V5-RESTORED md5=ca023c2e
+=== 现场保全 ===
+W4-TGZ size=5593B
+W4-DONE

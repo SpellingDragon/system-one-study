@@ -1,0 +1,39 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+E3-TRIAGE-gdn_delta BEGIN target=ascend device=npu eps=0.01 shapes=[(2, 4, 8), (2, 4, 8), (2, 4, 8), (2, 4, 8), (2, 4)]
+E3-TRIAGE-gdn_delta FWD finite=True nan=0 inf=0 maxabs=5.096
+[W1012 02:43:00.446303311 compiler_depend.ts:164] Warning: Device do not support double dtype now, dtype cast replace with float. (function operator())
+    dir0 q     ana finite=True nan=0 inf=0 maxabs=12.97 | num finite=True nan=0 inf=0 maxabs=816.7
+    dir0 k     ana finite=True nan=0 inf=0 maxabs=25.65 | num finite=True nan=0 inf=0 maxabs=1561
+    dir0 v     ana finite=True nan=0 inf=0 maxabs=8.401 | num finite=True nan=0 inf=0 maxabs=1299
+    dir0 g     ana finite=True nan=0 inf=0 maxabs=14.64 | num finite=True nan=0 inf=0 maxabs=5410
+    dir0 beta  ana finite=True nan=0 inf=0 maxabs=41.84 | num finite=True nan=0 inf=0 maxabs=1.746e+04
+    dir1 q     ana finite=True nan=0 inf=0 maxabs=4.765 | num finite=True nan=0 inf=0 maxabs=933.2
+    dir1 k     ana finite=True nan=0 inf=0 maxabs=19.91 | num finite=True nan=0 inf=0 maxabs=1658
+    dir1 v     ana finite=True nan=0 inf=0 maxabs=7.682 | num finite=True nan=0 inf=0 maxabs=2040
+    dir1 g     ana finite=True nan=0 inf=0 maxabs=12.51 | num finite=True nan=0 inf=0 maxabs=4650
+    dir1 beta  ana finite=True nan=0 inf=0 maxabs=117.1 | num finite=True nan=0 inf=0 maxabs=3.553e+04
+    dir2 q     ana finite=True nan=0 inf=0 maxabs=7.859 | num finite=True nan=0 inf=0 maxabs=3.2e+06
+    dir2 k     ana finite=True nan=0 inf=0 maxabs=16.94 | num finite=True nan=0 inf=0 maxabs=4.075e+06
+    dir2 v     ana finite=True nan=0 inf=0 maxabs=7.321 | num finite=True nan=0 inf=0 maxabs=7.548e+06
+    dir2 g     ana finite=True nan=0 inf=0 maxabs=14.19 | num finite=True nan=0 inf=0 maxabs=1.049e+07
+    dir2 beta  ana finite=True nan=0 inf=0 maxabs=25.68 | num finite=True nan=0 inf=0 maxabs=1.004e+07
+E3-TRIAGE-gdn_delta VERDICT=clean rel=2.2100e+05 pass=False
+E3-TRIAGE-gdn_conv BEGIN target=ascend device=npu eps=0.01 shapes=[(2, 8, 6), (8, 4), (8,)]
+E3-TRIAGE-gdn_conv FWD finite=True nan=0 inf=0 maxabs=3
+    dir0 x     ana finite=True nan=0 inf=0 maxabs=3.085 | num finite=True nan=0 inf=0 maxabs=3599
+    dir0 w     ana finite=True nan=0 inf=0 maxabs=3.291 | num finite=True nan=0 inf=0 maxabs=3331
+    dir0 bias  ana finite=True nan=0 inf=0 maxabs=25.68 | num finite=True nan=0 inf=0 maxabs=3272
+    dir1 x     ana finite=True nan=0 inf=0 maxabs=3.14 | num finite=True nan=0 inf=0 maxabs=717.7
+    dir1 w     ana finite=True nan=0 inf=0 maxabs=90.84 | num finite=True nan=0 inf=0 maxabs=2892
+    dir1 bias  ana finite=True nan=0 inf=0 maxabs=659.6 | num finite=True nan=0 inf=0 maxabs=1.686e+04
+    dir2 x     ana finite=True nan=0 inf=0 maxabs=1.494 | num finite=True nan=0 inf=0 maxabs=2.091e+05
+    dir2 w     ana finite=True nan=0 inf=0 maxabs=1.751e+04 | num finite=True nan=0 inf=0 maxabs=4.303e+05
+    dir2 bias  ana finite=True nan=0 inf=0 maxabs=3331 | num finite=True nan=0 inf=0 maxabs=1.849e+06
+E3-TRIAGE-gdn_conv VERDICT=clean rel=1.1636e+02 pass=False

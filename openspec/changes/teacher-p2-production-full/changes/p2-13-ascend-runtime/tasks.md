@@ -73,7 +73,7 @@
 - [x] **P1-1u-1 issue-2 措辞降级（R2 自陈 + 编排者批准）**：摘要句 "the hardware advances by `blockLen + pitch` per burst... the loaded rows are misaligned" 把机制因果写成已发生事实，而同文件承认单一几何模型复现不出实测误差图 ⇒ 改为 "the leading hypothesis is that…"，并在 Impact 保留"部分定位"标注 —— 验证：`grep -c "leading hypothesis" docs/upstream/issue-2-*.md` ≥ 1（原文 L193 已有一处，订正后为 2 —— 我此前写 "=1" 是我的口径错，已纠）
 
 
-- [ ] **P1-1z GDN 反向 `dbeta` 真机数值缺陷（窗三新发现，device-only）**（D3 收窄：`ub` 档设备执行态；三方生成码代数同构、`gdnb` **0 DMA** ⇒ 与跨步/stale **不同面，我的同源假设已撤回**；容错逐项判已落地，host 六项仍 1e-7）：`NUM-delta_bwd FAIL first=dbeta rel=5.997e-01 absdiff=4.435 thresh=2e-04`，而同腿 host cpu-alias 六项全 `1e-7`、负例逐项可指认 ⇒ 判决件可信、缺陷在设备侧。**且其余五项状态未知（FAIL 早退）**——先改容错逐项判。候选机制：与窗三 E 段双因子（跨步装填 + UB 残留）同源（**标为假设，待「预清零后 dbeta 是否改善」一枪判**）。验收＝逐项判决 + 归因到 `*_asc.py` 具体表达式或 `port910b_compat.h` 装填面 + 修复后真机 `NUM-delta_bwd PASS` 六项 —— 验证：本地取证先行，卡上一枪收尾
+- [ ] **P1-1z GDN 反向 `dbeta` 真机数值缺陷——窗四已定位：`pure` 变体设备执行错（`8.002e-01`），`ub` 变体六项全对（`1.018e-07`）；修法＝设备腿变体选择**（ub 的 stale 指纹敏感另立隐患项）（D3 收窄：`ub` 档设备执行态；三方生成码代数同构、`gdnb` **0 DMA** ⇒ 与跨步/stale **不同面，我的同源假设已撤回**；容错逐项判已落地，host 六项仍 1e-7）：`NUM-delta_bwd FAIL first=dbeta rel=5.997e-01 absdiff=4.435 thresh=2e-04`，而同腿 host cpu-alias 六项全 `1e-7`、负例逐项可指认 ⇒ 判决件可信、缺陷在设备侧。**且其余五项状态未知（FAIL 早退）**——先改容错逐项判。候选机制：与窗三 E 段双因子（跨步装填 + UB 残留）同源（**标为假设，待「预清零后 dbeta 是否改善」一枪判**）。验收＝逐项判决 + 归因到 `*_asc.py` 具体表达式或 `port910b_compat.h` 装填面 + 修复后真机 `NUM-delta_bwd PASS` 六项 —— 验证：本地取证先行，卡上一枪收尾
 - [ ] **P1-1s 补充实测（窗三 E 段）**：H-b **判真**（4 个 strided 格 `STALE-DIFF=['zero','perm']`、2 个 single 格 `=无`）⇒ 根因升级为双因子模型；D 段给出**排除性收敛**（default/A/C 三态皆红 ⇒ GM→L1 nd2nz 选择与读侧拆趟/折指针**均非 507015 触发者**）。遗留工装缺陷：default combo 同进程跑 `compile_all` 与 intrinsic 腿 ⇒ 发射桩传染、该趟颜色不可用（**一案一进程纪律回归**，P1-1r 的同类问题重演）
 
 
@@ -85,3 +85,9 @@
 - [ ] **P1-1zc `gdn_asc.backward` 对 2D `g` 回报 3D `dg`（真形档才现形的既有件缺陷，I3 发现）**：`RuntimeError: Function _GdnFnBackward returned an invalid gradient at index 3 - got [16,512,128] but expected [16,512]`，与 `gdn_asc.py:694` 自陈违约；I3 已用 `spread_gate` 等价桥隔离（`GDN-G-SPREAD` 公告行 + `NOFACADE` 计数），修法两条与验收探针见 `I3_REALSHAPE_SPEC.md` §4.4。验收＝产品件修复 + 桥撤除后真形档/gradcheck 仍绿 —— 验证：`I3_probe_gdn_bwd_shape.py` `same_shape=4/4`
 - **P1-1v 真形档判决件已备（I3，待窗六）**：`train_step_real.py`（拓扑全部引自 `config.json` 行号：24 层=18 GDN+6 full、hidden 1024、heads 8/2、hd 256、inter 3584、vocab 248320；每步 op 计数 `linear 374/gdn_conv 36/gdn_delta 36/attn_sw 12/rope 12/lora 48/readout 4`）；host dry EXIT=0、容器 41 键编译全过 `KERNEL-USED-PASS`；预算：编译 ~52s、seq=512 显存 1.46GB、**seq=8192≈13.4GB**、seq=16384≈49GB（无 gradient_checkpointing 的上界）。**缺一项规格待决策人**：「一桌」→(seq,batch) 映射（候选 A:8192×2 / B:8192×1 / C:16384×1 / D:4096×4，`gate08b.yaml:21/43/58` 语义与未定项原文在 SPEC §1.1）
 - **P1-1w2 窗五已备（J3，B 路线）**：`ta_pkg.tar.gz` 34.8MiB（sha256 `d5607ec6…`）解包即用已证（换前缀 6/6 GDN+gemm 编译过）；卡脚本含 CANN 8.5.2 ABI 十分钟金丝雀闸（不兼容即 `TA-ABORT reason=cann-abi` 止损，不卡上重编）与内核自证（`bisheng_calls>0 ∧ cache_so>0 ⇒ real-kernel`）；无设备负例全部显式 SKIP/ABORT
+
+- [ ] **P1-1zd gradcheck 探针 nan 判据缺陷（窗四 V1）**：`GRADCHECK-gdn_delta PASS max_rel=nan`——同窗 V2 同件 `rel=2.21e5 pass=False`、窗三同件判 FAIL ⇒ nan 比较路径不稳定，PASS 不可信。验收＝非有限值一律 FAIL（沿 D3 在 delta_bwd 的口径）+ 负例自证 —— 验证：注入 nan 梯度必红
+- [ ] **P1-1ze conv 反向件卡上 `rel=5.538e+04`（F4 件第 4 例 device-only）**：host `2.653e-05`、容器编过、卡上大错。候选与 `pure` 变体机制对照（先看该件是否走了 pure 形态）—— 验证：归因 + 修复 + 真机复判
+- **P1-1w2 窗五达成（真机判决）**：CANN 8.5.2 ABI 过；GDN 六件 `rel=0` 且 `upstream1e-5=ok`、`real-kernel` 自证；gemm fp16 `512³ 0.410ms`（对标量 294.3ms ⇒ **718×**）；fp32 改 block 腿 `rel=nan` 登记为该配置缺陷。**B 路线（采 tilelang-ascend 为性能底座）从评估升级为真机佐证**
+- **P1-1v 窗六部分**：8192 档 25min 超时（**=真形档标量路不可经济的硬数据**）；4096 档被实例停止中断，结果未落；R6/R7 报价口径须按 tilelang-ascend 路径重算
+- [ ] **P1-1zf v2 方案 A 卡上 507035 ⇒ 转方案 B**：`vector_dup` 预清零运行时崩（补丁已证可应用、头已还原）；按 S3 真值表落"每突发单发拆趟"提案 —— 验证：下窗 nextshot STALE-DIFF 归零

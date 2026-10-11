@@ -1,0 +1,54 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+S3-NEXT dev=npu m=16 n=96 ks=48,96,32 acts=none,relu prefills=none,zero,perm
+---- k=48/none bn=32 bk=16 nb=3 nk=3 dma=strided ----
+2026-10-12 02:45:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `probe_asc` with `out_idx=[1]`
+2026-10-12 02:45:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `probe_asc`
+2026-10-12 02:45:48  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 02:45:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+Traceback (most recent call last):
+  File "/tmp/sys1/release/ascend/kernels/reconcile/S3_probe_nextshot.py", line 224, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/tmp/sys1/release/ascend/kernels/reconcile/S3_probe_nextshot.py", line 199, in main
+    got = emit(a.m, a.n, k, bn, bk, a.dev, act, encode_W(a.n, k, "plain"))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/sys1/release/ascend/kernels/reconcile/S3_probe_nextshot.py", line 158, in emit
+    torch.npu.synchronize()
+  File "/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/npu/utils.py", line 72, in synchronize
+    return torch_npu._C._npu_synchronize()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: npuSynchronizeDevice:build/CMakeFiles/torch_npu.dir/compiler_depend.ts:575 NPU function error: AclrtSynchronizeDeviceWithTimeout, error code is 507035
+[ERROR] 2026-10-12-02:45:55 (PID:19756, Device:0, RankID:-1) ERR00100 PTA call acl api failed
+[Error]: The vector core execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EZ9999: Inner Error!
+EZ9999[PID: 19756] 2026-10-12-02:45:55.359.793 (EZ9999):  The error from device(chipId:3, dieId:0), serial number is 1147, there is an exception of aivec error, core id is 43, error code = 0x4000000000000000, dump info: pc start: 0x12c041400000, current: 0x12c0414003a4, vec error info: 0xbc, mte error info: 0x25000000e9, ifu error info: 0x7473c70411500, ccu error info: 0xfd07ece0218000b8, cube error info: 0, biu error info: 0, aic error mask: 0x6500020bd00028c, para base: 0x12c100400000.[FUNC:PrintCoreInfo][FILE:device_error_core_proc.cc][LINE:347]
+        TraceBack (most recent call last):
+       The extend info: errcode:(0x4000000000000000, 0, 0) errorStr: VEC instruction error: the ub address out of bounds. fixp_error0 info: 0xe9, fixp_error1 info: 0x25, fsmId:0, tslot:0, thread:0, ctxid:0, blk:1, sublk:0, subErrType:4.[FUNC:PrintCoreInfo][FILE:device_error_core_proc.cc][LINE:360]
+       Kernel task happen error, retCode=0x31, [vector core exception].[FUNC:PreCheckTaskErr][FILE:davinci_kernel_task.cc][LINE:1582]
+       rtDeviceSynchronizeWithTimeout execution failed, reason=vector core exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+       wait for compute device to finish failed, runtime result = 507035.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+
+[W1012 02:45:55.035391431 compiler_depend.ts:595] Warning: NPU warning, error code is 507035[Error]: 
+[Error]: The vector core execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 19756] 2026-10-12-02:45:55.371.363 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=vector core exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507035.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeUsedDevices)
+[W1012 02:45:55.036292565 compiler_depend.ts:577] Warning: NPU warning, error code is 507035[Error]: 
+[Error]: The vector core execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 19756] 2026-10-12-02:45:55.372.338 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=vector core exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507035.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeDevice)

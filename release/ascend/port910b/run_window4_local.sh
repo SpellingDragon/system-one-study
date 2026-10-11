@@ -6,7 +6,7 @@ D=/Users/pengweiye/Documents/codes/system-one/release/ascend/port910b
 H=ma-user@dev-modelarts-cnsouth1.huaweicloud.com
 S="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=20 -i $K -p 31955"
 chmod 400 "$K" 2>/dev/null
-for f in window4_card.sh; do
+for f in card_run.sh window4_card.sh; do
   L=$(wc -c < "$D/$f"); echo "LOCAL $f=$L"; [ "$L" -lt 2000 ] && { echo "TRUNCATED-ABORT"; exit 1; }
   cat "$D/$f" | ssh -T $S $H "cat > /tmp/$f; echo REMOTE=\$(wc -c < /tmp/$f)" 2>/dev/null
 done

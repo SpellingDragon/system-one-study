@@ -10,6 +10,10 @@ SRC=https://github.com/SpellingDragon/system-one-study.git
 
 [ -d $T ] || git clone -q --depth 1 $SRC $T || { echo "W4-ABORT clone-fail"; exit 1; }
 cd $T/release && git -C $T pull -q 2>/dev/null
+# 引导段（新实例 pip 无 tilelang——窗四首跑即灭于此）：借 card_run.sh [0]-[2] 装 tilelang + overlay 补丁
+CARDRUN_SKIP_CLONE=1 CARDRUN_STOP_AFTER=2 bash /tmp/card_run.sh > /tmp/w4_boot.log 2>&1 || true
+grep -E "OVERLAY-OK|INJECT-OK|FATAL" /tmp/w4_boot.log | tail -3
+python3 -c "import tilelang" 2>/dev/null || { echo "W4-ABORT reason=no-tilelang-after-bootstrap（看 /tmp/w4_boot.log）"; exit 1; }
 source /usr/local/Ascend/cann-8.5.2/set_env.sh 2>/dev/null
 export ASCEND_NPU_ARCH=dav-2201
 export BISHENG_HOME=$(dirname $(dirname $(command -v bisheng)))
@@ -42,11 +46,11 @@ echo "=== V5 双因子提案 v2 判决（补丁前后各一趟）==="
 export TILELANG_CACHE_DIR=$(mktemp -d)
 timeout 900 python3 ascend/kernels/reconcile/S3_probe_nextshot.py --dev npu --prefills none,zero,perm > /tmp/w4_v2_before.log 2>&1
 echo "W4-V5-BASE-EXIT=$?"; grep -E "STALE-DIFF|U2-READOUT|unexpected" /tmp/w4_v2_before.log | head -8
-cp $TLHDR $TLHDR.w4bak
-DIFF=ascend/port910b/attempts/S3_compat_proposal_v2.diff
-if (cd $TLPKG && patch -p2 --dry-run < ../release/$DIFF >/dev/null 2>&1 && cd $TLPKG && patch -p2 < ../release/$DIFF >/dev/null 2>&1); then
+cp $TLHDR $TLHDR.w4bak 2>/dev/null
+DIFF=$T/release/ascend/port910b/attempts/S3_compat_proposal_v2.diff
+if [ -n "$TLPKG" ] && (cd $TLPKG && patch -p2 --dry-run < $DIFF >/dev/null 2>&1 && cd $TLPKG && patch -p2 < $DIFF >/dev/null 2>&1); then
   echo "W4-V5-PATCHED mode=p2 md5=$(md5sum $TLHDR | cut -c1-8)"
-elif (cd $TLPKG && patch -p1 --dry-run < $T/release/$DIFF >/dev/null 2>&1 && cd $TLPKG && patch -p1 < $T/release/$DIFF >/dev/null 2>&1); then
+elif [ -n "$TLPKG" ] && (cd $TLPKG && patch -p1 --dry-run < $DIFF >/dev/null 2>&1 && cd $TLPKG && patch -p1 < $DIFF >/dev/null 2>&1); then
   echo "W4-V5-PATCHED mode=p1 md5=$(md5sum $TLHDR | cut -c1-8)"
 else
   echo "W4-V5-SKIP reason=patch-unapplicable（如实不判 v2）"

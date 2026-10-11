@@ -1,0 +1,31 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+[02:44:18] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+[02:44:22] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+==============================================================================
+D3-ORDER dev=npu variant=pure target=ascend
+==============================================================================
+2026-10-12 02:44:16  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_impl` with `out_idx=[]`
+2026-10-12 02:44:20  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_impl`
+2026-10-12 02:44:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_bwd_impl` with `out_idx=[]`
+2026-10-12 02:44:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_bwd_impl`
+gdnb keys = ['ascend|gdnb[ascend]|h2k8v8|c2purez']
+ITEM dq rel= 7.551e-08 verdict= PASS
+ITEM dk rel= 6.437e-08 verdict= PASS
+ITEM dv rel= 6.629e-08 verdict= PASS
+ITEM dbeta rel= 8.002e-01 verdict= FAIL
+ITEM dg rel= 9.571e-08 verdict= PASS
+ITEM dh0 rel= 6.176e-08 verdict= PASS
+------------------------------------------------------------------------------
+DBETA-FP  clean 三跑指纹（none / after-dirty / after-zero）:
+  none   dbeta-fp=e609a6ab
+  dirty  dbeta-fp=e609a6ab
+  zero   dbeta-fp=e609a6ab
+ORDER-VERDICT 逐位同 ⇒ 顺序无关(H-b 证伪)
+==============================================================================
