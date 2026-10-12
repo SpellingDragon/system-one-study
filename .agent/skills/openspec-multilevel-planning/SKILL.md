@@ -1,6 +1,6 @@
 ---
 name: openspec-multilevel-planning
-description: Plans large implementation work as multi-level OpenSpec changes with hierarchical specs, then orchestrates multi-agent execution and acceptance review. Level-1 change orchestrates only (mermaid tracking graph, merge rules, DoD, startup gates, and a mandatory pyramid-principle ORCHESTRATION.md holding the dispatch contract: ordering, write authorization, evidence gates, resource locks with waitlists); level-2 sub-changes are self-contained per decoupled domain (proposal/design/tasks/spec); level-3 leaf tasks carry verification commands. Covers goal-task coverage matrices and consumer-scenario enumeration during planning review, dispatching parallel apply agents with write whitelists, wave-by-wave integration verification, handling empty agent returns, cross-domain defect arbitration, plan-defect write-back during execution, and dual-track acceptance review (code review + runtime evidence audit). Use when asked to create change plans, break large features or course/teacher-reference implementations into sub-domains and granular tasks, orchestrate parallel execution waves, or execute/review such plans (依赖拆解、子领域、孙任务、多级 specs、编排文档、编排波次、并发实施、验收评审).
+description: Plans large implementation work as multi-level OpenSpec changes with hierarchical specs, then orchestrates multi-agent execution and acceptance review. Level-1 change orchestrates only (mermaid tracking graph, merge rules, DoD, startup gates, and a mandatory pyramid-principle ORCHESTRATION.md holding the dispatch contract: ordering, write authorization, evidence gates, resource locks with waitlists, and dispatch at leaf-task granularity gated on touch-set disjointness); level-2 sub-changes are self-contained per decoupled domain (proposal/design/tasks/spec); level-3 leaf tasks carry verification commands. Covers goal-task coverage matrices and consumer-scenario enumeration during planning review, dispatching parallel apply agents with write whitelists, wave-by-wave integration verification, handling empty agent returns, cross-domain defect arbitration, plan-defect write-back during execution, and dual-track acceptance review (code review + runtime evidence audit). Use when asked to create change plans, break large features or course/teacher-reference implementations into sub-domains and granular tasks, orchestrate parallel execution waves, or execute/review such plans (依赖拆解、子领域、孙任务、多级 specs、编排文档、编排波次、孙任务级调度、并发实施、验收评审).
 ---
 
 # OpenSpec 多级变更规划（multi-level spec-driven planning）
@@ -62,9 +62,9 @@ proposal 必含**"边界与依赖"**节四要素：依赖（注明接口常数 v
 **ORCHESTRATION.md（编排文档，计划完成的强制产物，派发唯一依据）**：按**金字塔原则**写——结论先行、归类分组（MECE）、逻辑排序，四层**不得倒装**：
 
 1. **结论层**：抵达 DoD 的唯一路径 + 当前最大风险/瓶颈，一句话（读者据此判断是否需要下钻）。
-2. **分组层·编排四问**：**次序**（波次解锁表 / 闭包不相交的实测凭据 / 关键路径 / 本波物理上做不了什么）· **授权**（写入白名单精确到文件 / 共享面归属 / 预授权与必须上报的边界）· **凭据**（四查落点 / 每条判据的复跑命令 / 必须亲自复验的数字清单）· **释放**（资源锁 ↔ 等待表 / 释放即触发的当场消费项 / 熔断线与分段记账）。
-3. **明细层**：波次-域矩阵、九要素落点、预算上限、档位与真实路径欠账。
-4. **台账层**：每波推进记录（①–⑥ 步结果 + 凭据摘要 + 计划回写项）；无凭据摘要不得写"完成"。
+2. **分组层·编排四问**：**次序**（就绪队列到孙任务粒度：前置/状态/触碰集/单号 / 关键路径 / 本轮做不了什么）· **授权**（每单白名单精确到文件 / 共享面归属 / 预授权与必须上报的边界）· **凭据**（四查落点按单核 / 每条判据的复跑命令 / 必须亲自复验的数字清单）· **释放**（资源锁 ↔ 等待表 / 释放即补派 ready 单 / 熔断线与分段记账）。
+3. **明细层**：派发单-孙任务矩阵（含触碰集与状态）、合单判据、预算上限、档位与真实路径欠账。
+4. **台账层**：每轮/每单推进记录（①–⑥ 步结果 + 凭据摘要 + 计划回写项）；无凭据摘要不得写"完成"。
 
 模板与用法见 [apply-orchestration.md](apply-orchestration.md) §〇。**三者边界**（各自职责，不互抄）：`specs/orchestration/spec.md` = 可验收的编排契约（条款/场景）；`design.md` = 静态决策（D2 子域表/D4 合并规则）；`ORCHESTRATION.md` = 怎么驱动 + 当场账。额外文件不破坏 openspec CLI 判定（实测：change 根含杂件仍报 4/4 complete）。
 
@@ -76,13 +76,13 @@ proposal 必含**"边界与依赖"**节四要素：依赖（注明接口常数 v
 
 完整 SOP 与编排文档模板见 [apply-orchestration.md](apply-orchestration.md)。
 
-**总纲（结论先行）**：编排者对**终态**负责，agent 对**域内**负责——一切"完成"以**复跑凭据**为准，不以汇报为准。三条纪律是总纲的三个切面，按 **次序 → 授权 → 凭据** 排序（详版 R6–R27）：
+**总纲（结论先行）**：编排者对**终态**负责，agent 对**本单（白名单内的孙任务）**负责——一切"完成"以**复跑凭据**为准，不以汇报为准。三条纪律是总纲的三个切面，按 **次序 → 授权 → 凭据** 排序（详版 R6–R28）：
 
-1. **次序**：波次划分依据 = 依赖传递闭包不相交（R21，各栈探测命令实测），不凭包名/import 直觉；共享面默认编排者单写，可按 R22 把契约冻结为签名级常数后独立派发。
-2. **授权**：派发前置 = 并发资源划拨审计 + 波次边界声明（九要素）；写入白名单精确到文件，账目单点归属（R17）。
-3. **凭据**：凡报必验、凡修必回归——完成度四查（勾选真实性/产物盘点/数字溯源/遗漏检测）＋ agent 写后校验三连是凭据可信的地基；未完成者归因后修计划再重派，执行期暴露的计划缺口必须回写计划与 skill。
+1. **次序**：**派发原子 = 就绪孙任务集合**，域只作边界与账目单位（R28）；并发准入 = 依赖传递闭包不相交（R21，各栈探测命令实测），不凭包名/import 直觉——到孙任务粒度即**触碰集不相交**，同文件簇必须合单或串行；共享面默认编排者单写，可按 R22 把契约冻结为签名级常数后独立派发。
+2. **授权**：派发前置 = 并发资源划拨审计 + 本单边界声明（九要素）；每单写入白名单精确到文件且只含本单孙任务所需，账目单点归属（R17）。
+3. **凭据**：凡报必验、凡修必回归——完成度四查（勾选真实性/产物盘点/数字溯源/遗漏检测）**按派发单核**＋ agent 写后校验三连是凭据可信的地基；未完成者归因后修计划再重派，执行期暴露的计划缺口必须回写计划与 skill。
 
-**纪律的载体是编排文档**（阶段 4 产物）而非会话记忆：每波开始前重读并对齐，波后回填台账；凡"下一波再说"的悬置若非真裁决点，即为流程债（R18/R19/R27）。
+**纪律的载体是编排文档**（阶段 4 产物）而非会话记忆：每次派发前重读并对齐，单完/波后回填台账；凡"下一波再说"的悬置若非真裁决点，即为流程债（R18/R19/R27/R28）。
 
 ## 核心原则（源真实项目实证）
 
@@ -96,8 +96,9 @@ proposal 必含**"边界与依赖"**节四要素：依赖（注明接口常数 v
 | 粒度判据 | 单文件单机制单测试；"一个会话可完成 + 一条验证命令" | 三合一大任务无法独立验证 |
 | **目标必有任务承载** | 变更目标的每个关键词（如"计算主体 TileLang 化"）都映射得到孙任务 | 计划审了任务一致性却漏了目标覆盖，内核与模型成两套平行实现 |
 | **消费者先于实现** | 每个产出物先枚举消费者（推理/训练/评测/服务）再定验收 | 只想着推理用内核，训练要不要反向传播无人问 |
+| **调度单位随就绪面下沉** | 派发原子是就绪孙任务集合；域是权限/验收单位而非调度单位；拆单收益需写进编排文档（固定开销换解锁） | 整域成单时少数 ready 项被卡住项拖住，释放事件无可消费的最小单元 |
 
-## 反模式（均真实出现并被修复；R6–R27 详版见 [apply-orchestration.md](apply-orchestration.md)——R27 见 §〇、R6–R26 见 §九/§十，本表为一行式索引）
+## 反模式（均真实出现并被修复；R6–R28 详版见 [apply-orchestration.md](apply-orchestration.md)——R27 见 §〇、R28 见 §十一、R6–R26 见 §九/§十，本表为一行式索引）
 
 规划期（R1–R5）：
 - **R1 跨变更启动门缺失**：后置 change 依赖的"契约"其实现在前者 W1。→ orchestration spec 加启动门。
@@ -106,11 +107,11 @@ proposal 必含**"边界与依赖"**节四要素：依赖（注明接口常数 v
 - **R4 偏大孙任务**：三合一。→ 拆为实现/对拍/组装。
 - **R5 时间断言脆弱**：CI 断言时长被慢机误报。→ 退出码为唯一判定。
 
-执行期（R6–R9、R15–R27，详见 apply-orchestration.md）：
+执行期（R6–R9、R15–R28，详见 apply-orchestration.md）：
 - **R6 空返即重做**：agent 空返 ≠ 未完成，先验工作区，重派令改"复跑验证"。
 - **R7 信汇报不复验**：数字/绿灯必须编排者 grep 校账 + 全量复跑。
 - **R8 跨域缺陷无人认领**：编排者是唯一越域裁决与修复点（修必附回归用例）。
-- **R9 集成只在最后**：每波间即做集成验证。
+- **R9 集成只在最后**：每轮间即做集成验证。
 - **R15 编辑工具假成功**：写返回成功而文件实为占位/0 字节/晚到覆盖。→ 写后校验三连（wc+compile+锚 grep）。
 - **R16 全局态脆断言**："X 不在模块表/环境为空"顺序依赖，单域绿全量红。→ 快照差集。
 - **R17 并发共享资源互踩**：并发 pip、同设备双跑、账目共写、后台被信号停起。→ 派发前资源划拨审计+账目单点归属。
@@ -123,7 +124,8 @@ proposal 必含**"边界与依赖"**节四要素：依赖（注明接口常数 v
 - **R24 门控验收三态**：无门=合法 Skip；有门缺凭据=Fatal；非空转证明=用不可路由端点证明真发起过调用且零产出拒收。详见 apply §十。
 - **R25 同树对照基准**：before 树编不了新 bench（新 API 不存在）时，同树新旧 API 并存同 fixture 对照，差值即新增开销。详见 apply §十。
 - **R26 index 污染**：仓内工具的 intent-to-add 会把代理临时件声明进 git index→事后卫生门红且污染提交面。→ 过程件只落仓库外；波后编排者必跑 git reset 清 index。详见 apply §十。
-- **R27 编排纪律无载体**：次序/授权/凭据/释放四类承诺只散在 skill 与会话记忆里，计划完成时未固化成编排文档→派发无单一依据、等待表无人消费、"完成"无对照物（为 R18/R19 的共同上游）。→ 阶段 4 强制产出 ORCHESTRATION.md（金字塔式），每波前重读对齐、波后回填台账。详见 apply §〇。
+- **R27 编排纪律无载体**：次序/授权/凭据/释放四类承诺只散在 skill 与会话记忆里，计划完成时未固化成编排文档→派发无单一依据、等待表无人消费、"完成"无对照物（为 R18/R19 的共同上游）。→ 阶段 4 强制产出 ORCHESTRATION.md（金字塔式），每次派发前重读对齐、单后回填台账。详见 apply §〇。
+- **R28 域级派发过粗**：整域当一个派发单时，域内少数已解锁孙任务要等其余卡住项；释放事件按域登记则常无"可整域派发"的候选，R18 的当场消费落空。→ 派发原子下沉到就绪孙任务（域降为边界/账目单位），并发准入用触碰集不相交，同文件簇合单；拆单须先记解锁收益。详见 apply §十一。
 
 规划覆盖性（R10–R14，P1 执行期返工所生）：
 - **R10 目标无任务承载**：目标关键词（"TileLang 加速""三后端"）没有对应孙任务，执行期用户一问才暴露。→ review 加目标-任务覆盖矩阵。

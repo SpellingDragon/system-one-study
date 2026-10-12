@@ -44,17 +44,17 @@
 
 | 资产 | 位置 |
 |---|---|
-| `openspec-apply` 子智能体定义（144 行，含自主决策规则） | [`.agent/agents/openspec-apply.md`](.agent/agents/openspec-apply.md) |
+| `openspec-apply` 子智能体定义（含自主决策规则与战报五段结构） | [`.agent/agents/openspec-apply.md`](.agent/agents/openspec-apply.md) |
 
-宿主内置的 agent 类型配以下固定用法（详见 skill 的 apply-orchestration §二/§四）：
+宿主内置的 agent 类型配以下固定用法（**派发粒度见 apply-orchestration §十一**，派发要素与核查协议见 §二/§四）：
 
 | sub-agent | 用途 | 派发要点 |
 |---|---|---|
-| `openspec-apply` | 实施二级子变更（每域一个） | prompt 八要素：四件套路径/venv python 绝对路径/已就绪资产情报/写入白名单/验证纪律（exit 0 才勾）/质量门自检/禁 git/探针回退分支 |
+| `openspec-apply` | 实施**一个派发单**（就绪孙任务的集合；域是边界与账目单位，非调度单位） | prompt 派发要素：四件套 **+ 一级根 ORCHESTRATION.md 路径**/**本单孙任务编号清单**/venv python 绝对路径/已就绪资产情报/**每单**写入白名单/验证纪律（exit 0 才勾）/质量门自检/禁 git/探针回退分支/本单边界与授权分级 |
 | `CodeReview` | 验收评审的代码层（唯一一个） | 给足范围界定（git status/diff）、契约清单、假绿/数值/安全重点、分级输出 |
 | 编排者（主 agent） | 集成验证、跨域缺陷裁决、完成度四查、计划回写、账目勾选 | 不可下放的职责见 skill apply-orchestration §三–§六 |
 
-**完成度四查**（每波 agent 返回后必做）：勾选真实性（复跑验证命令）/ 产物盘点（白名单文件与 spec↔测试映射）/ 数字溯源（汇报数字逐个实测）/ 遗漏检测（任务 vs 勾选 + 覆盖矩阵复查）→ 未完成者归因三型（agent 未完成/做错/计划缺任务）后按三型重派（复跑验证型/补缺型/修复型）。
+**完成度四查**（**每派发单返回后必做**，域级仅作汇总视图）：勾选真实性（复跑验证命令）/ 产物盘点（白名单文件与 spec↔测试映射）/ 数字溯源（汇报数字逐个实测）/ 遗漏检测（本单孙任务 vs 勾选 + 覆盖矩阵复查）→ 未完成者归因三型（agent 未完成/做错/计划缺任务）后按三型重派（复跑验证型/补缺型/修复型）。
 
 ### `.agent/rules/`（always-on 通用工作纪律）
 
