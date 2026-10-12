@@ -16,6 +16,17 @@
 | `host_selfcheck.cc` | 兼容层的主机侧等价性自检（位宽/RNE 数值/lane 位视图），**非 ascend 目标** | ✅ 可编译可跑 |
 | `probe910b.sh` | 上卡探针 P1–P10（裁决 44 个 D 类符号与墙0/墙3/墙4） | ❌ 本机拒绝执行（exit 2） |
 
+### 目录结构（2026-10-12 整理收纳）
+
+| 位置 | 内容 | 说明 |
+|---|---|---|
+| 根 | 在用件：`card_run.sh`（卡侧引导主件）、`run_delta_card.py` / `run_numerics.py` / `gradcheck` 相关判决件、`launch_card_local.sh` / `wait_card_local.sh` / `fixup_card.sh` / `bundle_ondemand.sh`（发射辅助）、上表 6 件 | 窗九及后续发射直接用 |
+| `windows/` | 窗二至窗八历史判决发射器：`windowN_card.sh`（卡侧）× `run_windowN_local.sh`（宿主侧）× `poll_*.sh`（轮询）共 15 件 | 各窗凭据与判决行见 `release/runs/1011-*/notes.md`；脚本内硬编码绝对路径指向整理前位置，**仅作历史归档不再发射**，复现以 git 历史为准 |
+| `archive/` | 一次性诊断件：`ssh_probe.sh` / `ssh_diag.sh` / `ssh_retry.sh`（网关 502 三件）、`res_check_local.sh`（实例资源盘点） | 经验结论已录入各窗 notes |
+| `attempts/`、`patches/` | 早期探针结构与补丁 | 未动 |
+| `cann_cache/`（gitignored） | CANN 8.5.0 toolkit run 包 | 容器 `cann910b-l` 的安装源；**卡上为 8.5.2，容器为 8.5.0——此版本差是窗九"卡上编译差异"分支的已知输入** |
+
+
 ---
 
 ## 2. 兼容层放哪（两条路，推荐 A）
