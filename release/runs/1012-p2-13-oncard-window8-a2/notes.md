@@ -15,3 +15,13 @@
 
 ## 工装勘误
 本窗回读 grep 因 sed 只换了部分 `W7-` 字面量漏了 `W8-HEAD/WARMUP` 行——**原始日志抢救后以日志为准**（教训：派生脚本要全量审一遍再用于取证窗）。
+
+
+## 附：CANN 社区定点只读调研（2026-10-12 午后，决策人问询触发；不发声、不提问）
+**Q1 论坛/issue 同类已知问题**：未命中与我们缺陷类（首发射确定性错值/507035）直接对应的帖子——无低挂果实。
+**Q2 CANN 版本情报**：9.0.0 商用版已出（AscendC SIMD+SIMT 混合编程等）、9.1.0 社区版在修精度类问题（如 FAG 短序列 GQA）、vllm-ascend 已迁 CANN 9.0；我们卡上 8.5.2 属旧代。**PTO 路需新 CANN（H2 已证 8.5 失配）**——记为未来升级路线情报，不改当前决策。
+**Q3（高价值）tilelang-ascend 的同步机制对照**：
+- TA 有**两套同步工程**：IR pass `ascend_sync_insert.cc`（`TL_ASCEND_AUTO_SYNC`，IR 级默认关）与 `ascend_sync_insert_vs.cc` + **bisheng 编译器旗标 `--cce-auto-sync`** 的显式管理（`pass_config.py:195-225`：VS 档配 `cce_auto_sync=False, opt_level=3`，**引 #1346**——他们为同步行为做过专门的工程取舍）；
+- **我们 fork 的 main 仓：`grep auto_sync` 为空——无任何同步机制**。
+⇒ **dbeta 确定性错算的最强机理候选＝fork 生成码缺核内（vector↔scalar 跨管）同步**：完美吻合全部观察——确定性错值（调度确定）、"补救 boot 态耦合"（UB 驻留/调度变化）、只打 UB+标量混算的 GDN 反向族、以及 TA substrate 真机 `rel=0`（同步工程已做好）。
+- **一旗证伪探针（P1-1zi，机会性）**：给 fork 的 gdnb 编译加 bisheng `--cce-auto-sync`（patch_bisheng/compile flags 单旗），若 dbeta 转对 ⇒ 机理坐实且 fork 有一旗救活的可能；10 分钟卡腿，**只作为未来任意窗的搭车项**，不重开止损线。
