@@ -1,5 +1,7 @@
 # M4_UBPREZERO.md — P1-1zg / M4：GDN 族「首次发射 UB 未初始化读」修复落地
 
+> ⚠️ **2026-10-12 窗七证伪并已回退**（fresh 未变、prefill 恶化）：窗七真机判决——fresh `dbeta rel=8.002e-01` 与窗四**逐字同**（修复未生效）；zero-prefill 档 `1.018e-07→4.606e-01` **恶化** ⇒ ub 设备路径非中性。**已由 N5 回退**（`gdn_asc.py` 复归 md5 `676c07936547e9d897d3b2366a0317e0`），M4 探针/文档保留作负结果。证据见 `runs/1012-p2-13-oncard-window4-pin/notes.md` §⑩ 与 `N5_WARMUP_DESIGN.md`。
+
 > 执行代理：**M4**　|　变更：p2-13 / P1-1zg　|　日期窗：1012　|　**不占卡**（host+容器双证；真机三判据留下一枪）
 > 一手事实（K4 定案）：`gdnb` fresh `dbeta rel=8.002e-01` 错；`prefill=zero` 后六项全对 `1.018e-07`。
 > 本件结论一句话：**生成码层 read-first 机械审计＝5 模具全 NONE（机理未定位，依逃生口径）⇒ 落

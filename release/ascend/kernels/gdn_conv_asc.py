@@ -378,7 +378,7 @@ def run(x: torch.Tensor, w: torch.Tensor, bias: torch.Tensor | None, y: torch.Te
         spec["target"])
     if kernel is None:
         return False
-    kernel(*args)
+    gdn_asc._launch_dev(kernel, args, spec["key"], spec["target"])   # A2 预热（一处模式复用）
     return True
 
 
@@ -532,7 +532,7 @@ def run_backward(x: torch.Tensor, w: torch.Tensor, bias: torch.Tensor, dy: torch
         spec["target"])
     if kernel is None:
         return False
-    kernel(*args)
+    gdn_asc._launch_dev(kernel, args, spec["key"], spec["target"])   # A2 预热（一处模式复用）
     return True
 
 
