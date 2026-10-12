@@ -25,3 +25,9 @@
 - **我们 fork 的 main 仓：`grep auto_sync` 为空——无任何同步机制**。
 ⇒ **dbeta 确定性错算的最强机理候选＝fork 生成码缺核内（vector↔scalar 跨管）同步**：完美吻合全部观察——确定性错值（调度确定）、"补救 boot 态耦合"（UB 驻留/调度变化）、只打 UB+标量混算的 GDN 反向族、以及 TA substrate 真机 `rel=0`（同步工程已做好）。
 - **一旗证伪探针（P1-1zi，机会性）**：给 fork 的 gdnb 编译加 bisheng `--cce-auto-sync`（patch_bisheng/compile flags 单旗），若 dbeta 转对 ⇒ 机理坐实且 fork 有一旗救活的可能；10 分钟卡腿，**只作为未来任意窗的搭车项**，不重开止损线。
+
+
+## 附2：P1-1zh 设计件落地（O5）＋ 编排者四项裁决
+- **O5 交付**：`tilelang-ascend:examples/gdn_bwd/design.md`（783 行全 11 节）+ `proto.yaml`（fp16/fp32）+ 我方 `reconcile/O5_GDN_BWD_DESIGN_HANDOFF.md`。质量自检过（无占位符、引用行号抽查 4/4 对、三态 ✅31/⚠️5/❓11）；**§7 同步硬约束成节**（新增件强制 `TL_ASCEND_AUTO_SYNC(_VS)`、禁手写 cross flag、跨 chunk 状态只走 GM workspace——以我们 M4/N5 证伪史为反面证据，引 TA `pass_config.py:204-207`/#1346/#1851）。
+- **四项裁决（编排者）**：①fwd `A/W/γ` **首版重算保自足**（正确性优先，workspace 复用留 perf 期）；②bwd 性能预算**待真机回填**（现为 ❓ 外推，口径已并排写明）；③**bf16 首版不纳入**（C2 一手取证 bisheng 8.5 拒、上游 #1762 未闭；fp16/fp32 足够判决）；④**变长 seq_lens 首版不支持**（规则 shape 先行，对齐判决件口径）。
+- NSA Bwd 先例（`7df10967`）为结构模板；`examples_experiment/chunk_gated_delta_rule/` 为 chunked 算法参考（O5 已勘正路径）。
