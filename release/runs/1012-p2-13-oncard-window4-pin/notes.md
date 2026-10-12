@@ -47,3 +47,11 @@ repo `caf824e`；实例资源盘点（决策人要求）：**910B4 单卡、HBM 
   - **A. 窗三 FAIL vs 窗四 PASS 的机理（pyc 考古）**：窗三 py3.10 旧判据 `nan<=x`→FAIL；窗四 `abs_err=ana_norm=+inf` ⇒ `inf<=inf=True`→**PASS 是假绿** ⇒ **窗四 gradcheck 真实是 6/8**（gdn_delta 仍坏，与 V2 分诊 2.2e5 一致）。判据已修（`isfinite` 三量门，非有限一律 FAIL；负例 `L4-NANFIX-DONE fail=0`；B3 三负例不破；8/8 回归）。注：补丁实为残缺返回的 L4 落盘（mtime 03:59），L4b 复核未重写（正确取舍，已申报）。
   - **B. conv 审计**：`conv_bwd` 唯一槽 `dw_ub` **源码 L261/生成码 L22 已入口清零、无 read-first**；**已知坏件 gdnb 生成码同样无 read-first** ⇒ 静态审计对此缺陷类**无判别力**（机理确在更深层）⇒ conv 判**未决**，并给出**可证伪预测：UB 预清零不会修好 conv**（其 dw_ub 本就清零、无可修之物）——窗七真值表据此三臂设计（A0 基线/A1 预清零/A2 预热）。
 - **窗七一枪清单（隧道恢复即跑）**：①M4 §⑤ 复判（fresh 六项 ITEM，期望 `dbeta 8.002e-01→<2e-4`；D3 顺序探针 `none` 指纹收敛到 `zero`）②L4B 三臂真值表（conv 的 A1 不转绿＝预测命中）③窗六 `/tmp/w6_all.log` 捞档 + 4096 补跑 ④修复后 `gradcheck --target ascend` 复判（期望 8/8 真 PASS）。
+
+
+## ⑩ 窗七判决（12:11 隧道恢复后，repo `e957367`，765s）——M4 证伪，A2 预热成为正解候选
+- **V2（M4 修复判决）＝证伪且有害**：fresh `ITEM dbeta rel=8.002e-01`（与窗四**逐字同**，修复未生效）；**zero-prefill 档 `1.018e-07→4.606e-01` 恶化**（指纹 `45266aef→2a507f3e`，且 dirty==zero 收敛同值）⇒ M4 的入口零写在 ub 设备路径**改变数值**（非中性）。根因复盘：M4 的 host 验证只覆盖 **pure**（cpu-alias 走 pure），**ub 体从未被数值验证过**（host 编不过 ub、容器无设备）——这是一次"未验证路径上的猜测性修复"，被窗七当场抓回。**处置：回退 M4（N5）**。
+- **V3（顺序探针，带修复跑）**：`none=4b017bea`（与窗四 `e609a6ab` 不同 ⇒ 零写确实改变了 fresh 输出，只是没改对）；`dirty=zero=2a507f3e`。**窗四的原始证据仍成立**：无 M4 时"任何先前发射 ⇒ dbeta 对（1.018e-07）"。
+- **V4（修判据后 gradcheck）＝6/8 诚实**：`gdn_delta FAIL nan`、`gdn_conv FAIL nan`（预测命中：conv 未被任何 UB 措施修复）；其余六件 PASS。
+- **正解候选＝A2 预热丢弃首跑**（每编译键首次发射后丢弃重跑）：证据链＝窗四"any-prior-launch ⇒ correct"；代价＝每键一次额外发射（纳秒–毫秒级）；实现层＝内核 run 包装（gdn_asc/gdn_conv_asc 的设备首_launch 分支）。窗八判决。
+- w6 捞档：`/tmp` 已被重启清空（预期内，损失仅 4096 计时点，战略上无决策价值——8192>25min 已足够定论）。
