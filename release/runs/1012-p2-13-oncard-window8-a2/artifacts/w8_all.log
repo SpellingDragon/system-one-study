@@ -1,0 +1,38 @@
+W8-HEAD=05e0b10
+=== [1] A0 对照臂（SYS1_DISABLE_WARMUP=1，期望 dbeta 复发 0.80 证明因果）===
+W8-V1-EXIT=1
+WARMUP行=0
+ITEM dbeta rel= 8.002e-01 verdict= FAIL
+NUM-delta_bwd FAIL first=dbeta rel=8.002e-01 absdiff=7.342e+00 thresh=2e-04
+=== [2] A2 默认臂（期望 WARMUP 行 + dbeta <2e-4 六项全 PASS）===
+W8-V2-EXIT=1
+WARMUP gdn[ascend]|h2k8v8|c8ubh
+WARMUP gdnb[ascend]|h2k8v8|c2ubz
+ITEM dq rel= 6.999e-08 verdict= PASS
+ITEM dk rel= 9.322e-08 verdict= PASS
+ITEM dv rel= 6.629e-08 verdict= PASS
+ITEM dbeta rel= 8.002e-01 verdict= FAIL
+ITEM dg rel= 1.016e-07 verdict= PASS
+ITEM dh0 rel= 6.176e-08 verdict= PASS
+ITEM adjoint rel= 5.999e-10 verdict= PASS
+NUM-delta_bwd FAIL first=dbeta rel=8.002e-01 absdiff=7.342e+00 thresh=2e-04
+=== [3] 修后 gradcheck（期望 gdn_delta/gdn_conv 转 PASS ⇒ 8/8；conv 若仍红则独立根因坐实）===
+W8-V3-EXIT=1
+GRADCHECK-linear PASS max_rel=1.225e-05 eps=0.05
+GRADCHECK-add_ln PASS max_rel=2.007e-05 eps=0.02
+GRADCHECK-rope PASS max_rel=1.231e-05 eps=0.05
+GRADCHECK-attn_sw PASS max_rel=2.535e-05 eps=0.02
+GRADCHECK-gdn_delta FAIL max_rel=4.698e+03 eps=0.01
+GRADCHECK-gdn_conv FAIL max_rel=1.431e+07 eps=0.01
+GRADCHECK-readout PASS max_rel=3.540e-06 eps=0.05
+GRADCHECK-lora_apply PASS max_rel=3.826e-06 eps=0.05
+GRADCHECK-SUMMARY ops=8 pass=6 fail=2 invalid=0 kernel_used=8/8
+=== [4] 顺序探针（期望 none 指纹 == dirty == zero）===
+W8-V4-EXIT=0
+ITEM dbeta rel= 8.002e-01 verdict= FAIL
+  none   dbeta-fp=e609a6ab
+  dirty  dbeta-fp=e609a6ab
+  zero   dbeta-fp=e609a6ab
+=== 现场保全 ===
+W8-TGZ size=3292B
+W8-DONE

@@ -585,65 +585,6 @@ def plan_backward(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, g: torch.Te
             "seq": fwd["seq"], "ws": ("Hist", "Lam"), "fwd": fwd}
 
 
-# ────────────────────────────────────────────────────────── A2 首发射预热（N5）
-#: 环境逃生口：置 1 关闭设备首发射预热（A2 负例／窗八 A0 对照臂）。
-ENV_DISABLE_WARMUP = "SYS1_DISABLE_WARMUP"
-#: 已做过首发射预热的编译键（模块级一处模式，conv 件复用 ⇒ 四处复用）。
-_WARMED: set[str] = set()
-
-
-def _warmup_should_fire(key: str) -> bool:
-    """设备首发射预热判据（A2）：键**首次**真发射前置一次同参丢弃发射。
-
-    窗四原始证据：`gdnb` 在**任何先前发射**（dirty 或 zero prefill）之后 `dbeta` 即对
-    （1.018e-07），唯**首次发射**读未初始化 UB 而错（fresh `8.002e-01`）。机理仍未定位
-    （窗七：低于生成码层），本修复是**证据驱动的规避**（同族于 M2 的 bk 避让），非语义修复。
-    `SYS1_DISABLE_WARMUP=1` 关闭此判据（负例／窗八 A0 对照臂，证明开关为真）。
-    """
-    if (os.environ.get(ENV_DISABLE_WARMUP) or "").strip().lower() in ("1", "true", "yes", "on"):
-        return False
-    if key in _WARMED:
-        return False
-    _WARMED.add(key)
-    return True
-
-
-def _sync_device() -> None:
-    """设备侧同步（预热那对发射都要落地）；无 npu 设备空操作。"""
-    sync = getattr(getattr(torch, "npu", None), "synchronize", None)
-    if sync is not None:
-        sync()
-
-
-def _on_npu(args: tuple) -> bool:
-    """这一趟发射是否真落在 NPU 上：看张量的**设备类型**（口径同 `train_step_real.device.type`）。
-
-    host `--target cpu` 走 **cpu-alias**（产品件内部口径仍是 `target="ascend"`，但张量在 CPU、
-    编译后端是 `c`）⇒ 必须按**真实设备**判，cpu-alias 判 False，预热分支不走、判决行逐字不变。
-    """
-    for t in args:
-        if getattr(getattr(t, "device", None), "type", "") == "npu":
-            return True
-    return False
-
-
-def _launch_dev(kernel, args: tuple, key: str, target: str) -> None:
-    """设备发射闸：**真机 NPU** 且键首次时，先同参丢弃发射一次再取结果（A2 预热）。
-
-    host（cpu-alias）路径**不走**此分支 ⇒ 四腿判决行逐字不变。预热发射用的是**同一个编译键**
-    （不新增键），故 `kernel_usage_report` 的计数语义不受影响。短路顺序保证 cpu-alias 连
-    `_warmup_should_fire` 都不触发 ⇒ `_WARMED` 不被 host 污染。
-    """
-    if target == ascend_env.TARGET_ASCEND and _on_npu(args) and _warmup_should_fire(key):
-        print(f"WARMUP {key}", flush=True)
-        kernel(*args)          # 预热发射：同参、丢弃结果（规避首次发射未初始化 UB 读）
-        _sync_device()
-        kernel(*args)          # 真发射：取结果
-        _sync_device()
-    else:
-        kernel(*args)
-
-
 def _compiled_for(spec: dict[str, Any], args: tuple[torch.Tensor, ...]):
     """按 spec 取（或首编）模具；args 是这一趟要递给模具的张量清单（只为描形状，不搬数据）。"""
     return ascend_env.get_compiled(
@@ -672,7 +613,7 @@ def run(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, g: torch.Tensor,
     kernel = _compiled_for(spec, args)
     if kernel is None:
         return False
-    _launch_dev(kernel, args, spec["key"], spec["target"])
+    kernel(*args)
     return True
 
 
@@ -698,13 +639,13 @@ def run_backward(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, g: torch.Ten
     fwd_kernel = _compiled_for(fwd, fwd_args)
     if fwd_kernel is None:
         return False
-    _launch_dev(fwd_kernel, fwd_args, fwd["key"], fwd["target"])
+    fwd_kernel(*fwd_args)
     lam = torch.zeros((heads, dvw, dkw), dtype=torch.float32, device=q.device)
     args = (q, k, v, g, beta, dout, hist, lam, dq, dk, dv, dbeta, dg, dh0)
     kernel = _compiled_for(spec, args)
     if kernel is None:
         return False
-    _launch_dev(kernel, args, spec["key"], spec["target"])
+    kernel(*args)
     return True
 
 

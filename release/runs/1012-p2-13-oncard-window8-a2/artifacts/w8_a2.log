@@ -1,0 +1,29 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+[12:47:12] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+2026-10-12 12:47:11  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_delta_fwd` with `out_idx=None`
+2026-10-12 12:47:14  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_delta_fwd`
+NUM-delta_fwd PASS rel_o=7.51e-08 rel_s=6.03e-08
+2026-10-12 12:47:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `probe_asc` with `out_idx=[1]`
+2026-10-12 12:47:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `probe_asc`
+2026-10-12 12:47:19  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_impl` with `out_idx=[]`
+2026-10-12 12:47:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_impl`
+WARMUP gdn[ascend]|h2k8v8|c8ubh
+[12:47:23] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+2026-10-12 12:47:22  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_bwd_impl` with `out_idx=[]`
+2026-10-12 12:47:25  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_bwd_impl`
+WARMUP gdnb[ascend]|h2k8v8|c2ubz
+ITEM dq rel= 6.999e-08 verdict= PASS
+ITEM dk rel= 9.322e-08 verdict= PASS
+ITEM dv rel= 6.629e-08 verdict= PASS
+ITEM dbeta rel= 8.002e-01 verdict= FAIL
+ITEM dg rel= 1.016e-07 verdict= PASS
+ITEM dh0 rel= 6.176e-08 verdict= PASS
+ITEM adjoint rel= 5.999e-10 verdict= PASS
+NUM-delta_bwd FAIL first=dbeta rel=8.002e-01 absdiff=7.342e+00 thresh=2e-04

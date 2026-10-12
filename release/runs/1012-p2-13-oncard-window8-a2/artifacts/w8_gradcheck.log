@@ -1,0 +1,67 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+=== gradcheck_card target=ascend mode=run(numeric-gradcheck) device=npu tilelang=0.1.15 dirs=2 rtol=0.0001 atol=1e-05 ===
+[W1012 12:47:58.468888834 compiler_depend.ts:164] Warning: Device do not support double dtype now, dtype cast replace with float. (function operator())
+2026-10-12 12:47:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `probe_asc` with `out_idx=[1]`
+2026-10-12 12:47:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `probe_asc`
+2026-10-12 12:47:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gemm_impl` with `out_idx=[]`
+2026-10-12 12:47:52  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gemm_impl`
+2026-10-12 12:47:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `dw_impl` with `out_idx=[]`
+2026-10-12 12:47:57  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `dw_impl`
+GRADCHECK-linear PASS max_rel=1.225e-05 eps=0.05
+    · fwd_keys=[gemm[ascend]|n16k16b16x16x16anonedfloat32]+1other wall=17.04s
+2026-10-12 12:47:59  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'probe_asc' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+2026-10-12 12:47:59  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `add_ln_impl` with `out_idx=[]`
+2026-10-12 12:48:05  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `add_ln_impl`
+2026-10-12 12:48:06  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `ln_bwd_impl` with `out_idx=[]`
+2026-10-12 12:48:26  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `ln_bwd_impl`
+GRADCHECK-add_ln PASS max_rel=2.007e-05 eps=0.02
+    · fwd_keys=[add_ln[ascend]|d16e1e-05b16]+1other wall=28.41s
+2026-10-12 12:48:28  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'probe_asc' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+2026-10-12 12:48:28  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `rope_impl` with `out_idx=[]`
+2026-10-12 12:48:30  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `rope_impl`
+GRADCHECK-rope PASS max_rel=1.231e-05 eps=0.05
+    · fwd_keys=[rope[ascend]|h2d8s2g1qfloat32afloat32] wall=3.40s
+2026-10-12 12:48:31  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'probe_asc' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+2026-10-12 12:48:31  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `attn_impl` with `out_idx=[]`
+2026-10-12 12:48:33  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `attn_impl`
+GRADCHECK-attn_sw PASS max_rel=2.535e-05 eps=0.02
+    · fwd_keys=[attn_sw[ascend]|h1d16w4b16x16] wall=3.97s
+2026-10-12 12:48:35  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'probe_asc' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+2026-10-12 12:48:35  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_impl` with `out_idx=[]`
+2026-10-12 12:48:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_impl`
+WARMUP gdn[ascend]|h2k8v8|c8ubh
+[12:48:40] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+2026-10-12 12:48:38  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_bwd_impl` with `out_idx=[]`
+2026-10-12 12:48:42  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_bwd_impl`
+WARMUP gdnb[ascend]|h2k8v8|c2ubz
+GRADCHECK-gdn_delta FAIL max_rel=4.698e+03 eps=0.01
+    · fwd_keys=[gdn[ascend]|h2k8v8|c8ubh]+1other wall=9.44s
+2026-10-12 12:48:44  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'probe_asc' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+2026-10-12 12:48:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `conv_impl` with `out_idx=[]`
+2026-10-12 12:48:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `conv_impl`
+WARMUP gdnconv[ascend]|c8k4b2|c8scalare
+2026-10-12 12:48:47  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `conv_bwd_impl` with `out_idx=[]`
+2026-10-12 12:48:49  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `conv_bwd_impl`
+WARMUP gdnconvb[ascend]|c8k4b2|c8scalar
+GRADCHECK-gdn_conv FAIL max_rel=1.431e+07 eps=0.01
+    · fwd_keys=[gdnconv[ascend]|c8k4b2|c8scalare]+1other wall=6.27s
+2026-10-12 12:48:51  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'probe_asc' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+2026-10-12 12:48:51  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gather_impl` with `out_idx=[]`
+2026-10-12 12:48:53  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gather_impl`
+2026-10-12 12:48:54  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `scatter_impl` with `out_idx=[]`
+2026-10-12 12:48:56  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `scatter_impl`
+GRADCHECK-readout PASS max_rel=3.540e-06 eps=0.05
+    · fwd_keys=[gather[ascend]|d16]+1other wall=6.58s
+2026-10-12 12:48:57  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'probe_asc' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+2026-10-12 12:48:57  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'gemm_impl' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+2026-10-12 12:48:57  [TileLang:tilelang.cache.kernel_cache:WARNING] (kernel_cache.py:379): Found kernel 'dw_impl' in memory cache. For better performance, consider using `@tilelang.jit` instead of direct kernel caching.
+GRADCHECK-lora_apply PASS max_rel=3.826e-06 eps=0.05
+    · fwd_keys=[gemm[ascend]|n16k16b16x16x16anonedfloat32]+1other wall=2.56s
+GRADCHECK-SUMMARY ops=8 pass=6 fail=2 invalid=0 kernel_used=8/8
