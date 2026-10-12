@@ -75,7 +75,7 @@
 ```
 ① 变更定位：一级 change 名 + 二级子变更目录路径（CLI 不识别嵌套，须显式给路径）
 ② 环境：所有解释器/测试运行器命令的绝对路径（venv/工具链路径随令下传）
-③ 必读四件套：proposal/design/tasks/spec（+项目注释规范章节）
+③ 必读四件套：proposal/design/tasks/spec（+项目注释规范章节）；**额外必给一级根 `ORCHESTRATION.md` 的路径**——它不是 openspec artifact，CLI 的 contextFiles 不列它，派发令不显式递路径就永远读不到（次序/授权/释放三节是 agent 自决边界的上位依据）
 ④ 已就绪资产情报：前序域的真实产物路径与可 import 的接口签名——免 agent 重探
 ⑤ 写入白名单：精确到文件/目录；明令"不动他域文件、禁 git commit/checkout"；过程件归置条款必写
    ——一次性探针/补丁/日志只准落约定隔离区（gitignored 或仓库外 /tmp 分域目录），
