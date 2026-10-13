@@ -99,3 +99,4 @@
   - **窗九（1013）真机首验判决：实现件撞 TA 编译器缺陷域，阻塞**。编译面全绿（容器/卡上多轮）、golden 卡上复验 5.999e-10，但执行期 507015「VEC 访问 UB 未对齐」最小形即发；19 数据点探针矩阵定案：雷不在 kernel 写法层（fork 全绿 serial 形态在 TA 同炸），嫌疑＝j 轴广播自动 Broadcast 展开 × UB memory planning（生成码 diff 取证在案）。处置（用户已裁）：A 上游 issue 草稿已备（`UPSTREAM_ISSUE_910b_vec_unaligned.md`，未发布）；B **chunked 二版立项**（j 收缩走 GEMM 域，窗五全绿形态域）；C 混合管线挂起。凭据：`runs/1013-p2-13-oncard-window9-ta-bwd/`（台账+探针族+三份生成码）
 
 - [ ] **P1-1zi 机会性一旗探针（搭车项，不重开止损）**：fork 生成码疑缺核内 vector↔scalar 同步（TA 有两套同步工程且引 #1346，main 仓为零）⇒ 给 `gdnb` 编译加 bisheng `--cce-auto-sync` 单旗，判 `dbeta 8.002e-01` 是否转对。**转对＝机理坐实（写进 PR 素材）＋fork 可选救活；不对＝止损结论加固**。验收＝任一未来窗搭 10 分钟腿出判决 —— 验证：`ITEM dbeta` 二值之一
+  - **P1-1zi 已判（窗十，1013 晚）：不对**——`--cce-auto-sync`（list 形态注入，经 ffi.Array/libhccl 两坑）下 dbeta 仍 8.002e-01 逐字同值；止损结论加固，缺同步假说未获证实。**新信息：其余五项（dq/dk/dv/dg/dh0）真机全 PASS（1e-7/1e-8）——fork 病灶收窄为 dbeta 单输出**（首见六项全判）。凭据：`runs/1013-p2-13-oncard-window10-align-workaround/notes.md` §[4]
