@@ -3,6 +3,14 @@
 > Status: DRAFT, not filed. Filed only after user approval (external actions stay frozen by default).
 > Chinese ledger: release/runs/1013-p2-13-oncard-window9-ta-bwd/notes.md (window 9)
 
+## Prior-art scan (2026-10-13, before filing — per user instruction)
+
+- **#1307 [open, 2026-07-07] "Fix AscendC GetWithOffset allocation size alignment"** — same mechanism family: allocation SIZES not rounded to 32B. Our generated code contains `GetWithOffset<float>(1, 2400)` (4-byte capacity). Filing posture: **a new, chip-fatal trigger face of #1307** (aicore exception instead of garbage read-back), posted as a comment on #1307 or a linked issue — NOT a duplicate bug report.
+- #1680 [closed 2026-10-08] column-offset BufferRegion flatten → 507015 — different trigger face (we use no column-offset slices); fix likely already in our build.
+- #1641 / #1777 T.tile.broadcast GM-src silent wrong values — broadcast family but different symptom (silent wrong vs chip exception) and different src (GM-loaded).
+- #1453 / #1537 compact unaligned copies — adjacent family, not our trigger.
+- Pending on-card verification (next window): enlarging every sub-32B UB buffer to 32B (`[1]`→`[8]`) as a user-side workaround — probe v14 written, not yet run (instance stopped).
+
 ---
 
 ## Title
@@ -75,7 +83,7 @@ plus an extra `AscendC::PipeBarrier<PIPE_V>();`. The Broadcast scratch shifts ev
 
 ## Ask
 
-1. Is a j-axis (first Parallel axis) broadcast contracted via `reduce_sum(dim=0)` a supported form on 910B in this pipeline? If yes, this looks like a codegen/memory-planning defect on dav-2201.
+1. Is the j-axis (first Parallel axis) broadcast contracted via `reduce_sum(dim=0)` a known casualty of the #1307 size-alignment gap? Our repro would then serve as a chip-fatal variant for that PR's regression set (the existing repro is a garbage-read case).
 2. Any recommended lowering for `dk_i = sum_j A[j,i] * v[j]` on 910B (vector path) that avoids the auto-Broadcast path? (GEMM/GEMV via `T.gemm_v0` is our planned fallback for the chunked version.)
 
 ---
