@@ -1,0 +1,61 @@
+=== [0] env ===
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+NPU-REG ok 2.7.1.post2 avail=True count=1 torch=2.7.1+cpu
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+torch 2.7.1+cpu npu_avail True
+WARNING: There was an error checking the latest version of pip.
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+tilelang 0.1.15
+=== [1] repo @latest ===
+SKIP-CLONE（自证钩子）：用已就位的 /tmp/sys1
+048dfa1 docs(agent): drop dispatch granularity to leaf-task level (R28, apply §十一)
+=== [2] overlay 910B templates + bisheng inject ===
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+TLROOT=/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang
+PIP_SRC(桩头落点根)=/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang/src   TPL(模板落点)=/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang/src/tl_templates/ascend
+-rw-r----- 1 ma-user ma-group 428 Oct 13 12:59 /home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang/src/c_api/asc_simd.h
+OVERLAY-OK headers=5 tpl=12
+compat §12+fill: 7
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+C-BISHENG-PATCHED /home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/tilelang/contrib/bisheng.py (root=/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux)
+  -> result = ["-O2", "-fPIC", "-std=c++20", "-DTL_PORT910B_NATIVE_TYPES", "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/asc/impl",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/asc/include",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/tikcpp/tikcfw",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/tikcpp/tikcfw/impl",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/tikcpp/tikcfw/interface",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/tikcpp/tikcfw/lib",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascendc/include/basic_api",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/ascendc/include/highlevel_api",  "-I/usr/local/Ascend/ascend-toolkit/latest/aarch64-linux/include", "-mllvm", "-cce-aicore-dcpreload-args=false"]
+INJECT-OK
+STOP-AFTER-2 OVERLAY-OK
+=== [5] verdict summary ===
+VERDICT-SCAN-BEGIN
+VERDICT-SCAN-END
+SUMMARY-DEGRADED note=无设备 命中=0 行
+LOGS /tmp/sys1_legs (每条腿原文一份，补看：grep -E '^Y-|^NUM-|^ASC-|^P2-STEP|^KERNEL-USED|^DTYPE-TRACE' /tmp/sys1_legs/<腿>.log)
+RUNNER-DONE SUMMARY pass=0 fail=0 skipped_legs=13 degraded=0 advisory_fail=0 exit=0

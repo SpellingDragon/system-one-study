@@ -1,0 +1,50 @@
+=== [0] TA 解包 + env + 自证 ===
+W9-TAR bytes=36478146 sha256=d5607ec6f9c321c9652fa7d25f234d2e17a074cf308938fa2c4b522830b02172
+W9-UNPACK files=1996
+W9-CANN-env /usr/local/Ascend/cann-8.5.2/set_env.sh
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+2026-10-13 12:55:24  [TileLang:tilelang.env:WARNING]: CUTLASS is not installed or found in the expected path
+2026-10-13 12:55:24  [TileLang:tilelang.env:WARNING]: Composable Kernel is not installed or found in the expected path
+2026-10-13 12:55:38  [TileLang:tilelang.jit.adapter.cython.adapter:INFO]: No cached version found for cython jit adapter, need to compile...
+2026-10-13 12:55:38  [TileLang:tilelang.jit.adapter.cython.adapter:INFO]: Waiting for lock to compile cython jit adapter...
+2026-10-13 12:55:38  [TileLang:tilelang.jit.adapter.cython.adapter:INFO]: Compiling cython jit adapter...
+W9-TLPKG /tmp/ta_unpack/ta_pkg/tilelang/__init__.py
+W9-SRC gdn_bwd=14779B test=18952B
+=== [1] F1 卡上编译（bisheng 8.5.2，两 dtype 分判）===
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+2026-10-13 12:55:48  [TileLang:tilelang.env:WARNING]: CUTLASS is not installed or found in the expected path
+2026-10-13 12:55:48  [TileLang:tilelang.env:WARNING]: Composable Kernel is not installed or found in the expected path
+W9-COMPILE-float16 OK src=24419
+W9-COMPILE-float32 OK src=24571
+W9-COMPILE-EXIT=0
+=== [2] L0 真机数值（六梯度×6 case + special；runpy 注入 torch_npu 注册，不动 TA 冻结件）===
+W9-L0-EXIT=1
+ITEM adjoint rel= 5.999e-10 verdict= PASS
+[PRECISION_FAIL] l0_basic B=1 H=1 T=64 DK=64 DV=64 dt=float16: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_basic B=1 H=1 T=64 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_typical B=1 H=2 T=256 DK=64 DV=64 dt=float16: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_typical B=1 H=2 T=256 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_h0 B=1 H=2 T=256 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_special B=1 H=1 T=64 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+=== [3] 一旗腿 P1-1zi：fork gdnb 加 --cce-auto-sync，判 dbeta（TA 环境出，回 fork 世界）===
+W9-FLAG-HEAD=048dfa1
+W9-FLAG-INJECTED=1
+W9-FLAG-EXIT=1
+W9-FLAG-REVERTED=0
+=== [4] 现场保全 ===
+W9-TGZ size=3725B
+W9-DONE
