@@ -9,7 +9,7 @@
 - #1680 [closed 2026-10-08] column-offset BufferRegion flatten → 507015 — different trigger face (we use no column-offset slices); fix likely already in our build.
 - #1641 / #1777 T.tile.broadcast GM-src silent wrong values — broadcast family but different symptom (silent wrong vs chip exception) and different src (GM-loaded).
 - #1453 / #1537 compact unaligned copies — adjacent family, not our trigger.
-- Pending on-card verification (next window): enlarging every sub-32B UB buffer to 32B (`[1]`→`[8]`) as a user-side workaround — probe v14 written, not yet run (instance stopped).
+- Pending on-card verification (next window): enlarging every sub-32B UB buffer to 32B (`[1]`→`[8]`) as a user-side workaround — **RESOLVED NEGATIVE (window 10, on-card): the aligned variant still fails with the identical 507015**, so the #1307 size-rounding gap is NOT our mechanism (worth stating upstream to rule the hypothesis out); our case stands as an independent defect, filed with references to the #1307/#1680 families.
 
 ---
 

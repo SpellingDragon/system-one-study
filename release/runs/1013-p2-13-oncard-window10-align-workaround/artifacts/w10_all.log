@@ -1,0 +1,53 @@
+=== [0] TA 解包 + env + 自证 ===
+W10-TAR bytes=36478146 sha256=d5607ec6f9c321c9652fa7d25f234d2e17a074cf308938fa2c4b522830b02172
+W10-UNPACK files=1996
+W10-CANN-env /usr/local/Ascend/cann-8.5.2/set_env.sh
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+2026-10-13 23:59:18  [TileLang:tilelang.env:WARNING]: CUTLASS is not installed or found in the expected path
+2026-10-13 23:59:18  [TileLang:tilelang.env:WARNING]: Composable Kernel is not installed or found in the expected path
+2026-10-13 23:59:30  [TileLang:tilelang.jit.adapter.cython.adapter:INFO]: No cached version found for cython jit adapter, need to compile...
+2026-10-13 23:59:30  [TileLang:tilelang.jit.adapter.cython.adapter:INFO]: Waiting for lock to compile cython jit adapter...
+2026-10-13 23:59:30  [TileLang:tilelang.jit.adapter.cython.adapter:INFO]: Compiling cython jit adapter...
+W10-TLPKG /tmp/ta_unpack/ta_pkg/tilelang/__init__.py
+W10-SRC gdn_bwd=16246B test=18952B v14=6695B
+=== [1] v14：#1307 workaround 判决（A=[1]buf 对照 / B=[8] 32B 对齐）===
+W10-V14-EXIT=0
+V14 A-orig-1buf FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+V14 B-align-32B FAIL RuntimeError: ACL stream synchronize failed, error code:507015
+V14-DONE
+=== [2] 对齐版 ladder（7 档）===
+W10-LADDER-EXIT=0
+LADDER FAIL B=1 H=1 L=1 DK=8 DV=8 dt=float32 :: RuntimeError: ACL stream synchronize failed, error code:507015
+LADDER FAIL B=1 H=1 L=4 DK=8 DV=8 dt=float32 :: RuntimeError: ACL stream synchronize failed, error code:507015
+LADDER FAIL B=1 H=1 L=64 DK=8 DV=8 dt=float32 :: RuntimeError: ACL stream synchronize failed, error code:507015
+LADDER FAIL B=1 H=1 L=64 DK=64 DV=64 dt=float32 :: RuntimeError: ACL stream synchronize failed, error code:507015
+LADDER FAIL B=1 H=2 L=256 DK=64 DV=64 dt=float32 :: RuntimeError: ACL stream synchronize failed, error code:507015
+LADDER FAIL B=1 H=1 L=64 DK=64 DV=64 dt=float16 :: RuntimeError: ACL stream synchronize failed, error code:507015
+LADDER FAIL B=1 H=2 L=256 DK=64 DV=64 dt=float16 :: RuntimeError: ACL stream synchronize failed, error code:507015
+LADDER-DONE
+=== [3] 对齐版 L0 全量（六梯度×6 case + special）===
+W10-L0-EXIT=1
+ITEM adjoint rel= 5.999e-10 verdict= PASS
+[PRECISION_FAIL] l0_basic B=1 H=1 T=64 DK=64 DV=64 dt=float16: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_basic B=1 H=1 T=64 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_typical B=1 H=2 T=256 DK=64 DV=64 dt=float16: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_typical B=1 H=2 T=256 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_h0 B=1 H=2 T=256 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_special B=1 H=1 T=64 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+=== [4] 一旗腿 P1-1zi（autoload 修复配方：显式 torch_npu 预载）===
+W10-FLAG-HEAD=a102ffe
+W10-FLAG-INJECTED=1
+W10-FLAG-EXIT=1
+ImportError: libhccl.so: cannot open shared object file: No such file or directory
+ImportError: libhccl.so: cannot open shared object file: No such file or directory
+W10-FLAG-REVERTED=0
+=== [5] 现场保全 ===
+W10-TGZ size=4231B
+W10-DONE

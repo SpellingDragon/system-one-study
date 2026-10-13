@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/__init__.py", line 41, in <module>
+    import torch_npu.npu
+  File "/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/npu/__init__.py", line 140, in <module>
+    from torch_npu.utils import _should_print_warning
+  File "/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/__init__.py", line 4, in <module>
+    from torch_npu import _C
+ImportError: libhccl.so: cannot open shared object file: No such file or directory
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/__init__.py", line 43, in <module>
+    from torch_npu.utils._error_code import ErrCode, pta_error
+  File "/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/__init__.py", line 4, in <module>
+    from torch_npu import _C
+ImportError: libhccl.so: cannot open shared object file: No such file or directory

@@ -1,0 +1,79 @@
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2 owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+/home/ma-user/anaconda3/envs/PyTorch-2.7.1/lib/python3.12/site-packages/torch_npu/utils/collect_env.py:58: UserWarning: Warning: The /usr/local/Ascend/cann-8.5.2/aarch64-linux/ascend_toolkit_install.info owner does not match the current owner.
+  warnings.warn(f"Warning: The {path} owner does not match the current owner.")
+[W1014 00:02:59.344761927 compiler_depend.ts:58] Warning: EZ9999: Inner Error!
+EZ9999[PID: 11785] 2026-10-14-00:02:59.679.003 (EZ9999):  The error from device(chipId:7, dieId:0), serial number is 959, there is an exception of fftsplus aivector error, core id is 45, error code = 0, dump info: pc start: 0x12c0428007d4, current: 0x12c042801f94, vec error info: 0x7000000f5, mte error info: 0xc000000d8, ifu error info: 0x1000000000000, ccu error info: 0xb61b1a20080006d, cube error info: 0, biu error info: 0, aic error mask: 0x6500020bd00028c, para base: 0x12c100000080.[FUNC:PrintCoreInfo][FILE:device_error_core_proc.cc][LINE:347]
+        TraceBack (most recent call last):
+       The extend info: errcode:(0, 0x800, 0) errorStr: The UB address accessed by the VEC instruction is not aligned. fixp_error0 info: 0xd8, fixp_error1 info: 0xc, fsmId:1, tslot:7, thread:0, ctxid:0, blk:0, sublk:0, subErrType:4.[FUNC:PrintCoreInfo][FILE:device_error_core_proc.cc][LINE:360]
+       Kernel task happen error, retCode=0x26, [aicore exception].[FUNC:PreCheckTaskErr][FILE:davinci_kernel_task.cc][LINE:1582]
+       rtStreamSynchronize execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+       synchronize stream failed, runtime result = 507015[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function copy_between_host_and_device_opapi)
+[W1014 00:03:15.395305331 compiler_depend.ts:58] Warning: EE9999: Inner Error!
+EE9999[PID: 11785] 2026-10-14-00:03:15.730.083 (EE9999):  rtStreamSynchronize execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       synchronize stream failed, runtime result = 507015[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function copy_between_host_and_device_opapi)
+[W1014 00:03:38.245046887 compiler_depend.ts:58] Warning: EE9999: Inner Error!
+EE9999[PID: 11785] 2026-10-14-00:03:38.579.662 (EE9999):  rtStreamSynchronize execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       synchronize stream failed, runtime result = 507015[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function copy_between_host_and_device_opapi)
+[W1014 00:04:02.881521184 compiler_depend.ts:58] Warning: EE9999: Inner Error!
+EE9999[PID: 11785] 2026-10-14-00:04:02.216.277 (EE9999):  rtStreamSynchronize execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       synchronize stream failed, runtime result = 507015[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function copy_between_host_and_device_opapi)
+[W1014 00:04:10.175416436 compiler_depend.ts:58] Warning: EE9999: Inner Error!
+EE9999[PID: 11785] 2026-10-14-00:04:10.510.189 (EE9999):  rtStreamSynchronize execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       synchronize stream failed, runtime result = 507015[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function copy_between_host_and_device_opapi)
+/tmp/test_gdn_bwd.py:64: RuntimeWarning: invalid value encountered in matmul
+  O[h, t] = snew @ Q[h, t]
+/tmp/test_gdn_bwd.py:61: RuntimeWarning: invalid value encountered in matmul
+  pred = sp @ K[h, t]
+/tmp/test_gdn_bwd.py:108: RuntimeWarning: invalid value encountered in scalar add
+  acc_q += (sp + u[j] * kt[i]) * dot[j]
+[W1014 00:04:11.209732366 compiler_depend.ts:58] Warning: EE9999: Inner Error!
+EE9999[PID: 11785] 2026-10-14-00:04:11.545.315 (EE9999):  rtStreamSynchronize execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       synchronize stream failed, runtime result = 507015[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function copy_between_host_and_device_opapi)
+2026-10-14 00:02:40  [TileLang:tilelang.env:WARNING]: CUTLASS is not installed or found in the expected path
+2026-10-14 00:02:40  [TileLang:tilelang.env:WARNING]: Composable Kernel is not installed or found in the expected path
+[GOLDEN_SELFCHECK] ADJ-FD Q     rel=9.688e-11
+[GOLDEN_SELFCHECK] ADJ-FD K     rel=3.181e-10
+[GOLDEN_SELFCHECK] ADJ-FD V     rel=2.437e-10
+[GOLDEN_SELFCHECK] ADJ-FD BETA  rel=3.194e-10
+[GOLDEN_SELFCHECK] ADJ-FD G     rel=5.999e-10
+[GOLDEN_SELFCHECK] ADJ-FD H0    rel=3.863e-10
+[GOLDEN_SELFCHECK] adjoint-vs-FD worst_rel=5.999e-10 tol=1e-08 -> PASS
+ITEM adjoint rel= 5.999e-10 verdict= PASS
+[PRECISION_FAIL] l0_basic B=1 H=1 T=64 DK=64 DV=64 dt=float16: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_basic B=1 H=1 T=64 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_typical B=1 H=2 T=256 DK=64 DV=64 dt=float16: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_typical B=1 H=2 T=256 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_h0 B=1 H=2 T=256 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[PRECISION_FAIL] l0_special B=1 H=1 T=64 DK=64 DV=64 dt=float32: RuntimeError: ACL stream synchronize failed, error code:507015
+[W1014 00:04:11.211617766 compiler_depend.ts:595] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 11785] 2026-10-14-00:04:11.547.562 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeUsedDevices)
+[W1014 00:04:11.212568000 compiler_depend.ts:577] Warning: NPU warning, error code is 507015[Error]: 
+[Error]: The aicore execution is abnormal. 
+        Rectify the fault based on the error information in the ascend log.
+EE9999: Inner Error!
+EE9999[PID: 11785] 2026-10-14-00:04:11.548.590 (EE9999):  rtDeviceSynchronizeWithTimeout execution failed, reason=aicore exception[FUNC:FuncErrorReason][FILE:error_message_manage.cc][LINE:61]
+        TraceBack (most recent call last):
+       wait for compute device to finish failed, runtime result = 507015.[FUNC:ReportCallError][FILE:log_inner.cpp][LINE:148]
+ (function npuSynchronizeDevice)
