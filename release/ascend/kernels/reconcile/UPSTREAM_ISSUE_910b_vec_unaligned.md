@@ -89,3 +89,4 @@ plus an extra `AscendC::PipeBarrier<PIPE_V>();`. The Broadcast scratch shifts ev
 ---
 
 Attachments (this repo): `release/runs/1013-p2-13-oncard-window9-ta-bwd/artifacts/{w9_probe_v7_loop.py, w9_gen_L12.cpp, w9_gen_L18.cpp, w9_gen_L23.cpp}` — trimmed copies would be attached at filing time.
+- 2026-10-14：issue 已发布 → https://github.com/tile-ai/tilelang-ascend/issues/1885（用户授权；正文=21 点矩阵+生成码 diff+自足 v14 复现+workaround 证伪）
