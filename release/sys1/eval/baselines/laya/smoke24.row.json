@@ -1,0 +1,24 @@
+{
+  "kind": "baseline-row",
+  "baseline": "laya",
+  "dataset": "test",
+  "split": "smoke24",
+  "n_samples": 24,
+  "device": "cpu",
+  "sampling_params": "T=1/top_p=1(readout)",
+  "metrics": {
+    "acc": 0.583333,
+    "ece": 0.079008,
+    "ece_after": 0.079008,
+    "ece_before": 0.062588,
+    "ms_p50": 250.706,
+    "ms_mean": 326.79,
+    "throughput_qps": 3.0601
+  },
+  "run_id": "1005-p2-04-laya-cpu-fec2",
+  "commit": "fb70c7939acdc04049c10bc8c47b2dab7151827e",
+  "source": "harness",
+  "gate": true,
+  "on_device": "端侧(CPU通路)",
+  "note": "同 harness 亲跑（CPU 小样本通路；全量延后 C6）。meta={'backend': 'laya', 'model': 'typed-decisions'}"
+}

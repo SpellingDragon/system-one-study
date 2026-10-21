@@ -1,0 +1,20 @@
+run_id: 1004-eval-report-1f94
+stage: eval
+evaluated_run_id: 1004-s2-decision-sft-17ac
+evaluated_commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+mode: model
+device: mps
+backend: tilelang
+n_predictions: 100
+axes:
+- quality
+- calibration
+- speed
+- parity
+passed: true
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

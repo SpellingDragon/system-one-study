@@ -1,0 +1,58 @@
+# p2-05 正式档 B：Qwen3-0.6B 备选档（scaling 对照；910B 全自研栈，待 C5 实跑）
+#
+# 与 gate08b.yaml 逐键相同，只允许差这四类：backbone / max_tokens+accum（批规模）/ max_steps（步数）。
+# 口径键（读点、LoRA 超参、混合配比、教师身份、算子档、调度）必须一模一样，
+# 否则两份档跑出来的曲线没法对照——由 tests/test_prod_sft.py -k configs 钉住。
+#
+# run_prefix 不写进档表：正式跑时用 --run-prefix 给（p2-05-gate / p2-05-scaling），
+# 好让下面两份 yaml 逐键只差"底座/批规模/步数"四类
+
+# ── 资源与身份 ──
+backbone: qwen3-0.6b            # p2-01 备选（纯文本结构、载得快，用于 scaling 对照）
+loader: seam                    # 正式门：连四道接缝一并校（替身兜底门只给 tiny 用）
+device: npu:0
+dtype: bfloat16
+threads: 8
+seed: 20261005                  # 同种子 → 同桌序（两档只差批规模时才可逐点对比）
+
+# ── 数据（p2-03 registry 口，训练循环不造题）──
+# 2026-10-10 audit-remediation（R-P0-2）：训测分离——旧值走的是评测考卷轴（quality＝test 档），旧 dev run 的 quality 轴记录见 run 档，不回写
+axis: train
+limit: 0                        # 0 = 全量（正式档不封顶）
+max_length: 8192                # 超长直接丢；截半截题会把读点位切掉
+
+# ── 教师（p2-02 缓存口；C3 产完真伪标再开跑）──
+teacher_model_id: StartLuxAI/StartLux-Decision-4B
+teacher_cache: bench/teacher_cache
+mix_soft: 0.5                   # hard/soft 各半（spec 默认配比）
+hard_mass: 0.9                  # 人工硬标签的押注质量（p2-02 现成折法）
+
+# ── 旁路与算子档（p2-13 自研栈）──
+kernel_backend: kernel          # 云端走自研件；本地同键改 torch 即回参照路
+ascend_target: ascend
+r: 16
+alpha: 32                       # 力度 = α/r = 2.0（StartLux 基线）
+dropout: 0.05
+gradient_checkpointing: true    # 910B 上换内存的重算
+
+# ── 步长与调度（StartLux finetune_lora 基线）──
+lr: 0.0001
+warmup_ratio: 0.05
+weight_decay: 0.0
+max_grad_norm: 1.0
+epochs: 2
+max_tokens: 8192                # 底座小一半 → 一桌少坐些，攒桌数补回来
+accum: 8                        # 攒八桌下一次笔（等效字数与 gate 档同为 16384×4）
+max_steps: 0                    # 0 = 按桌数与遍数推
+
+# ── 产物与记录 ──
+out_dir: null                   # null = 落在 run 目录里的 model/
+prefill_chunk: 32               # 产标一桌问几题（伪标由 C3 出，本档不产）
+
+# ── 批规模折算比（design「16384tok×4 accum」基线 → 本档键值；本地半场只记口径，实测待 C5）──
+#   基线口径：等效字数 = 一桌补齐后字数 × 攒桌数 = 16384 × 4 = 65536 字 / 次下笔。
+#   参照档（gate08b，0.8B bf16 + 分段记账）：max_tokens 16384 / accum 4 —— 与基线逐字同形，折算比 1:1。
+#   本档（scaling，0.6B）：为守"等效字数不许动"这条，改 8192 × 8 = 65536，折算比 2:1
+#     （桌内宽度减半、攒桌数翻倍）；这样两档曲线仍可逐点对照，差异只剩底座。
+#   未定项：910B 单卡真会不会 OOM、要不要把 max_tokens 再对折 —— 只有 C5 首跑能给数，
+#     本地 CPU 替身跑出的 s/step 与 tok/s 一律不外推（tiny_cpu 档只验通路）。

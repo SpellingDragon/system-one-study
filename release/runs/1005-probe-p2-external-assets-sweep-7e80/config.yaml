@@ -1,0 +1,8 @@
+run_id: 1005-probe-p2-external-assets-sweep-7e80
+purpose: P2 计划全部外部资产的存在性/可达性/兼容性核查（Qwen3.5 事件的系统性排查，规划期一次做完，不再推迟到执行期）
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

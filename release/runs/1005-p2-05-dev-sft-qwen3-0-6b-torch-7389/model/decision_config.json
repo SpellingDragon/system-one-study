@@ -1,0 +1,108 @@
+{
+  "version": "dmlaya_p2_sft_v1",
+  "owner": "p2-05-prod-sft",
+  "render_version": "dmlaya_render_v1",
+  "readout": {
+    "position": "last_real_token",
+    "letters": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "W",
+      "X",
+      "Y",
+      "Z"
+    ],
+    "max_options": 26
+  },
+  "letter_token_ids": [
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57
+  ],
+  "temperature_by_type": {},
+  "temperatures": {},
+  "calibration": {
+    "status": "pending"
+  },
+  "sft": {
+    "version": "dmlaya_p2_sft_v1",
+    "backend": "torch",
+    "ascend_target": "cpu",
+    "r": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "target_leaves": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj"
+    ],
+    "trainable": 4587520,
+    "steps": 100,
+    "first_loss": 1.958339,
+    "final_loss": 1.260573,
+    "run_id": "1005-p2-05-dev-sft-qwen3-0-6b-torch-7389",
+    "data": {
+      "axis": "quality",
+      "revision": "typed-decisions@f7a2487+intern-decision@2f81580+cmmlu-subset@master+clue-subset@master",
+      "records_seen": 480,
+      "encoded": 480,
+      "skipped": {}
+    },
+    "teacher": {
+      "model_id": "StartLuxAI/StartLux-Decision-4B#scaffold-cpu",
+      "soft_coverage": 1.0,
+      "hits": 480,
+      "misses": 0
+    },
+    "note": "CPU 替身口径（本地开发档）；910B 正式档（gate08b/scaling 全量）待 C5"
+  },
+  "teacher": {
+    "model_id": "StartLuxAI/StartLux-Decision-4B#scaffold-cpu",
+    "cache": "bench/teacher_cache/p2_05_pseudo",
+    "mix_soft": 0.5
+  }
+}

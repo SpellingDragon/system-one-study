@@ -1,0 +1,17 @@
+run_id: 1007-p2-03-eval-registry-six-axes-eea3
+axes:
+- quality
+- calibration
+- longctx
+- multimodal
+- speed
+- parity
+backend: cpu
+registry_source: $REPO_ROOT/release/bench/eval_data/manifest.json
+data_revision: eval-registry[typed-decisions@f7a2487e,intern-decision@2f81580,jevbench@7ce310c7]
+  sets=13 samples=26308
+commit: 5981ade9b0080aac5fc672543c54df4ee5da0b4e
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

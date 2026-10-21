@@ -1,0 +1,23 @@
+run_id: 1006-p207-longctx-local-half-7b07-2
+domain: p2-07-long-context
+wave: A1+B1a-B1c+B2+C1（本地半场；A2 待云端/长窗真档）
+model: Qwen3-0.6B 替身（production/sft build_student loader=minimal）
+device: cpu
+dtype: torch.bfloat16
+mps: 禁用（派单纪律）
+longctx_version: needle_body_v1
+render_version: dmlaya_render_v1
+needle_table_source: bench/eval_data/assembled/needle-synthetic/needle-synthetic.jsonl
+state_tokens_for_prefix_probe: 2048
+drift_ratio_threshold: 0.02
+sliding:
+  reference_kernel: sys1/kernels/attn_sw_kernel
+  default_window: 128
+  cap_switch: LongContextPlan.cap / cap_full
+memory_ledger: cpu-rss + 解析账，非 NPU 显存账
+commit: 7280e06420f0c0ede3e85d627f40e52ad7c001f0
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

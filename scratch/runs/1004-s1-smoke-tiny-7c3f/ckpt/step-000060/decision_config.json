@@ -1,0 +1,5 @@
+{
+  "placeholder": true,
+  "owner": "p1-07-decision-program",
+  "note": "模型 save 只占位；真实读出配置（qtype 温度表等）由决策域写入，占位不覆盖已有文件"
+}

@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-08T02:04:43+0800", "walls_fell": "本会话新增 5 层：dcache_bypass(GM 直读写)、assert(trap 包装)、proxy 拷贝删除(const&化)、bf16x2 位拆包、AIC 适配器(asc_init/mmad/sync/lock/__mix__/ASC_IS_*) + AIV 面(asc_copy_gm2ub_align 等) + 地址空间指针整数中转"}
+{"step": 1, "ts": "2026-10-08T02:04:43+0800", "kernel_object": "真实 kernel 在 ccec_compiler 内层 + .asc 自动语言 + -std=c++20 下 **编译产出 .o（gate 0）**——tilelang 语义→codegen→bisheng 全链贯通"}
+{"step": 2, "ts": "2026-10-08T02:04:43+0800", "sole_residual": "外层 bin/bisheng 的 ASCPLUGIN 拉内层时硬传 -x cce + 全家桶 flag → mad(bf16) 10-arg overload 命中 target-feature gate。根因确认：910B(__NPU_ARCH__=2201) 官方 cube 面 = Ascend C 框架 AscendC::Mmad 模板（ascendc/basic_api/impl arch-select），非 clang-builtin mad 直调；MMAD 宏 gate=5102/9201/3801/3101 无 2201"}
+{"step": 3, "ts": "2026-10-08T02:04:43+0800", "discovery_mix": "__mix__(cube,vec)=原生 core_ratio 属性宏（910B 原生支持双工比例！），compat 覆盖版须让位（#ifndef 守卫）；-x cce 上下文原生定义 __CCE_AICORE__/CCE 函数头"}

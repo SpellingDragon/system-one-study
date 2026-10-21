@@ -1,0 +1,2 @@
+{"step": 0, "ts": "2026-10-05T14:30:53+0800", "b3_files": 30, "b3_total_bytes": 9344023187, "b3_weight_bytes": 9319828240, "b3_letter_ids_match": 1, "b3_vocab": 248044}
+{"step": 1, "ts": "2026-10-05T14:30:53+0800", "b3_cpu_first_pass_s": 0.842, "b3_cpu_tok_s": 204.3, "b3_forward_calls": 3, "b3_second_pass_hits": 3, "b3_api_calls": 14, "b3_api_mean_latency_s": 2.714, "b3_pack_rows": 2, "b3_replay_hits": 2, "b3_replay_api_calls": 0}

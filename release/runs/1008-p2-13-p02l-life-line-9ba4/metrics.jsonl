@@ -1,0 +1,3 @@
+{"step": 0, "ts": "2026-10-08T01:09:04+0800", "verdict": "LIFELINE-PASS(有依据)", "evidence_a": "950 风格 asc_* 系 12/12 MISS（clang15 builtin 层确无）", "evidence_b": "但 cube 能力在：aicore_functions.h MMAD×23 / mad/mad_sp/mad_mx 函数族", "evidence_c": "Ascend C 标准库整层在位：ascendc/include/basic_api/impl + asc/impl/adv_api（DataCopy/barrier 等官方模板层）"}
+{"step": 1, "ts": "2026-10-08T01:09:04+0800", "architecture": "tilelang 生成码调 ascend_gemm_l1<...>——这是 gemm.h 里 tilelang 自包的模板 wrapper（内部才调 asc_* builtin）→ 移植面=为该模板补 910B 第二实现（MMAD+Ascend C DataCopy 后端），codegen/IR 层零改动"}
+{"step": 2, "ts": "2026-10-08T01:09:04+0800", "compat_layers_done": "common.h 全链已过（P2 PASS）：950头罩除/bit_cast内置/reduce罩除/half=_Float16原生/bf16=u16存储compat/__aicore__空宏——八墙一夜尽解"}

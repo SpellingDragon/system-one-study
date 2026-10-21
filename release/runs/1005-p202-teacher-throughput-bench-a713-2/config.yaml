@@ -1,0 +1,13 @@
+run_id: 1005-p202-teacher-throughput-bench-a713-2
+domain: p2-02-teacher-adapters
+n_samples: 50
+backend: StartLuxAI/StartLux-Decision-4B#scaffold-cpu
+device: cpu
+cache_root: $REPO_ROOT/release/bench/teacher_cache/throughput_bench
+note: 吞吐为同架构脚手架口径；4B 真载吞吐按 D6 延后至云端 C3
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

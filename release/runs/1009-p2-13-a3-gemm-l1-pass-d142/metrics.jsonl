@@ -1,0 +1,3 @@
+{"step": 0, "ts": "2026-10-09T01:26:27+0800", "verdict": "**A2-GEMM-L1-PASS 2776B**——alloc_l1/alloc_l0c+transpose_B 的 gemm 模板路在本地 bisheng 全链编译通过（GM→L1→L0A/B→mad），§12 全 native 化、门控废弃、MX 段罩除"}
+{"step": 1, "ts": "2026-10-09T01:26:27+0800", "signatures": "官方形定档三件：copy_gm_to_cbuf 8 参/load_cbuf_to_ca-cb 9 参(第9=addr_cal_mode_t)/mad 10 参；CCE 三禁：可变成体全局、L0C→UB(硬件不支持=assert-false)、32bit 直 GM"}
+{"step": 2, "ts": "2026-10-09T01:26:27+0800", "residual": "l0c2gm 输出路 stub（L0C→L1→MTE3→GM 三段 cfg 位段=A-4）；V1/V2 数值上卡证真；主线四线回归全绿"}

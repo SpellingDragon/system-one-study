@@ -1,0 +1,19 @@
+{
+  "peft_type": "LORA",
+  "r": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj"
+  ],
+  "modules_to_save": [],
+  "base_model_name_or_path": "$REPO_ROOT/release/bench/ms_models/models/Qwen--Qwen3-0.6B/snapshots/master",
+  "fan_in_fan_out": false,
+  "bias": "none",
+  "task_type": "CAUSAL_LM",
+  "sft_version": "dmlaya_p2_sft_v1",
+  "params": 4587520
+}

@@ -1,0 +1,10 @@
+run_id: 1008-p2-13-upstream-issue-3448-be5c
+run:
+  name: p2-13-upstream-issue-3448
+artifact: https://github.com/tile-ai/tilelang/issues/3448
+commit: 749bdb1505be65a8ba827ad345f61a59e3533e29
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

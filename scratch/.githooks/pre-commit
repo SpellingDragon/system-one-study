@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# 本地 pre-commit 钩子（轻量档：注释门 + 编译检查）。
+# 启用一次即可:  git config core.hooksPath .githooks
+bash tools/ci.sh --fast

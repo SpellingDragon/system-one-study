@@ -1,0 +1,10 @@
+run_id: 1009-p2-13-a4-gemm-full-chain-5fd3
+run:
+  name: p2-13-a4-gemm-full-chain
+milestone: A-4：gemm 全链编译贯通（含输出段）
+commit: 74d306427c55a816792099c0fe9a71e3919f9f16
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

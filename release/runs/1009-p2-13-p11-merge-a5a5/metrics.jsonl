@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-09T00:50:56+0800", "B": "add_ln+readout 双 COMPILE-PASS（fp16；bf16 标量 cast 系 910B 后端硬缺陷 not support bf16 type cast，生产本就 fp16）；GAPB 四件（7参搬运/set_flag 宏/store 枚举/rsqrtf 临时 shim）"}
+{"step": 1, "ts": "2026-10-09T00:50:56+0800", "C": "GDN conv 4/4 COMPILE-PASS + GOLDEN-PASS(max_rel 1.1e-6)；重大结构结论：短卷积纯 AIV 标量面可表达、不需 Cube/mix；§11 数学面(expf 软件件修了双重+127 指数域 bug/fabsf)；9 条缺口单"}
+{"step": 2, "ts": "2026-10-09T00:50:56+0800", "merge": "编排者合并：B 块置前+§11 追加；enum 统一为 fixed-underlying 并集(4=NORMAL@copy.cc:316)；ub2gm 保 C 版摘 B 版（同 codegen 契约、C 注释与 32B 换算更严）；集成回归 4/4 全绿"}
+{"step": 3, "ts": "2026-10-09T00:50:56+0800", "toolchain": "三件通用发现：①bisheng 注入统一 patches/patch_bisheng.py(幂等+py_compile) ②TILELANG_CACHE_DIR 新目录是 compat 判决硬纪律(key 不含模板内容) ③docker commit 母本分裂免 pip 重装"}

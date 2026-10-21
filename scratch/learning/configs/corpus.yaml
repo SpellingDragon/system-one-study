@@ -1,0 +1,96 @@
+# learning/configs/corpus.yaml — S1 预训练语料装配配置（p1-08 A1/A2）
+#
+# 职责：把"从中英两摊文本里取数、去重、配比、切片"的全部规矩集中在这一份文件里。
+# sys1/data/pretrain_corpus.load_spec 只认这份单子（defaults 先落底，profiles 再覆盖），
+# 代码里不留第二处来源；改配比、改去重强度、改片长都在这里改，改完重装配即生效。
+#
+# 字段口径：
+#   tokenizer_dir      自训产物目录（GUIDE §7-0：绝不引第三方表/权重），vocab_size 必须与它一致
+#   shard_tokens       单个二进制片的编号个数（约 shard_tokens×4 字节）
+#   max_tokens         本次装配的编号产出上限（先到先收手）
+#   stream_limit_bytes 文本读取字节上限（人类写法，如 200MB）
+#   min_tokens_expected 产出下限：低于它就当作装配失败，绝不交付半成品语料
+#   sources[].weight   按"最终编号数"计的配比，两条之和必须为 1（默认 7:3）
+#   sources[].local    本地语料路径；存在即用，避免重复网络下载（本仓 209MB 已在 bench/）
+#   sources[].modelscope / huggingface / files  远端双源（ModelScope 优先，HF 兜底）与文件名清单
+#   dedup              去重规则：exact=规范化全文哈希精确判重；minhash_lite=近重复（条带数可调）
+defaults:
+  tokenizer_dir: runs/1003-s0-bpe-16k-realedu-zh-en/tokenizer
+  vocab_size: 16000
+  shard_tokens: 2000000
+  cache_dir: bench/corpus_s1
+  doc_sep: '<|endoftext|>'          # 文档之间插这个整篇结束标记（自训表固定 1 号）
+  dedup:
+    enabled: true
+    exact: true
+    minhash_lite:
+      num_perm: 8
+      shingle_chars: 8
+      stride: 4
+  sources:
+    - lang: en
+      weight: 0.7
+      local: bench/corpus_s0/txt/en_fineweb_edu.txt
+      modelscope: AI-ModelScope/fineweb-edu
+      huggingface: HuggingFaceFW/fineweb-edu
+      revision: master
+      text_key: text
+      files:
+        - sample/350BT/016_00000.parquet
+    - lang: zh
+      weight: 0.3
+      local: bench/corpus_s0/txt/zh_fineweb_edu.txt
+      modelscope: opencsg/Fineweb-Edu-Chinese-V2.2
+      huggingface: opencsg/Fineweb-Edu-Chinese-V2.2
+      revision: master
+      text_key: text
+      files:
+        - 2_3/001376.parquet
+
+profiles:
+  # tiny：A2 的 200MB 冒烟档 + smoke_tiny 训练档的取数来源（本地语料，离线可复跑）
+  tiny:
+    max_tokens: 8000000
+    stream_limit_bytes: 200MB
+    min_tokens_expected: 6000000
+    shard_tokens: 2000000
+  # main：父 design D6 的 MPS 正式档量级（数小时级装配，CI 不跑）
+  main:
+    max_tokens: 120000000
+    stream_limit_bytes: 6GB
+    min_tokens_expected: 100000000
+    shard_tokens: 4000000
+    prefer: remote
+  # unit：  # unit：单测专用（配置里直接内联小文档，秒级、零网络；两侧文档不重叠，
+  # 所以去重层保持开启也不会把某一侧全部抓掉；去重行为本身由 tests 自造 spec 单独覆盖）
+  unit:
+    max_tokens: 100000
+    stream_limit_bytes: 0
+    min_tokens_expected: 60
+    shard_tokens: 64
+    dedup:
+      enabled: true
+      exact: true
+      minhash_lite:
+        num_perm: 4
+        shingle_chars: 6
+        stride: 2
+    sources:
+      - lang: en
+        weight: 0.7
+        docs:
+          - "The quick brown fox jumps over the lazy dog near the river bank."
+          - "Deep learning needs compute, and careful engineering needs patience even more."
+          - "Evidence: the temperature fell to 18 degrees and the sky turned clear after noon."
+          - "Options: A conservative, B aggressive, C unknown; pick the one that fits the data."
+          - "Safety first: measure correctness before you measure performance on any device."
+          - "The four letter word we should all learn to say is can, not cant."
+      - lang: zh
+        weight: 0.3
+        docs:
+          - "床前明月光，疑是地上霜。举头望明月，低头思故乡。"
+          - "中文和 English 混排的教育文本一起训练，标点包括：，。！？；："
+          - "决策题的做法：先看证据，再比较选项，最后输出一个字母和一个置信度。"
+          - "深度学习需要算力，deep learning needs compute，两边话说到一处。"
+          - "今天多云，气温 18 度，适合把实验收据整理一遍。"
+          - "先测正确性，再谈性能；correctness comes before performance。"

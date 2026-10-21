@@ -1,0 +1,10 @@
+run_id: 1008-p2-13-p02l-life-line-9ba4
+run:
+  name: p2-13-p02l-life-line
+question: asc_init/asc_mmad 等 AIC 通路 intrinsic 在 910B 是否存在（vecadd/gemm 编译的生死线）
+commit: c95e32b36c115667d67b95813406d6c845daa23c
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

@@ -1,0 +1,13 @@
+run_id: 1005-probe-08b-lora-mps-feasibility-5a64
+purpose: P2 前置可行性实测：0.6B backbone 在 M3 Pro 36GB/MPS 上 LoRA 训练
+model: Qwen/Qwen3-0.6B (ModelScope 真下载 251s/1.2GB)
+lora: r16 a32 qkvo trainable 4.59M(0.77%)
+torch: 2.14.1
+transformers: 5.18.0
+peft: 0.21.2
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

@@ -1,0 +1,208 @@
+===== MATRIX：5 变体 + 建材回归（每次全新 TILELANG_CACHE_DIR）=====
+----- variant=baseline -----
+D-DW-COMPILE-PASS
+  variant=baseline T=2048 N=1024 K=1024 BN=128 BK=128 TT=64 cores=64 dtype=float16 acc=float32
+  lines: 18
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: False
+  has_nd2nz: True
+  has_l1tmpl: True
+  has_mmad: False
+  has_l0c2gm: True
+  has_l12l0: False
+  has_l12l0_tr: False
+  emitted asc_* : asc_copy_gm2l1_nd2nz asc_copy_l0c2gm asc_init asc_load_l2_cache_mode asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode ascend_gemm_l1<128, 64, 128, 64, true, half>
+----- variant=ntt -----
+D-DW-COMPILE-PASS
+  variant=ntt T=2048 N=1024 K=1024 BN=128 BK=128 TT=64 cores=64 dtype=float16 acc=float32
+  lines: 18
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: True
+  has_nd2nz: False
+  has_l1tmpl: True
+  has_mmad: False
+  has_l0c2gm: True
+  has_l12l0: False
+  has_l12l0_tr: False
+  emitted asc_* : asc_copy_gm2l1_dn2nz asc_copy_l0c2gm asc_init asc_load_l2_cache_mode asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode ascend_gemm_l1<128, 64, 128, 64, true, half>
+----- variant=l0tr -----
+D-DW-COMPILE-PASS
+  variant=l0tr T=2048 N=1024 K=1024 BN=128 BK=128 TT=64 cores=64 dtype=float16 acc=float32
+  lines: 21
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: False
+  has_nd2nz: True
+  has_l1tmpl: False
+  has_mmad: True
+  has_l0c2gm: True
+  has_l12l0: True
+  has_l12l0_tr: True
+  emitted asc_* : asc_copy_gm2l1_nd2nz asc_copy_l0c2gm asc_copy_l12l0a_transpose asc_copy_l12l0b_transpose asc_init asc_load_l2_cache_mode asc_mmad asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode
+----- variant=madta -----
+D-DW-COMPILE-FAIL
+  variant: madta
+---- first error ----
+  /tmp/tmpg_7ca30f/tl_kernel.asc:11:11: error: only __ubuf__  and __gm__  and local memory pointer can be dereferenced
+  Fatal Err: A fatal error occurred in iternel process, and Diagnostic info can not be reported correctly
+  /tmp/tmpg_7ca30f/tl_kernel.asc:11:11: error: only __ubuf__  and __gm__  and local memory pointer can be dereferenced
+  Fatal Err: A fatal error occurred in iternel process, and Diagnostic info can not be reported correctly
+---- tail 1200 ----
+ void dW_madta_kernel(__gm__ float* DW, __gm__ half* X, __gm__ half* dY) {
+  asc_init();
+  __ca__ half *a_l0 = (__ca__ half *)0;
+  __cb__ half *b_l0 = (__cb__ half *)0;
+  __cc__ float *acc = (__cc__ float *)0;
+  for (int32_t kt = 0; kt < 32; ++kt) {
+    #pragma unroll
+    for (int32_t i = 0; i < 8192; ++i) {
+      a_l0[((((i >> 11) * 2048) + ((i & 127) * 16)) + ((i & 2047) >> 7))] = dY[((((kt * 65536) + ((i >> 7) * 1024)) + ((((int32_t)block_idx) >> 3) * 128)) + (i & 127))];
+    }
+    #pragma unroll
+    for (int32_t i_1 = 0; i_1 < 8192; ++i_1) {
+      b_l0[((((i_1 >> 11) * 2048) + ((i_1 & 127) * 16)) + ((i_1 & 2047) >> 7))] = X[((((kt * 65536) + ((i_1 >> 7) * 1024)) + ((((int32_t)block_idx) & 7) * 128)) + (i_1 & 127))];
+    }
+    asc_mmad(((__cc__ float*)acc), ((__ca__ half*)a_l0), ((__cb__ half*)b_l0), 128, 64, 128, 0, 1, 0, (kt == 0));
+  }
+  asc_set_l0c_copy_nz_para(1, 0, 0);
+  asc_copy_l0c2gm((&(DW[(((((int32_t)block_idx) >> 3) * 131072) + ((((int32_t)block_idx) & 7) * 128))])), ((__cc__ float*)acc), 128, 128, 1024, 128, static_cast<asc_store_l2_cache_mode>(0), static_cast<asc_unit_flag_mode>(0), static_cast<asc_quant_mode>(0), static_cast<asc_relu_pre_mode>(0), 0, 1, 0, 0);
+}
+
+
+----- variant=madl1 -----
+D-DW-COMPILE-PASS
+  variant=madl1 T=2048 N=1024 K=1024 BN=128 BK=128 TT=64 cores=64 dtype=float16 acc=float32
+  lines: 21
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: False
+  has_nd2nz: True
+  has_l1tmpl: False
+  has_mmad: True
+  has_l0c2gm: True
+  has_l12l0: True
+  has_l12l0_tr: True
+  emitted asc_* : asc_copy_gm2l1_nd2nz asc_copy_l0c2gm asc_copy_l12l0a_transpose asc_copy_l12l0b_transpose asc_init asc_load_l2_cache_mode asc_mmad asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode
+----- 建材回归: A2 纯 NT L1 件 (fp16) -----
+D-A2-BASELINE-PASS
+  lines: 16
+  has_l1tmpl: True  has_mmad: False  has_l0c2gm: True  has_mix: False
+----- 建材回归: e2e_cube 直路 -----
+E2E-CUBE-ONLY PASS
+HAS_MIX: True  HAS_ASC_IS: True
+----- golden -----
+D-GOLDEN-SELFCHK
+  T=2048 N=256 K=256 TT=64 BN=128 BK=128 seed=0 dtype_in=float16 acc=float32 out=float32
+  exact   : norm=1208.44 maxabs=22.1562
+  tiled   : relFro(vs exact)=0.000e+00   <== 这就是'纯累加次序误差'上界，P1 阈值按它标定
+  fp16out : relFro(vs tiled)=0.000e+00
+  per-elem: max_abs=0.000e+00 max_rel(>=1e-3 分母)=0.000e+00
+  transposition-discriminator: relFro(exact, exact)=0.000e+00 relFro(exact, exact.T)=1.411e+00 => 可区分(P0 有效)
+  einsum-vs-matmul: relFro=0.000e+00 (必须 0/1e-16 量级)
+  ---- 上卡判据（照抄，勿放宽） ----
+  P0 转置方向: relFro(DW,exact) < 1e-2 且 relFro(DW,exact) < relFro(DW,exact.T)
+  P1 累加精度: relFro(DW,tiled) <= 2e-6 ; relFro(DW,exact) <= 1.0e-05
+  P2 逐元素  : assert_close(DW, tiled, atol=1e-3, rtol=1e-5)  (对 exact 放宽 atol=1e-2)
+  出口降 fp16: P1 阈值 5e-4, P2 atol=5e-2 rtol=5e-3
+
+===== SHAPES：主案 l0tr 的形状/tiling 鲁棒矩阵 =====
+----- l0tr T=2048 N=1024 K=1024 BN=128 BK=128 TT=64 cores=64 -----
+D-DW-COMPILE-PASS
+  variant=l0tr T=2048 N=1024 K=1024 BN=128 BK=128 TT=64 cores=64 dtype=float16 acc=float32
+  lines: 21
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: False
+  has_nd2nz: True
+  has_l1tmpl: False
+  has_mmad: True
+  has_l0c2gm: True
+  has_l12l0: True
+  has_l12l0_tr: True
+  emitted asc_* : asc_copy_gm2l1_nd2nz asc_copy_l0c2gm asc_copy_l12l0a_transpose asc_copy_l12l0b_transpose asc_init asc_load_l2_cache_mode asc_mmad asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode
+----- l0tr T=512 N=512 K=1024 BN=64 BK=64 TT=32 cores=64 -----
+D-DW-COMPILE-PASS
+  variant=l0tr T=512 N=512 K=1024 BN=64 BK=64 TT=32 cores=64 dtype=float16 acc=float32
+  lines: 23
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: False
+  has_nd2nz: True
+  has_l1tmpl: False
+  has_mmad: True
+  has_l0c2gm: True
+  has_l12l0: True
+  has_l12l0_tr: True
+  emitted asc_* : asc_copy_gm2l1_nd2nz asc_copy_l0c2gm asc_copy_l12l0a_transpose asc_copy_l12l0b_transpose asc_init asc_load_l2_cache_mode asc_mmad asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode
+----- l0tr T=4096 N=2048 K=512 BN=128 BK=64 TT=128 cores=64 -----
+D-DW-COMPILE-PASS
+  variant=l0tr T=4096 N=2048 K=512 BN=128 BK=64 TT=128 cores=64 dtype=float16 acc=float32
+  lines: 23
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: False
+  has_nd2nz: True
+  has_l1tmpl: False
+  has_mmad: True
+  has_l0c2gm: True
+  has_l12l0: True
+  has_l12l0_tr: True
+  emitted asc_* : asc_copy_gm2l1_nd2nz asc_copy_l0c2gm asc_copy_l12l0a_transpose asc_copy_l12l0b_transpose asc_init asc_load_l2_cache_mode asc_mmad asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode
+----- l0tr T=2048 N=512 K=1024 BN=128 BK=128 TT=64 cores=64 -----
+D-DW-COMPILE-PASS
+  variant=l0tr T=2048 N=512 K=1024 BN=128 BK=128 TT=64 cores=64 dtype=float16 acc=float32
+  lines: 21
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: False
+  has_nd2nz: True
+  has_l1tmpl: False
+  has_mmad: True
+  has_l0c2gm: True
+  has_l12l0: True
+  has_l12l0_tr: True
+  emitted asc_* : asc_copy_gm2l1_nd2nz asc_copy_l0c2gm asc_copy_l12l0a_transpose asc_copy_l12l0b_transpose asc_init asc_load_l2_cache_mode asc_mmad asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode
+----- l0tr T=2048 N=1024 K=1024 BN=256 BK=256 TT=64 cores=64 -----
+D-DW-COMPILE-PASS
+  variant=l0tr T=2048 N=1024 K=1024 BN=256 BK=256 TT=64 cores=64 dtype=float16 acc=float32
+  lines: 21
+  has_mix: False
+  has_ASC_IS_: False
+  has_threadIdx: False
+  has_vf_call: False
+  has_ubuf: False
+  has_dn2nz: False
+  has_nd2nz: True
+  has_l1tmpl: False
+  has_mmad: True
+  has_l0c2gm: True
+  has_l12l0: True
+  has_l12l0_tr: True
+  emitted asc_* : asc_copy_gm2l1_nd2nz asc_copy_l0c2gm asc_copy_l12l0a_transpose asc_copy_l12l0b_transpose asc_init asc_load_l2_cache_mode asc_mmad asc_quant_mode asc_relu_pre_mode asc_set_gm2l1_nz_para asc_set_l0c_copy_nz_para asc_store_l2_cache_mode asc_unit_flag_mode
+----- 同形状 dtype 面：l0tr acc=fp32 入 fp16（生产一致）已由上列覆盖；bf16 已知后端缺陷不测 -----

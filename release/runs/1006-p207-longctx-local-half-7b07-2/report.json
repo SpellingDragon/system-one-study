@@ -1,0 +1,378 @@
+{
+  "a1": {
+    "rows": 8,
+    "seconds": 0.6,
+    "out": "$REPO_ROOT/release/bench/eval_data/assembled/needle-synthetic/needle-envelopes.jsonl",
+    "fingerprint": {
+      "count": 8,
+      "sha256_16": "ab5cbe542bb837fa",
+      "chars_total": 774390,
+      "chars_by_ctx": {
+        "8192": 23211,
+        "32768": 185792,
+        "131072": 186093,
+        "262144": 371450
+      }
+    },
+    "per_bucket": {
+      "8192": {
+        "probes": 2,
+        "needles_in_doc": 2,
+        "target": 8192,
+        "tokens_min": 8194,
+        "tokens_max": 8199,
+        "rel_err_max": 0.0009
+      },
+      "32768": {
+        "probes": 4,
+        "needles_in_doc": 4,
+        "target": 32768,
+        "tokens_min": 32772,
+        "tokens_max": 32775,
+        "rel_err_max": 0.0002
+      },
+      "131072": {
+        "probes": 1,
+        "needles_in_doc": 8,
+        "target": 131072,
+        "tokens_min": 131076,
+        "tokens_max": 131076,
+        "rel_err_max": 0.0
+      },
+      "262144": {
+        "probes": 1,
+        "needles_in_doc": 16,
+        "target": 262144,
+        "tokens_min": 262141,
+        "tokens_max": 262141,
+        "rel_err_max": 0.0
+      }
+    }
+  },
+  "b": {
+    "state_tokens": 2065,
+    "split_info": {
+      "full_len": 2134,
+      "shell_len": 2065,
+      "suffix_len": 69,
+      "mark_found": true,
+      "shell_chars": 3013
+    },
+    "asks": [
+      {
+        "q": 0,
+        "key": "30f0e224879e7f2a1dc446d37fd56a77",
+        "hit": false,
+        "recomputed": false,
+        "prefix_tokens_fed": 2065,
+        "suffix_tokens_fed": 69,
+        "full_tokens_fed": 0,
+        "tokens_fed": 2134,
+        "suffix_len": 69,
+        "tokens_are_suffix_only": false,
+        "drift": null,
+        "drift_ratio": null,
+        "argmax_same": null,
+        "elapsed_s": 34.3492,
+        "seconds": 34.36,
+        "scores": [
+          26.3402,
+          24.1797,
+          21.8739
+        ],
+        "argmax_key": "1"
+      },
+      {
+        "q": 1,
+        "key": "30f0e224879e7f2a1dc446d37fd56a77",
+        "hit": true,
+        "recomputed": false,
+        "prefix_tokens_fed": 0,
+        "suffix_tokens_fed": 69,
+        "full_tokens_fed": 0,
+        "tokens_fed": 69,
+        "suffix_len": 69,
+        "tokens_are_suffix_only": true,
+        "drift": null,
+        "drift_ratio": null,
+        "argmax_same": null,
+        "elapsed_s": 1.5974,
+        "seconds": 1.607,
+        "scores": [
+          26.189,
+          24.2804,
+          22.472
+        ],
+        "argmax_key": "1"
+      },
+      {
+        "q": 2,
+        "key": "30f0e224879e7f2a1dc446d37fd56a77",
+        "hit": true,
+        "recomputed": false,
+        "prefix_tokens_fed": 0,
+        "suffix_tokens_fed": 47,
+        "full_tokens_fed": 0,
+        "tokens_fed": 47,
+        "suffix_len": 47,
+        "tokens_are_suffix_only": true,
+        "drift": null,
+        "drift_ratio": null,
+        "argmax_same": null,
+        "elapsed_s": 1.0859,
+        "seconds": 1.097,
+        "scores": [
+          30.3727,
+          29.1839
+        ],
+        "argmax_key": "false"
+      }
+    ],
+    "counter": {
+      "total": 4657,
+      "calls": 9,
+      "by_kind": {
+        "prefix": 2065,
+        "suffix": 458,
+        "full": 2134
+      }
+    },
+    "naive_total": 6380,
+    "saved_tokens": 1723,
+    "cold_seconds": 34.36,
+    "parity": {
+      "key": "30f0e224879e7f2a1dc446d37fd56a77",
+      "max_abs_drift": 0.38462257385253906,
+      "score_scale": 24.495424270629883,
+      "drift_ratio": 0.01570181310611971,
+      "argmax_same": true,
+      "passed": true,
+      "threshold": 0.02,
+      "scores_reuse": [
+        26.188988,
+        24.280416,
+        22.472008
+      ],
+      "scores_full": [
+        26.319689,
+        24.309959,
+        22.85663
+      ]
+    },
+    "cross_request": {
+      "hits": 3,
+      "requests": 3,
+      "all_suffix_only": true,
+      "tokens_avoided": 6195
+    },
+    "cache": {
+      "hits": 7,
+      "misses": 1,
+      "hit_ratio": 0.875,
+      "items": 1,
+      "bytes_used": 236830720,
+      "bytes_mib": 225.9,
+      "stores": 1,
+      "evictions": 0,
+      "oversized": 0,
+      "max_bytes": 8589934592,
+      "max_items": 0,
+      "memory_ledger": "cpu-rss/past-bytes，非 NPU 显存账"
+    },
+    "past_bytes": 236830720,
+    "past_mib": 225.9,
+    "runner_stats": {
+      "cache": {
+        "hits": 7,
+        "misses": 1,
+        "hit_ratio": 0.875,
+        "items": 1,
+        "bytes_used": 236830720,
+        "bytes_mib": 225.9,
+        "stores": 1,
+        "evictions": 0,
+        "oversized": 0,
+        "max_bytes": 8589934592,
+        "max_items": 0,
+        "memory_ledger": "cpu-rss/past-bytes，非 NPU 显存账"
+      },
+      "counter": {
+        "total": 4657,
+        "calls": 9,
+        "by_kind": {
+          "prefix": 2065,
+          "suffix": 458,
+          "full": 2134
+        }
+      },
+      "quarantined": [],
+      "verified_keys": 0,
+      "parity_failed": 0,
+      "recompute_forced": 1
+    }
+  },
+  "c": {
+    "routes_512": {
+      "seq": 512,
+      "window": 128,
+      "heads": 16,
+      "dim": 128,
+      "chunk": 64,
+      "kernel_vs_masked_max_abs": 0.0,
+      "kernel_peak_bytes": 2334784,
+      "kernel_allclose": true,
+      "local_vs_masked_max_abs": 0.0,
+      "local_peak_bytes": 782336,
+      "local_allclose": true,
+      "masked_peak_bytes": 16777216,
+      "full_attention_peak_bytes": 16777216,
+      "peak_ratio_vs_full": 0.046630859375,
+      "window_equals_full_when_seq_le_window": false,
+      "stats_band": {
+        "route": "local",
+        "window": 128,
+        "seq": 512,
+        "heads": 16,
+        "chunk": 64,
+        "band_len": 191,
+        "chunks": 8,
+        "materialized_peak_bytes": 782336,
+        "scales_with": "O(chunk x (chunk+window))，与总长无关",
+        "memory_ledger": "cpu-alloc 口径，非 NPU 显存账"
+      }
+    },
+    "band_T1024": {
+      "route": "local",
+      "window": 128,
+      "seq": 1024,
+      "heads": 16,
+      "chunk": 64,
+      "band_len": 191,
+      "chunks": 16,
+      "materialized_peak_bytes": 782336,
+      "scales_with": "O(chunk x (chunk+window))，与总长无关",
+      "memory_ledger": "cpu-alloc 口径，非 NPU 显存账"
+    },
+    "masked_T1024_peak_bytes": 67108864,
+    "band_T1024_peak_bytes": 782336,
+    "peak_ratio": 0.011658,
+    "rss_base": 3357769728,
+    "rss_after_band": 3357769728,
+    "rss_after_masked": 3357769728,
+    "kv_by_bucket": {
+      "8192": {
+        "full_mib": 224.0,
+        "windowed_mib": 3.5,
+        "saved_ratio": 0.9844
+      },
+      "32768": {
+        "full_mib": 896.0,
+        "windowed_mib": 3.5,
+        "saved_ratio": 0.9961
+      },
+      "131072": {
+        "full_mib": 3584.0,
+        "windowed_mib": 3.5,
+        "saved_ratio": 0.999
+      },
+      "262144": {
+        "full_mib": 7168.0,
+        "windowed_mib": 3.5,
+        "saved_ratio": 0.9995
+      }
+    },
+    "kv_128k": {
+      "seq": 131072,
+      "layers": 28,
+      "kv_heads": 2,
+      "head_dim": 128,
+      "dtype_bytes": 2,
+      "kv_bytes_per_token_per_layer": 1024,
+      "full_attention_bytes": 3758096384,
+      "windowed_bytes": 3670016,
+      "full_attention_mib": 3584.0,
+      "windowed_mib": 3.5,
+      "saved_ratio": 0.999,
+      "windows": [
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128,
+        128
+      ],
+      "memory_ledger": "解析账（CPU 口径），NPU 显存实测待开卡"
+    },
+    "capped_plan": {
+      "layers": 28,
+      "pattern": "25:3",
+      "window": 262144,
+      "windows": [
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256,
+        256
+      ],
+      "cap": 256,
+      "cap_full": true,
+      "clamped_layers": 28
+    }
+  },
+  "device_note": {
+    "device": "cpu",
+    "os": "Darwin-arm64",
+    "peak_rss_bytes": 3357769728,
+    "memory_ledger": "cpu-rss(peak), 非 NPU 显存账",
+    "pid": 35816
+  },
+  "pending": {
+    "A2": "8K/32K/128K 真前向召回曲线：待云端/长窗真档（本机 CPU 摊不开）",
+    "C2": "1M 档 measured 待开卡；config 见 production/configs/longctx_1m_cloud.yaml"
+  }
+}

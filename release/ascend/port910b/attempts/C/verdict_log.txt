@@ -1,0 +1,178 @@
+### canonical evidence run @ host 2026-10-08T16:43:08Z  (files as shipped)
+
+===== [1] run.sh --matrix (4 变体判决 + e2e 基线) =====
+########## variant=scalar silu=exp ##########
+C-COMPAT-10B-REWRITTEN /usr/local/lib/python3.10/dist-packages/tilelang/src/tl_templates/ascend/port910b_compat.h (778 -> 799 lines)
+bisheng.py already patched (/usr/local/lib/python3.10/dist-packages/tilelang/contrib/bisheng.py)
+SETUP-DONE
+2026-10-08 16:43:12  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_conv_fwd` with `out_idx=-1`
+2026-10-08 16:43:13  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_conv_fwd`
+C-GDN-CONV-COMPILE-PASS
+  variant=scalar silu=exp C=2048 L=512 K=4 cores=64 dtype=float32
+  prefix: __global__ __vector__ void gdn_conv_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  lines: 37
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/gdn_scalar_exp.asc
+########## variant=scalar silu=rational ##########
+C-COMPAT-10B-REWRITTEN /usr/local/lib/python3.10/dist-packages/tilelang/src/tl_templates/ascend/port910b_compat.h (778 -> 799 lines)
+bisheng.py already patched (/usr/local/lib/python3.10/dist-packages/tilelang/contrib/bisheng.py)
+SETUP-DONE
+2026-10-08 16:43:16  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_conv_fwd` with `out_idx=-1`
+2026-10-08 16:43:17  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_conv_fwd`
+C-GDN-CONV-COMPILE-PASS
+  variant=scalar silu=rational C=2048 L=512 K=4 cores=64 dtype=float32
+  prefix: __global__ __vector__ void gdn_conv_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  lines: 37
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : fabsf
+  source dumped -> /tmp/gdn_scalar_rational.asc
+########## variant=ubstage silu=exp ##########
+C-COMPAT-10B-REWRITTEN /usr/local/lib/python3.10/dist-packages/tilelang/src/tl_templates/ascend/port910b_compat.h (778 -> 799 lines)
+bisheng.py already patched (/usr/local/lib/python3.10/dist-packages/tilelang/contrib/bisheng.py)
+SETUP-DONE
+2026-10-08 16:43:20  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_conv_fwd` with `out_idx=-1`
+2026-10-08 16:43:21  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_conv_fwd`
+C-GDN-CONV-COMPILE-PASS
+  variant=ubstage silu=exp C=2048 L=512 K=4 cores=64 dtype=float32
+  prefix: __global__ __vector__ void gdn_conv_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: False
+  has_ubuf: True
+  lines: 37
+  emitted asc_* : asc_copy_gm2ub_align asc_copy_ub2gm_align asc_get_sub_block_id asc_init asc_load_l2_cache_mode asc_store_l2_cache_mode
+  emitted tl::* : (none)
+  math/intrin   : expf
+  source dumped -> /tmp/gdn_ubstage_exp.asc
+########## variant=ubstage silu=rational ##########
+C-COMPAT-10B-REWRITTEN /usr/local/lib/python3.10/dist-packages/tilelang/src/tl_templates/ascend/port910b_compat.h (778 -> 799 lines)
+bisheng.py already patched (/usr/local/lib/python3.10/dist-packages/tilelang/contrib/bisheng.py)
+SETUP-DONE
+2026-10-08 16:43:25  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_conv_fwd` with `out_idx=-1`
+2026-10-08 16:43:25  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_conv_fwd`
+C-GDN-CONV-COMPILE-PASS
+  variant=ubstage silu=rational C=2048 L=512 K=4 cores=64 dtype=float32
+  prefix: __global__ __vector__ void gdn_conv_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: False
+  has_ubuf: True
+  lines: 37
+  emitted asc_* : asc_copy_gm2ub_align asc_copy_ub2gm_align asc_get_sub_block_id asc_init asc_load_l2_cache_mode asc_store_l2_cache_mode
+  emitted tl::* : (none)
+  math/intrin   : fabsf
+  source dumped -> /tmp/gdn_ubstage_rational.asc
+########## baseline e2e_cube (compat 注入无回归检查) ##########
+2026-10-08 16:43:26  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `main` with `out_idx=-1`
+2026-10-08 16:43:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `main`
+E2E-CUBE-ONLY PASS
+HAS_MIX: True  HAS_ASC_IS: True
+
+===== [2] run.sh --ub (UB 句柄 4 case, G-C8) =====
+PROBE-UBHANDLE start
+CASE A: compile PASS | buf_dyn_shmem refs=6 | 命名空句柄=(none)
+   UB : __ubuf__ uint8_t *buf_dyn_shmem = (__ubuf__ uint8_t *)0;
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[i] = A[i];
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[(i_1 + 8)] = B[i_1];
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[(i_2 + 16)] = Dead[i_2];
+   UB : acc = (((__ubuf__ float*)buf_dyn_shmem)[i_3] + ((__ubuf__ float*)buf_dyn_shmem)[(i_3 + 8)]);
+CASE B: compile PASS | buf_dyn_shmem refs=6 | 命名空句柄=(none)
+   UB : __ubuf__ uint8_t *buf_dyn_shmem = (__ubuf__ uint8_t *)0;
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[i] = A[i];
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[(i_1 + 8)] = B[i_1];
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[(i_2 + 16)] = Dead[i_2];
+   UB : acc = (((__ubuf__ float*)buf_dyn_shmem)[i_3] + ((__ubuf__ float*)buf_dyn_shmem)[(i_3 + 8)]);
+CASE C: compile PASS | buf_dyn_shmem refs=0 | 命名空句柄=['sa']
+   UB : __ubuf__ float *sa = (__ubuf__ float *)0;
+CASE D: compile PASS | buf_dyn_shmem refs=5 | 命名空句柄=(none)
+   UB : __ubuf__ uint8_t *buf_dyn_shmem = (__ubuf__ uint8_t *)0;
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[i] = A[i];
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[(i_1 + 8)] = B[i_1];
+   UB : ((__ubuf__ float*)buf_dyn_shmem)[(i_2 + 16)] = Dead[i_2];
+   UB : acc = ((__ubuf__ float*)buf_dyn_shmem)[i_3];
+PROBE-UBHANDLE-VERDICT: NULL-HANDLE-SEEN cases ['C'] 出现命名空句柄；对照 A/B/C/D 的差量即触发条件（本波结论：被访问的 alloc_shared 只有 1 个 ⇒ 落 (__ubuf__ T*)0 = UB 偏移 0，未进动态布局；>= 2 ⇒ 走 buf_dyn_shmem 分块）
+
+===== [3] run.sh --dma (搬运面 19 例) =====
+PROBE gm2ub_cfg3_voidptr                 PASS
+PROBE gm2ub_cfg3_u8ptr                   PASS
+PROBE ub2gm_cfg3_voidptr                 PASS
+PROBE ub2gm_cfg3_u8ptr                   PASS
+PROBE gm2ub_7arg_voidptr                 PASS
+PROBE gm2ub_7arg_u8ptr                   PASS
+PROBE ub2gm_7arg_voidptr                 PASS
+PROBE ub2gm_7arg_u8ptr                   PASS
+PROBE ub2gm_7arg_f32ptr                  PASS
+PROBE copy_data_gm2ub                    FAIL :: /tmp/tmpj1rd3zq0/tl_kernel.asc:6:3: error: no matching function for call to 'copy_data'
+PROBE copy_data_ub2gm                    FAIL :: /tmp/tmpcjcw5qi1/tl_kernel.asc:6:3: error: no matching function for call to 'copy_data'
+PROBE copy_data_align64_gm2ub            FAIL :: /tmp/tmpwjsym6ca/tl_kernel.asc:6:3: error: no matching function for call to 'copy_data_align64'
+PROBE compat_gm2ub_align_10arg           PASS
+PROBE compat_ub2gm_align_10arg           PASS
+PROBE codegen_ub2gm_7arg_as_emitted      PASS
+PROBE asc_store_l2_cache_mode_exists     PASS
+PROBE arity_control_ub2gm_2arg           FAIL :: /tmp/tmpnzivsiep/tl_kernel.asc:6:19: error: parameters too few
+PROBE arity_control_ub2gm_9arg           FAIL :: /tmp/tmpvtz7ks2h/tl_kernel.asc:6:19: error: parameters too many
+PROBE arity_control_gm2ub_5arg           FAIL :: /tmp/tmpt3ridt6h/tl_kernel.asc:6:19: error: parameters too many
+PROBE-DMA-SUMMARY pass=13 fail=6
+
+===== [4] run.sh --probe (数学面 23 例) =====
+PROBE expf               PASS   (expf(-x))
+PROBE sqrtf              FAIL   (sqrtf(x)) :: /tmp/tmppkdx0rsj/tl_kernel.asc:5:12: error: use of undeclared identifier 'sqrtf'; did you mean 'sqrt'?
+PROBE rsqrtf             FAIL   (rsqrtf(x)) :: /tmp/tmpw6mnloa9/tl_kernel.asc:5:12: error: use of undeclared identifier 'rsqrtf'; did you mean 'sqrt'?
+PROBE fabsf              PASS   (fabsf(-x))
+PROBE floorf             FAIL   (floorf(x)) :: /tmp/tmpdv144w3c/tl_kernel.asc:5:12: error: use of undeclared identifier 'floorf'
+PROBE log2f              FAIL   (log2f(x)) :: /tmp/tmpkatw5vte/tl_kernel.asc:5:12: error: use of undeclared identifier 'log2f'
+PROBE logf               FAIL   (logf(x)) :: /tmp/tmppwqefv30/tl_kernel.asc:5:12: error: use of undeclared identifier 'logf'
+PROBE tanhf              FAIL   (tanhf(x)) :: /tmp/tmp5sq0bjcw/tl_kernel.asc:5:12: error: use of undeclared identifier 'tanhf'
+PROBE powf               FAIL   (powf(x, 2.0f)) :: /tmp/tmpmg9asks6/tl_kernel.asc:5:12: error: use of undeclared identifier 'powf'
+PROBE exp10f             FAIL   (exp10f(x)) :: /tmp/tmpjiiquedx/tl_kernel.asc:5:12: error: use of undeclared identifier 'exp10f'
+PROBE sqrt_d             PASS   (sqrt(x))
+PROBE fabs_d             FAIL   (fabs(-x)) :: /tmp/tmpjv64m5h0/tl_kernel.asc:5:12: error: use of undeclared identifier 'fabs'; did you mean 'abs'?
+PROBE exp_d              FAIL   (exp(-x)) :: /tmp/tmplitxoe7c/tl_kernel.asc:5:12: error: use of undeclared identifier 'exp'
+PROBE __builtin_fabsf    PASS   (__builtin_fabsf(-x))
+PROBE __builtin_sqrtf    FAIL   (__builtin_sqrtf(x)) :: ld.lld: error: undefined symbol: sqrtf
+PROBE __builtin_floorf   FAIL   (__builtin_floorf(x)) :: ld.lld: error: undefined symbol: floorf
+PROBE __builtin_ceilf    FAIL   (__builtin_ceilf(x)) :: ld.lld: error: undefined symbol: ceilf
+PROBE __builtin_expf     FAIL   (__builtin_expf(-x)) :: ld.lld: error: undefined symbol: expf
+PROBE __builtin_exp2f    FAIL   (__builtin_exp2f(x)) :: ld.lld: error: undefined symbol: exp2f
+PROBE __builtin_log2f    FAIL   (__builtin_log2f(x)) :: ld.lld: error: undefined symbol: log2f
+PROBE __builtin_rsqrtf   FAIL   (__builtin_rsqrtf(x)) :: /tmp/tmpaxf70dlm/tl_kernel.asc:5:12: error: use of undeclared identifier '__builtin_rsqrtf'
+PROBE expf_math_h        FAIL   (expf(-x)) :: /usr/lib/gcc/aarch64-linux-gnu/11/../../../../include/c++/11/bits/stl_iterator.h:1505:7: error: functions that differ only in their return type cannot be overloaded
+PROBE arith_baseline     PASS   (x * 2.0f + 1.0f)
+PROBE-SUMMARY fails=18
+
+===== [5] run.sh --golden (CPU 语义真值 + npz 产出) =====
+EXP-SWEEP |x|<=30: max_rel_err=1.103e-06 OK
+EXP-EDGE  expf(-200)=0  expf(200)=3.40282e+38  expf(-104)=0  expf(88)=3.40282e+38  expf(0)=1
+typical(C=8,L=64,K=4) fp32:abs 7.20e-07/rel 2.11e-07 | compatexp:abs 7.20e-07/rel 2.11e-07 | rational(仅参考):abs 6.93e+00 | torch:abs 7.89e-07/rel 1.83e-07
+L==K(C=4,L=4,K=4) fp32:abs 5.57e-08/rel 1.07e-08 | compatexp:abs 5.57e-08/rel 1.07e-08 | rational(仅参考):abs 1.25e+00 | torch:abs 5.57e-08/rel 1.07e-08
+L<K(C=3,L=2,K=4) fp32:abs 9.21e-08/rel 5.29e-08 | compatexp:abs 9.21e-08/rel 5.29e-08 | rational(仅参考):abs 1.41e+00 | torch:abs 2.72e-08/rel 1.56e-08
+long(C=5,L=512,K=4) fp32:abs 1.05e-06/rel 2.45e-07 | compatexp:abs 1.05e-06/rel 2.45e-07 | rational(仅参考):abs 9.06e+00 | torch:abs 8.63e-07/rel 2.10e-07
+zerow(C=6,L=32,K=4) fp32:abs 6.89e-09/rel 0.00e+00 | compatexp:abs 6.89e-09/rel 0.00e+00 | rational(仅参考):abs 3.21e-02 | torch:abs 2.70e-09/rel 0.00e+00
+bigz(C=4,L=24,K=4) fp32:abs 9.21e-07/rel 1.81e-07 | compatexp:abs 9.21e-07/rel 1.81e-07 | rational(仅参考):abs 1.54e+01 | torch:abs 1.03e-06/rel 1.49e-07
+GOLDEN-SELFCHK OK
+GOLDEN-EMITTED /tmp/gdn_pairs.npz X(2048, 512) W(2048, 4) BIAS(2048,) -> Y(2048, 512) + Y_FP32/Y_COMPAT_EXP/Y_COMPAT_RATIONAL
+  建议对拍判据: allclose(Y_kernel, Y_COMPAT_EXP, rtol=2e-5, atol=2e-5)；实测 compat exp 精度见上方 EXP-SWEEP 行（本次 max_rel_err=1.10e-06，2e-5 约有 18 倍余量）
+GOLDEN-PASS

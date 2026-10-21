@@ -1,0 +1,44 @@
+{
+  "samples_collected": 50,
+  "model_id": "StartLuxAI/StartLux-Decision-4B#scaffold-cpu",
+  "passes": {
+    "samples": 50,
+    "prompt_tokens_total": 2915,
+    "cold_pass_seconds": 17.006,
+    "cold_tokens_per_second": 171.4,
+    "cold_forward_calls": 50,
+    "warm_pass_seconds": 0.0,
+    "warm_tokens_per_second": 8489263.3,
+    "warm_forward_calls": 0,
+    "speedup_cold_over_warm": 49524.8,
+    "parquet_rows_written": 50,
+    "single_request_median_ms": 343.24,
+    "single_request_probe_n": 10,
+    "single_request_probe_seconds": 3.68,
+    "stats": {
+      "forward_calls": 10,
+      "api_calls": 0,
+      "cache_hits": 50,
+      "cache_misses": 0,
+      "generations": 0
+    }
+  },
+  "batch": {
+    "batch_size": 20,
+    "batched_seconds": 4.87,
+    "batched_tokens_per_second": 237.0,
+    "batch_forward_calls": 20,
+    "one_by_one_seconds": 6.193,
+    "one_by_one_tokens_per_second": 186.3,
+    "loop_forward_calls": 0,
+    "ratio_one_by_one_over_batched": 1.27
+  },
+  "generation": {
+    "samples": 3,
+    "max_new_tokens": 16,
+    "seconds": 20.497,
+    "generated_tokens_per_second": 2.3,
+    "parsable": 0,
+    "generations": 6
+  }
+}

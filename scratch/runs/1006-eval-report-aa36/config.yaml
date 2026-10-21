@@ -1,0 +1,20 @@
+run_id: 1006-eval-report-aa36
+stage: eval
+evaluated_run_id: 1006-s2-decision-sft-1e95
+evaluated_commit: 6c63ce3a98670f7e5e0d717bda180d4b779e159f
+mode: model
+device: mps
+backend: tilelang
+n_predictions: 100
+axes:
+- quality
+- calibration
+- speed
+- parity
+passed: true
+commit: 6c63ce3a98670f7e5e0d717bda180d4b779e159f
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

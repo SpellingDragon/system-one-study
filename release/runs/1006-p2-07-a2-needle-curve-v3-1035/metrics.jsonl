@@ -1,0 +1,7 @@
+{"step": 1, "ts": "2026-10-06T13:05:54+0800", "bucket": 8192, "ctx_tokens": 7457, "pred": "4", "gold": "1", "ok": false, "peak_gb": 7.61}
+{"step": 2, "ts": "2026-10-06T13:06:11+0800", "bucket": 8192, "ctx_tokens": 7474, "pred": "3", "gold": "3", "ok": true, "peak_gb": 8.31}
+{"step": 3, "ts": "2026-10-06T13:07:26+0800", "bucket": 32768, "ctx_tokens": 29563, "pred": "3", "gold": "3", "ok": true, "peak_gb": 13.08}
+{"step": 4, "ts": "2026-10-06T13:08:41+0800", "bucket": 32768, "ctx_tokens": 29605, "pred": "3", "gold": "1", "ok": false, "peak_gb": 13.08}
+{"step": 5, "ts": "2026-10-06T13:09:53+0800", "bucket": 32768, "ctx_tokens": 29648, "pred": "2", "gold": "4", "ok": false, "peak_gb": 13.15}
+{"step": 6, "ts": "2026-10-06T13:11:06+0800", "bucket": 32768, "ctx_tokens": 29566, "pred": "2", "gold": "4", "ok": false, "peak_gb": 13.54}
+{"step": 7, "ts": "2026-10-06T13:20:27+0800", "bucket": 131072, "ctx_tokens": 118129, "pred": "2", "gold": "4", "ok": false, "peak_gb": 18.46}

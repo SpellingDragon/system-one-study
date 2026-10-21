@@ -1,0 +1,12 @@
+run_id: 1004-bench-tilelang-vs-torch-mps-1a18
+purpose: mps_main 接入内核前的收益裁决基准
+device: mps
+chip: Apple M3 Pro 36GB
+tilelang: 0.1.15
+torch: 2.14.1
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

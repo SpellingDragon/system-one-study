@@ -1,0 +1,10 @@
+run_id: 1009-p2-13-a3-gemm-l1-pass-d142
+run:
+  name: p2-13-a3-gemm-l1-pass
+milestone: A案编译贯通
+commit: 02955f3244f3205d9908a2458b69b7f2fb8ed2f2
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

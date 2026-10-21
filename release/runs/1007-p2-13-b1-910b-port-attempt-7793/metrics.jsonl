@@ -1,0 +1,2 @@
+{"step": 0, "ts": "2026-10-07T22:00:33+0800", "verdict_layers": "剥层五进四：①950头缺失✓解 ②bit_cast✓解 ③SIMD宏属性面✓解(属性图全绿:gm/cc/cbuf/ubuf/mix/simd_callee clang15俱备) ④block_idx builtin✓解 ⑤bisheng BFloat16 类型代理无 float 转换算子——卡于 950 编译器类型系统深水区"}
+{"step": 1, "ts": "2026-10-07T22:00:33+0800", "r7_conv2d": "FAIL：Qwen3.5-GDN 在 910B torch_npu 上 Conv2D 图执行失败(ge result 4294967295)——非方言问题，是 GDN 短卷积在 npu 后端无可用执行路径", "prior_c1d_note": "c1d 2×512 eval fwd+手动 loss 曾通过；bs8×1024+labels+AdamW 下 Conv2D 执行崩——GDN 路在 910B 双栈均无现成执行体"}

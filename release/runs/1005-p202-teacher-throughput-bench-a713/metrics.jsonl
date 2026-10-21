@@ -1,0 +1,3 @@
+{"step": 0, "ts": "2026-10-05T14:41:14+0800", "samples": 50, "prompt_tokens": 2915, "cold_seconds": 17.006, "cold_tokens_per_second": 171.4, "cold_forward_calls": 50, "parquet_rows": 50}
+{"step": 1, "ts": "2026-10-05T14:41:14+0800", "warm_seconds": 0.0, "warm_tokens_per_second": 8489263.3, "warm_forward_calls": 0, "speedup": 49524.8, "single_request_median_ms": 343.24}
+{"step": 2, "ts": "2026-10-05T14:41:14+0800", "batched_seconds": 4.87, "one_by_one_seconds": 6.193, "batch_ratio": 1.27, "generated_tokens_per_second": 2.3, "generations": 6}

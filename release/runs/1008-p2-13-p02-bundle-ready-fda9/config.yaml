@@ -1,0 +1,10 @@
+run_id: 1008-p2-13-p02-bundle-ready-fda9
+run:
+  name: p2-13-p02-bundle-ready
+milestone: P0-2 上机就绪判定：本地全真预演通过
+commit: 5de4ede6b5bf5df0f2cf6830d460f768ca813604
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

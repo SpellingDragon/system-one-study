@@ -1,0 +1,10 @@
+run_id: 1009-p2-13-a-case-recon-e0db
+run:
+  name: p2-13-a-case-recon
+scope: P1-1 A案：shared.l1 gemm 数值路侦察 + §12 首版（gate 待破）
+commit: 02955f3244f3205d9908a2458b69b7f2fb8ed2f2
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

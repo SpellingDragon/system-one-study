@@ -1,0 +1,11 @@
+run_id: 1006-p2-03-d3-eval-registry-six-axes-4f3a
+axes: []
+backend: null
+registry_source: $REPO_ROOT/release/bench/eval_data/manifest.json
+data_revision: eval-registry[typed-decisions@f7a2487e,intern-decision@2f81580,jevbench@7ce310c7]
+  sets=13 samples=26308
+commit: dfed11e9a3b699efb3723f758c02a6ce557ba97d
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

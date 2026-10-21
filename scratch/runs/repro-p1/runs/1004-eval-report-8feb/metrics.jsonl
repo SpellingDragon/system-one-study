@@ -1,0 +1,1 @@
+{"step": 0, "ts": "2026-10-04T05:52:13+0800", "acc_choice_k3": 0.64, "base_choice_k3": 0.333333, "acc_noul_k2": 0.742857, "base_noul_k2": 0.5, "ece_before_choice": 0.047796, "ece_after_choice": 0.116439, "ece_before_noul": 0.031833, "ece_after_noul": 0.164346, "e2e_p50_ms": 1.06, "e2e_p95_ms": 1.114, "parity_agreement": 1.0, "parity_max_abs_err": 0.00017318129539489746}

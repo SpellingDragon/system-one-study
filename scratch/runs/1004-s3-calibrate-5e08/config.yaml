@@ -1,0 +1,18 @@
+run_id: 1004-s3-calibrate-5e08
+stage: s3-calibrate
+model_dir: $WORKSPACE_ROOT/deep-mutimodal-laya-by-tilelang/runs/1004-s2-decision-sft-739e/model
+tokenizer: runs/1003-s0-bpe-16k-realedu-zh-en/tokenizer
+data: runs/repro-p1/calibrate.jsonl
+batch_size: 32
+min_samples: 10
+bins: 15
+seed: 0
+n_calibration_samples: 60
+data_revision:
+  calibration: held-out transcribed set (NOT typed-decisions test, NOT SFT train)
+  leak_policy: temperature fit only; no gradient/weight update on this data
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

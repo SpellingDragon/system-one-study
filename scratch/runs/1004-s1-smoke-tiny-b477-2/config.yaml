@@ -1,0 +1,70 @@
+run_id: 1004-s1-smoke-tiny-b477-2
+stage: s1-pretrain
+config_path: $WORKSPACE_ROOT/deep-mutimodal-laya-by-tilelang/learning/configs/smoke_tiny.yaml
+config:
+  run:
+    name: s1-smoke-tiny
+  model:
+    d: 64
+    L: 2
+    heads: 4
+    ctx: 128
+    vocab: 16000
+    rope_theta: 10000.0
+    seed: 0
+    ffn_mult: 4
+    norm_eps: 1.0e-05
+    pad_token_id: 0
+  data:
+    corpus_dir: runs/corpus_tiny
+    seq_len: 128
+    batch_size: 64
+    seed: 0
+  train:
+    device: cpu
+    threads: 8
+    max_steps: 300
+    lr: 0.0003
+    warmup_steps: 30
+    min_lr_frac: 0.1
+    betas:
+    - 0.9
+    - 0.95
+    weight_decay: 0.1
+    grad_clip: 1.0
+    grad_accum: 1
+    log_interval: 20
+    save_interval: 100
+    keep_last: 3
+  sample:
+    n: 8
+    temperature: 0.8
+    top_k: 40
+    max_new_tokens: 40
+    prompts:
+    - 今天天气
+    - 深度学习需要
+    - The capital of France is
+    - Once upon a time
+    - 下列选项中正确的是
+    - In 1969, humans
+    - 床前明月光，
+    - Evidence shows that
+fingerprint: c4e8dd1677d3
+corpus:
+  tokens: 8000000
+  shards: 4
+  vocab_size: 16000
+  lang_share:
+    en: 0.7
+    zh: 0.3
+    other: 0.0
+  id_max: 15999
+device: cpu
+resumed_from: null
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

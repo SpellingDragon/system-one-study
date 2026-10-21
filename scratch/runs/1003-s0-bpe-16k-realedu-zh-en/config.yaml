@@ -1,0 +1,40 @@
+run_id: 1003-s0-bpe-16k-realedu-zh-en
+stage: s0-tokenizer
+created_at: '2026-10-03'
+hardware:
+  platform: macOS-14.7.2-arm64-arm-64bit
+  machine: arm64
+  device: cpu
+env:
+  python: 3.12.8
+  tokenizers: 0.23.2
+params:
+  corpus:
+  - bench/corpus_s0/txt
+  vocab_size: 16000
+  stream_limit: 200MB
+  min_freq: 3
+source: self-trained BPE, no third-party vocab/weights (GUIDE §7-0)
+outputs:
+  tokenizer_dir: tokenizer
+  vocab_size_actual: 16000
+check:
+  letters_single_token: 52
+  pad_token_id: 0
+corpus_stats:
+  corpus_source: bench/corpus_s0/txt 等文档
+  files: 2
+  lines: 1291642
+  bytes_read: 209469929
+  train_seconds: 33.65
+spot_check:
+  en:
+    chars: 65324
+    oov_char_rate: 0.0
+    tokens: 33390
+    chars_per_token: 1.956
+  zh:
+    chars: 68767
+    oov_char_rate: 0.0
+    tokens: 41877
+    chars_per_token: 1.642

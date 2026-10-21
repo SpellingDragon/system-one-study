@@ -1,0 +1,51 @@
+# p2-05 本地开发档：CPU tiny 冒烟（0.6B 替身 + 袖珍教师伪标），只验通路、不出任何评测分
+#
+# 这一份不在 design 的文件清单里，是本地半场为了"真跑真曲线"加的第三个开关位：
+# 正式档（gate08b / scaling_06b）都在云端 C5 跑，本地要证明同一条代码路能跑通，
+# 只能把资源口径降下来——降的是底座型号、位宽、题量、批规模，
+# 不降的是读点、混合口径、LoRA 超参与算子开关。
+#
+# 边界声明（同 TRAINABLE_NOTE）：CPU 替身口径；910B 正式档待 C5。
+
+# ── 资源与身份 ──
+backbone: qwen3-0.6b            # 替身（正版学生 0.8B 也能跑，但 CPU 上慢一倍）
+loader: minimal                 # 替身兜底门：p2-01 接缝对 0.6B 会因"缺多模态编号"拒载
+device: cpu                     # MPS 被一阶段长跑占着，本地全 CPU
+dtype: float32                  # CPU 上 bf16 单步慢到不可用（实测 228s/step vs 3.3s/step）
+threads: 4
+seed: 20261005
+
+# ── 数据（p2-03 registry 口）──
+# 2026-10-10 audit-remediation（R-P0-2）：训测分离——旧值走的是评测考卷轴（quality＝test 档），旧 dev run 的 quality 轴记录见 run 档，不回写
+axis: train
+limit: 480                      # 装配封顶：spec 冒烟档写死「≤500 样本」，留 20 条余量给超限丢弃
+max_length: 512                 # 超长直接丢（不截半截题——截了读点位就落在题面中间）
+
+# ── 教师（p2-02 缓存口；训练循环零教师前向）──
+teacher_model_id: "StartLuxAI/StartLux-Decision-4B#scaffold-cpu"   # 袖珍教师号，与真伪标天然分家
+teacher_cache: bench/teacher_cache/p2_05_pseudo                    # 由 --prefill-pseudo 产出
+mix_soft: 0.5
+hard_mass: 0.9
+
+# ── 旁路与算子档（p2-13 自研栈的 cpu 路径）──
+kernel_backend: kernel          # 本地就走自研件的 cpu 档；换 torch 即回参照路（单测对拍用）
+ascend_target: cpu
+r: 16
+alpha: 32
+dropout: 0.05
+gradient_checkpointing: false   # 0.6B 在 CPU 上不省内存反而多算一遍
+
+# ── 步长与调度（超参照旧，规模降到 tiny）──
+lr: 0.0001
+warmup_ratio: 0.05
+weight_decay: 0.0
+max_grad_norm: 1.0
+epochs: 2
+max_tokens: 512                 # 一桌最多 512 字（CPU 上约 3~6 秒/桌）
+accum: 1                        # 每桌下笔一次，曲线点位最密
+max_steps: 100                  # ≤100 步（孙任务上限）
+
+# ── 产物与记录 ──
+run_prefix: p2-05-dev           # 本地半场专用前缀
+out_dir: null
+prefill_chunk: 16

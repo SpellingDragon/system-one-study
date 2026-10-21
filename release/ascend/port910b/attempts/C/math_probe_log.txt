@@ -1,0 +1,27 @@
+===== [4] run.sh --probe (数学面 23 例) =====
+PROBE expf               PASS   (expf(-x))
+PROBE sqrtf              FAIL   (sqrtf(x)) :: /tmp/tmppkdx0rsj/tl_kernel.asc:5:12: error: use of undeclared identifier 'sqrtf'; did you mean 'sqrt'?
+PROBE rsqrtf             FAIL   (rsqrtf(x)) :: /tmp/tmpw6mnloa9/tl_kernel.asc:5:12: error: use of undeclared identifier 'rsqrtf'; did you mean 'sqrt'?
+PROBE fabsf              PASS   (fabsf(-x))
+PROBE floorf             FAIL   (floorf(x)) :: /tmp/tmpdv144w3c/tl_kernel.asc:5:12: error: use of undeclared identifier 'floorf'
+PROBE log2f              FAIL   (log2f(x)) :: /tmp/tmpkatw5vte/tl_kernel.asc:5:12: error: use of undeclared identifier 'log2f'
+PROBE logf               FAIL   (logf(x)) :: /tmp/tmppwqefv30/tl_kernel.asc:5:12: error: use of undeclared identifier 'logf'
+PROBE tanhf              FAIL   (tanhf(x)) :: /tmp/tmp5sq0bjcw/tl_kernel.asc:5:12: error: use of undeclared identifier 'tanhf'
+PROBE powf               FAIL   (powf(x, 2.0f)) :: /tmp/tmpmg9asks6/tl_kernel.asc:5:12: error: use of undeclared identifier 'powf'
+PROBE exp10f             FAIL   (exp10f(x)) :: /tmp/tmpjiiquedx/tl_kernel.asc:5:12: error: use of undeclared identifier 'exp10f'
+PROBE sqrt_d             PASS   (sqrt(x))
+PROBE fabs_d             FAIL   (fabs(-x)) :: /tmp/tmpjv64m5h0/tl_kernel.asc:5:12: error: use of undeclared identifier 'fabs'; did you mean 'abs'?
+PROBE exp_d              FAIL   (exp(-x)) :: /tmp/tmplitxoe7c/tl_kernel.asc:5:12: error: use of undeclared identifier 'exp'
+PROBE __builtin_fabsf    PASS   (__builtin_fabsf(-x))
+PROBE __builtin_sqrtf    FAIL   (__builtin_sqrtf(x)) :: ld.lld: error: undefined symbol: sqrtf
+PROBE __builtin_floorf   FAIL   (__builtin_floorf(x)) :: ld.lld: error: undefined symbol: floorf
+PROBE __builtin_ceilf    FAIL   (__builtin_ceilf(x)) :: ld.lld: error: undefined symbol: ceilf
+PROBE __builtin_expf     FAIL   (__builtin_expf(-x)) :: ld.lld: error: undefined symbol: expf
+PROBE __builtin_exp2f    FAIL   (__builtin_exp2f(x)) :: ld.lld: error: undefined symbol: exp2f
+PROBE __builtin_log2f    FAIL   (__builtin_log2f(x)) :: ld.lld: error: undefined symbol: log2f
+PROBE __builtin_rsqrtf   FAIL   (__builtin_rsqrtf(x)) :: /tmp/tmpaxf70dlm/tl_kernel.asc:5:12: error: use of undeclared identifier '__builtin_rsqrtf'
+PROBE expf_math_h        FAIL   (expf(-x)) :: /usr/lib/gcc/aarch64-linux-gnu/11/../../../../include/c++/11/bits/stl_iterator.h:1505:7: error: functions that differ only in their return type cannot be overloaded
+PROBE arith_baseline     PASS   (x * 2.0f + 1.0f)
+PROBE-SUMMARY fails=18
+
+

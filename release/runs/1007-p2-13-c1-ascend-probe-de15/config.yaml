@@ -1,0 +1,27 @@
+run_id: 1007-p2-13-c1-ascend-probe-de15
+run:
+  name: p2-13-c1-ascend-probe
+cloud: 华为云 ModelArts 开发环境 cn-south-1，notebook cedc4280，910B4 单卡
+device:
+  chip: Ascend 910B4
+  hbm: 29.5GB 可用（标称 32GB）
+  arch: dav-2201（需 ASCEND_NPU_ARCH 显式指定，tilelang 默认 dav-3510）
+  host: aarch64 192核 / 1.5TB RAM / overlay 50G
+stack:
+  torch: 2.7.1+cpu
+  torch_npu: 2.7.1.post2
+  CANN: 8.5.2
+  npu-smi: 25.5.1
+  python: 3.12.0
+  transformers: 4.53.1(预装)→5.18.0(pip 装成功，qwen3_5 识别 OK)
+  tilelang: 0.1.15(pip) 可装
+storage:
+  OBS /ext-data: s3fs，写 332MB/s 读 345MB/s；**探针期间挂载死亡（Transport endpoint not connected），无
+    root 不可自愈——正式训练数据面须双备份或改本地盘+S3 同步**
+  0.8B 权重 OBS 载入: load_s=9.0（快照已在 OBS models/）
+commit: 40d57dd2fa619a8e2bbfad21e9ebb6a4b3f8887e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

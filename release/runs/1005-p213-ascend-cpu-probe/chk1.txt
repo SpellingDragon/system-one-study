@@ -1,0 +1,2 @@
+63:        with T.Kernel(nb, T.ceildiv(m, bm)) as (mx, my):
+99:        with T.Kernel(NUM_BLOCKS) as bx:

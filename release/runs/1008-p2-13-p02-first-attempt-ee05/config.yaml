@@ -1,0 +1,11 @@
+run_id: 1008-p2-13-p02-first-attempt-ee05
+run:
+  name: p2-13-p02-first-attempt
+env: 同 snt9b；REPO=/home/${CARD_USER}/tilelang_root（主仓 src 树已上机）；探针 probe910b.sh 首跑
+verdict_scope: 本 run 为 P0-2 第一轮：得 P1 决定性判决；P2/P3 败于探针脚本环境缺陷（非移植墙）
+commit: 5adde098c3115770843639ad38d6f8443a008898
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

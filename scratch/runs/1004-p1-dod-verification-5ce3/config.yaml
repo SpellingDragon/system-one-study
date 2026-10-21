@@ -1,0 +1,19 @@
+run_id: 1004-p1-dod-verification-5ce3
+stage: p1-dod-verification
+tracks:
+  p1-01: 5/5
+  p1-02: 4/4
+  p1-03: 6/6
+  p1-04: 12/12
+  p1-05: 4/4
+  p1-06: 5/5
+  p1-07: 8/8
+  p1-08: 8/8
+  p1-09: 7/7
+  p1-10: 7/7
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

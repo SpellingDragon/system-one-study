@@ -1,0 +1,339 @@
+# verdict_log_F — p2-13 甲路 P1-3 波 F（GDN delta rule 前后向）@ cann910b-f
+# 生成时间 2026-10-10 14:45:31；命令：bash run_F.sh --matrix  然后  bash run_F.sh --golden --npz /tmp/f_gdn_pairs.npz
+# 判决纪律：每条 compile 都 TILELANG_CACHE_DIR=$(mktemp -d)（防陈旧 PASS）；推送已加 md5 PUSH-VERIFY
+
+==================== [A] run_F.sh --matrix ====================
+PUSH-VERIFY SAME compat_patch_F.h
+PUSH-VERIFY SAME patch_compat_F.py
+PUSH-VERIFY SAME f_probe_logf.py
+PUSH-VERIFY SAME f_gdn_delta_fwd_910b.py
+PUSH-VERIFY SAME f_gdn_delta_bwd_910b.py
+PUSH-VERIFY SAME f_gdn_golden.py
+########## [1/8] FWD ub（验证形状 H8 T32 DK16 DV16 cores8）##########
+[06:44:32] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-FWD-COMPILE-PASS
+  variant=ub H=8 T=32 DK=16 DV=16 cores=8 dtype=float32 hist=1
+  prefix: __global__ __vector__ void gdn_delta_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 59
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/f_fwd_ub.asc
+########## [2/8] FWD pure（零 UB，状态就地 GM）##########
+[06:44:34] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-FWD-COMPILE-PASS
+  variant=pure H=8 T=32 DK=16 DV=16 cores=8 dtype=float32 hist=1
+  prefix: __global__ __vector__ void gdn_delta_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: True
+  lines: 50
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::read_gm_bypass_dcache tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/f_fwd_pure.asc
+########## [3/8] BWD ub（伴随态 (DV,DK) 常驻 UB）##########
+[06:44:36] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-BWD-COMPILE-PASS
+  variant=ub dstate=zero H=8 T=32 DK=16 DV=16 cores=8 dtype=float32
+  prefix: __global__ __vector__ void gdn_delta_bwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 101
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/f_bwd_ub.asc
+########## [4/8] BWD pure（零 UB，GM 读改写累加）##########
+[06:44:38] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-BWD-COMPILE-PASS
+  variant=pure dstate=zero H=8 T=32 DK=16 DV=16 cores=8 dtype=float32
+  prefix: __global__ __vector__ void gdn_delta_bwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: True
+  lines: 104
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::read_gm_bypass_dcache tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/f_bwd_pure.asc
+########## [5/8] BWD ub --dstate gm（末状态梯度非零入口）##########
+[06:44:40] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-BWD-COMPILE-PASS
+  variant=ub dstate=gm H=8 T=32 DK=16 DV=16 cores=8 dtype=float32
+  prefix: __global__ __vector__ void gdn_delta_bwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 101
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/f_bwd_ub_gmstate.asc
+########## [6/8] 生产形状外推 H16 DK64 DV64 T128 cores16 ##########
+[06:44:42] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-FWD-COMPILE-PASS
+  variant=ub H=16 T=128 DK=64 DV=64 cores=16 dtype=float32 hist=1
+  prefix: __global__ __vector__ void gdn_delta_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 59
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/f_fwd_prod.asc
+[06:44:44] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-BWD-COMPILE-PASS
+  variant=ub dstate=zero H=16 T=128 DK=64 DV=64 cores=16 dtype=float32
+  prefix: __global__ __vector__ void gdn_delta_bwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 101
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/f_bwd_prod.asc
+########## [7/8] GAP-F logf 编译差分（正/负形）##########
+---------- GAP-F 差分·负形（还原快照后，未注入补丁，预期 FAIL）----------
+F-PATCH-RESTORED -> /usr/local/lib/python3.10/dist-packages/tilelang/src/tl_templates/ascend/port910b_compat.h (965 lines)
+F-PATCH-STATUS after-restore: lines=965 GAP_F_present=False bak_exists=True
+F-LOGF-PROBE-COMPILE-FAIL
+  /tmp/tmp_7jugqyt/tl_kernel.asc:10:9: error: use of undeclared identifier 'logf'
+  Fatal Err: A fatal error occurred in iternel process, and Diagnostic info can not be reported correctly
+  /tmp/tmp_7jugqyt/tl_kernel.asc:10:9: error: use of undeclared identifier 'logf'
+  Fatal Err: A fatal error occurred in iternel process, and Diagnostic info can not be reported correctly
+DIFF-NEGCONFIRMED: 未注入 GAP-F 时 logf 面确实不可编 ⇒ 缺口成立
+---------- GAP-F 差分·正形（注入 compat_patch_F.h 后，预期 PASS）----------
+F-PATCH-APPENDED /usr/local/lib/python3.10/dist-packages/tilelang/src/tl_templates/ascend/port910b_compat.h (965 -> 1052 lines)
+F-PATCH-STATUS after-apply: lines=1052 GAP_F_present=True bak_exists=True
+F-LOGF-PROBE-COMPILE-PASS
+  N=256 emitted_math=['expf', 'logf'] lines=14
+########## GAP-F 数值定标（numpy 逐行复刻 vs np.log）##########
+F-LOGF-ACCURACY-BEGIN
+  DECAY-DOMAIN a∈(0,1] : max_abs_err=4.812e-07 max_rel(|ln|>1e-3)=1.844e-07
+  WIDE-SWEEP 2^k×[1,1.9] k∈[-30,30] n=610: max_abs=1.916e-06 max_rel(|ln|>1e-3)=1.140e-07
+  PT log(1)       got=0 want=0 abs_err=0.000e+00
+  PT log(e)       got=1 want=1 abs_err=0.000e+00
+  PT log(0.5)     got=-0.693147182 want=-0.693147181 abs_err=1.905e-09
+  PT log(1e-30)   got=-69.0775528 want=-69.0775528 abs_err=5.589e-09
+  PT log(2)       got=0.693147182 want=0.693147181 abs_err=1.905e-09
+  EDGE log(0)   -> -3.40282e+38（设计=钳位 -FLT_MAX，非 NaN）
+  EDGE log(-1)  -> -3.40282e+38（设计=钳位 -FLT_MAX，非 NaN）
+F-LOGF-ACCURACY OK worst_rel=1.844e-07
+F-LOGF-GDNPATH 往返 a→log→exp→a' max_rel=4.190e-07 （口径 (b) 接 GAP-F 后可安全喂给本波 delta rule 件的 g 入口）
+########## [8/8] 回归：注入 GAP-F 后 FWD/BWD 仍须 COMPILE-PASS ##########
+[06:44:49] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-FWD-COMPILE-PASS
+  variant=ub H=8 T=32 DK=16 DV=16 cores=8 dtype=float32 hist=1
+  prefix: __global__ __vector__ void gdn_delta_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 59
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+[06:44:51] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+F-GDN-DELTA-BWD-COMPILE-PASS
+  variant=ub dstate=zero H=8 T=32 DK=16 DV=16 cores=8 dtype=float32
+  prefix: __global__ __vector__ void gdn_delta_bwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 101
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+
+==================== [B] run_F.sh --golden ====================
+PUSH-VERIFY SAME compat_patch_F.h
+PUSH-VERIFY SAME patch_compat_F.py
+PUSH-VERIFY SAME f_probe_logf.py
+PUSH-VERIFY SAME f_gdn_delta_fwd_910b.py
+PUSH-VERIFY SAME f_gdn_delta_bwd_910b.py
+PUSH-VERIFY SAME f_gdn_golden.py
+[A] FWD  fp32(exp)  vs fp64 : rel_O=1.123e-07 rel_HIST=8.217e-08 rel_Sfin=8.124e-08
+[A] FWD  fp32(expf) vs fp64 : rel_O=1.286e-07 rel_HIST=9.369e-08 rel_Sfin=1.339e-07
+[A] FWD  fp32(expf) vs fp32(exp) : rel_O=9.355e-08 rel_Sfin=1.063e-07   ← 纯 expf 软件件贡献
+[B] ADJ-FD Q     rel=1.380e-10
+[B] ADJ-FD K     rel=2.770e-10
+[B] ADJ-FD V     rel=3.731e-10
+[B] ADJ-FD BETA  rel=3.194e-10
+[B] ADJ-FD G     rel=7.281e-10
+[B] ADJ-FD H0    rel=4.415e-10
+[B] ADJ-TORCH Q     rel=8.776e-17
+[B] ADJ-TORCH K     rel=2.659e-16
+[B] ADJ-TORCH V     rel=1.542e-16
+[B] ADJ-TORCH BETA  rel=2.584e-16
+[B] ADJ-TORCH G     rel=5.383e-16
+[B] ADJ-TORCH H0    rel=5.921e-17
+[B] BWD-ADJOINT OK worst_rel_vs_FD=7.281e-10 (tol 1e-08)
+[C] fp32+expf Q     rel_vs_fp64=1.365e-07
+[C] fp32+expf K     rel_vs_fp64=1.654e-07
+[C] fp32+expf V     rel_vs_fp64=1.410e-07
+[C] fp32+expf BETA  rel_vs_fp64=1.807e-07
+[C] fp32+expf G     rel_vs_fp64=5.757e-07
+[C] fp32+expf H0    rel_vs_fp64=1.187e-07
+[C] fp32 发射次序 spread(ub vs pure) = 4.528e-07
+[C] EXPF-DRIFT a_t 单点 max_rel=1.427e-07（compat §11 件本体）；沿 T=32 连乘后进 O 的 rel=1.286e-07
+F-GDN-GOLDEN rel=5.757e-07 (fwd 1.286e-07 / bwd_fp32 worst 5.757e-07 / adjoint-vs-FD 7.281e-10) TOL_F32=2e-04
+GOLDEN-EMITTED /tmp/f_gdn_pairs.npz (fp32 同序件 + fp64 真值，供上卡对拍)
+
+==================== [C] 定稿复核 2026-10-10 14:58（先 --restore 还原 965 行未注入快照 ⇒ 证明本波件零 GAP-F 依赖；三格重验 + golden 复现，数字与 [A]/[B] 段逐位同）====================
+==================== [C] 定稿复核（先 --restore 还原 965 行快照 ⇒ 证明本波件零 GAP-F 依赖）====================
+PUSH-VERIFY SAME compat_patch_F.h
+PUSH-VERIFY SAME patch_compat_F.py
+PUSH-VERIFY SAME f_probe_logf.py
+PUSH-VERIFY SAME f_gdn_delta_fwd_910b.py
+PUSH-VERIFY SAME f_gdn_delta_bwd_910b.py
+PUSH-VERIFY SAME f_gdn_golden.py
+F-PATCH-RESTORED -> /usr/local/lib/python3.10/dist-packages/tilelang/src/tl_templates/ascend/port910b_compat.h (965 lines)
+F-PATCH-STATUS after-restore: lines=965 GAP_F_present=False bak_exists=True
+---- 快照态重验 ----
+PUSH-VERIFY SAME compat_patch_F.h
+PUSH-VERIFY SAME patch_compat_F.py
+PUSH-VERIFY SAME f_probe_logf.py
+PUSH-VERIFY SAME f_gdn_delta_fwd_910b.py
+PUSH-VERIFY SAME f_gdn_delta_bwd_910b.py
+PUSH-VERIFY SAME f_gdn_golden.py
+[06:52:25] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+2026-10-10 06:52:24  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_delta_fwd` with `out_idx=-1`
+2026-10-10 06:52:25  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_delta_fwd`
+F-GDN-DELTA-FWD-COMPILE-PASS
+  variant=ub H=8 T=32 DK=16 DV=16 cores=8 dtype=float32 hist=1
+  prefix: __global__ __vector__ void gdn_delta_fwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 59
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+PUSH-VERIFY SAME compat_patch_F.h
+PUSH-VERIFY SAME patch_compat_F.py
+PUSH-VERIFY SAME f_probe_logf.py
+PUSH-VERIFY SAME f_gdn_delta_fwd_910b.py
+PUSH-VERIFY SAME f_gdn_delta_bwd_910b.py
+PUSH-VERIFY SAME f_gdn_golden.py
+[06:52:27] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+2026-10-10 06:52:27  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_delta_bwd` with `out_idx=-1`
+2026-10-10 06:52:28  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_delta_bwd`
+F-GDN-DELTA-BWD-COMPILE-PASS
+  variant=ub dstate=zero H=8 T=32 DK=16 DV=16 cores=8 dtype=float32
+  prefix: __global__ __vector__ void gdn_delta_bwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: False
+  lines: 101
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+PUSH-VERIFY SAME compat_patch_F.h
+PUSH-VERIFY SAME patch_compat_F.py
+PUSH-VERIFY SAME f_probe_logf.py
+PUSH-VERIFY SAME f_gdn_delta_fwd_910b.py
+PUSH-VERIFY SAME f_gdn_delta_bwd_910b.py
+PUSH-VERIFY SAME f_gdn_golden.py
+[06:52:30] : Warning: Python Z3 scheduler failed with exception: Z3 scheduling failed: solver returned unsat, falling back to topological sort
+2026-10-10 06:52:29  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `gdn_delta_bwd` with `out_idx=-1`
+2026-10-10 06:52:30  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `gdn_delta_bwd`
+F-GDN-DELTA-BWD-COMPILE-PASS
+  variant=pure dstate=zero H=8 T=32 DK=16 DV=16 cores=8 dtype=float32
+  prefix: __global__ __vector__ void gdn_delta_bwd_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  has_mte_copy: False
+  named_null_ubuf: []
+  gm_rmw: True
+  lines: 104
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::read_gm_bypass_dcache tl::write_gm_bypass_dcache
+  math/intrin   : expf

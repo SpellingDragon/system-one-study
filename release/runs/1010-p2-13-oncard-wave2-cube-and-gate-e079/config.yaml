@@ -1,0 +1,10 @@
+run_id: 1010-p2-13-oncard-wave2-cube-and-gate-e079
+run:
+  name: p2-13-oncard-wave2-cube-and-gate
+env: 910B4/CANN8.5.2 单窗；card_run.sh overlay c_api 路径 bug 已在卡上就地修正后复跑
+commit: 4b5aa70d91d5c8faa9b0e3938c51b410969dc4d9
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

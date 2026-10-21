@@ -1,0 +1,1 @@
+{"step": 0, "ts": "2026-10-04T11:22:52+0800", "torch_backbone_tok_s": 13017, "tilelang_backbone_tok_s": 11497, "kern_over_torch": 0.88, "torch_readout_ms": 0.114, "kern_readout_ms": 0.038, "torch_lmhead_ms": 23.9, "kern_lmhead_ms": 24.2}

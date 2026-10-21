@@ -1,0 +1,2 @@
+{"step": 0, "ts": "2026-10-07T20:57:38+0800", "verdict": "DIALECT-FAIL-CONFIRMED", "reason": "tilelang ascend 模板硬依赖 c_api/asc_simd.h + simt_api/*（950 新 CANN 头，本机 CANN 8.5.2 全系 find 无此文件）；AIC gemm 与 SIMT kernel 两路编译均挂；bisheng arch 修正(dav-2201)后仍败于头文件", "triple_evidence": "TileKernels 官方要求 950 + 头缺失实勘 + 默认 arch dav-3510"}
+{"step": 1, "ts": "2026-10-07T20:57:38+0800", "torch_npu_matmul_2048_ms": 0.268, "npu_ok": true, "gate_throughput": "未竟——bf16 前向触发 SetPrecisionMode ACL 500001（torch_npu 已知精度模式坑，待用 TORCH_DEVICE_BACKEND_AUTOLOAD/npu config 或 fp32 重试；脚本 /tmp/c1d.py 本地已存）"}

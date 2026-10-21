@@ -1,0 +1,14 @@
+run_id: 1006-p2-04-laya-cpu-af1f
+baseline: laya
+dataset: $REPO_ROOT/scratch/bench/p1-09/typed_decisions/test.jsonl
+split: test
+limit: 100
+device: cpu
+sampling_params: T=1/top_p=1(readout)
+model: typed-decisions
+commit: 4020a80e13acd883680fc77b2f7e0dac2a7a0247
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

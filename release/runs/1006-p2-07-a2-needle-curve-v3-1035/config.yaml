@@ -1,0 +1,13 @@
+run_id: 1006-p2-07-a2-needle-curve-v3-1035
+run:
+  name: p2-07-a2-needle-curve-v4
+model: Qwen3.5-0.8B 零样本基座（p2-01 载重口 load_backbone，无 SFT）
+device: cpu（A2 设备边界取证：MPS 在 GDN conv1d 硬伤不支持——Qwen3.5 混合架构 Mac/MPS 前向不可行的实证，归 notes）
+dtype: float32
+note: v1 空跑/v2 render 形误均留档；v3 依 test_assets._decide 已验路执行
+commit: 3ec198170da911a671323bc6ea8ebd06c2756d75
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

@@ -1,0 +1,70 @@
+run_id: 1005-s1-mps-main-dc8c
+stage: s1-pretrain
+config_path: learning/configs/mps_main.yaml
+config:
+  run:
+    name: s1-mps-main
+  model:
+    d: 512
+    L: 12
+    heads: 8
+    ctx: 1024
+    vocab: 16000
+    rope_theta: 10000.0
+    seed: 0
+    ffn_mult: 4
+    norm_eps: 1.0e-05
+    pad_token_id: 0
+  data:
+    corpus_dir: runs/corpus_main
+    seq_len: 1024
+    batch_size: 8
+    seed: 0
+  train:
+    device: mps
+    threads: 0
+    max_steps: 2000
+    lr: 0.0003
+    warmup_steps: 200
+    min_lr_frac: 0.1
+    betas:
+    - 0.9
+    - 0.95
+    weight_decay: 0.1
+    grad_clip: 1.0
+    grad_accum: 8
+    log_interval: 20
+    save_interval: 250
+    keep_last: 3
+  sample:
+    n: 8
+    temperature: 0.8
+    top_k: 40
+    max_new_tokens: 40
+    prompts:
+    - 今天天气
+    - 深度学习需要
+    - The capital of France is
+    - Once upon a time
+    - 下列选项中正确的是
+    - In 1969, humans
+    - 床前明月光，
+    - Evidence shows that
+fingerprint: 1b8e10e7e872
+corpus:
+  tokens: 117489266
+  shards: 30
+  vocab_size: 16000
+  lang_share:
+    en: 0.3343
+    zh: 0.6657
+    other: 0.0
+  id_max: 15999
+device: mps
+resumed_from: null
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

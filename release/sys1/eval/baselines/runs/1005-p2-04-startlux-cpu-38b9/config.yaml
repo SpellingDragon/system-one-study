@@ -1,0 +1,14 @@
+run_id: 1005-p2-04-startlux-cpu-38b9
+baseline: startlux
+dataset: $REPO_ROOT/scratch/bench/p1-09/typed_decisions/test.jsonl
+split: smoke24
+limit: 24
+device: cpu
+sampling_params: T=1/top_p=1(readout)
+model: $REPO_ROOT/release/bench/ms_models/models/StartLuxAI--StartLux-Decision-0.8B/snapshots/master
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

@@ -1,0 +1,18 @@
+run_id: 1006-s3-calibrate-962f
+stage: s3-calibrate
+model_dir: $REPO_ROOT/scratch/runs/1006-s2-decision-sft-1e95/model
+tokenizer: runs/1003-s0-bpe-16k-realedu-zh-en/tokenizer
+data: runs/trackA-finish/calibrate.jsonl
+batch_size: 32
+min_samples: 10
+bins: 15
+seed: 0
+n_calibration_samples: 60
+data_revision:
+  calibration: held-out transcribed set (NOT typed-decisions test, NOT SFT train)
+  leak_policy: temperature fit only; no gradient/weight update on this data
+commit: 6c63ce3a98670f7e5e0d717bda180d4b779e159f
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

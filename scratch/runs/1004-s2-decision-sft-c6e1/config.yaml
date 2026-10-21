@@ -1,0 +1,20 @@
+run_id: 1004-s2-decision-sft-c6e1
+stage: s2-decision-sft
+ckpt: $WORKSPACE_ROOT/deep-mutimodal-laya-by-tilelang/runs/1004-s1-smoke-tiny-ca2f/model
+tokenizer: runs/1003-s0-bpe-16k-realedu-zh-en/tokenizer
+epochs: 1
+lr: 0.03
+batch_size: 16
+seed: 0
+holdout: 60
+n_train: 540
+n_holdout: 60
+data_revision:
+  train: transcribed(XNLI-zh->noul, MASSIVE-zh-subset->choice, rating->score) + Intern-Decision-train
+  holdout: in-domain transcribed split (NOT typed-decisions test)
+  leak_policy: typed-decisions test set is eval-only, excluded from SFT train (tools/check_leak.py)
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-06T04:08:58+0800", "needle_rows": 8, "corpus_sha16": "ab5cbe542bb837fa", "corpus_build_seconds": 0.6, "token_rel_err_max": 0.0009}
+{"step": 1, "ts": "2026-10-06T04:10:15+0800", "prefix_state_tokens": 2065, "reuse_tokens_fed": 4657, "naive_tokens_fed": 6380, "saved_tokens": 1723, "cold_seconds": 34.36, "past_mib": 225.9}
+{"step": 2, "ts": "2026-10-06T04:10:15+0800", "cross_request_hits": 3, "cross_requests": 3, "cross_request_all_suffix_only": true, "cache_hits": 7, "cache_misses": 1, "cache_evictions": 0, "drift_ratio": 0.01570181310611971, "argmax_same": true, "parity_passed": true}
+{"step": 3, "ts": "2026-10-06T04:10:15+0800", "masked_peak_bytes": 67108864, "band_peak_bytes": 782336, "peak_ratio": 0.011658, "kv_full_mib_128k": 3584.0, "kv_windowed_mib_128k": 3.5, "kv_saved_ratio": 0.999, "cap_clamped_layers": 28}

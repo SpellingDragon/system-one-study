@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-09T01:18:03+0800", "trigger": "alloc_l1/alloc_l0c + transpose_B → codegen _lower_l1（gemm_mad.py:161）发 ascend_gemm_l1 模板（__cube__ 单工），发射面恰 9 符号（a2_probe dump）"}
+{"step": 1, "ts": "2026-10-09T01:18:03+0800", "materials": "官方 Cal 解包获全部真件名与参数映射：copy_gm_to_cbuf(GM→L1)/load_cbuf_to_ca/cb(L1→L0)/load_gm_to_ca/cb(捷径!)/mad 10 参官方形(+kDirectionAlign)/Fixpipe 三向+Params 三结构"}
+{"step": 2, "ts": "2026-10-09T01:18:03+0800", "blocker": "框架 include 组装未破（单拎 impl 缺 LocalTensor；全链 dump_tensor_impl 崩于 ASCENDC_DUMP 默认置 1）。破解方向=extern 声明 __builtin_cce_* 直调"}
+{"step": 3, "ts": "2026-10-09T01:18:03+0800", "guardian": "§12 门控默认关+g_sysFftsAddr 框架守卫——主线四线回归全绿复证；采证纪律=一律 -c（fsyntax-only 宏注入不同会假翻转）"}

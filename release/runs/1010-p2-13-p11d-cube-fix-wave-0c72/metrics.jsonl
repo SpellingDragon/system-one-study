@@ -1,0 +1,5 @@
+{"step": 0, "ts": "2026-10-10T15:05:50+0800", "p11d": "root cause: asc_copy_l12l0a/b 7-arg vs official 9-arg (sid dropped, addrCalMode mis-slot, transpose missing); fixed+synced trunk 971L->patches; local A2-COMPILE-PASS+D-DW-COMPILE-PASS+E2E-CUBE-ONLY PASS no-regression; transpose path already 8-correct; units V2 card-only"}
+{"step": 1, "ts": "2026-10-10T15:05:50+0800", "p13_F": "delta fwd/bwd ub+pure compile-PASS, 6 grads no-partial, CPU fp32 golden 1.29e-7/5.76e-7 adjoint-vs-FD 7.28e-10; 口径(a) zero-new-compat; run_delta_card compile-only PASS"}
+{"step": 2, "ts": "2026-10-10T15:05:50+0800", "p11e_G": "run_numerics 6->8 targets addln/readout inlined TA-dialect compile-PASS exit0"}
+{"step": 3, "ts": "2026-10-10T15:05:50+0800", "bundle": "bundle_ondemand.sh single-window consolidated (gemm_l1/dw/addln/readout/gdn subprocess-isolated + delta) fresh cache; commit pushed; pending ONE card window numeric"}
+{"step": 4, "ts": "2026-10-10T15:05:50+0800", "cost": "local zero-cost; pending 1 window <=8min ~<=¥5"}

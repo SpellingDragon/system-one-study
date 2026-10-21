@@ -1,0 +1,51 @@
+[project]
+name = "sys1"
+description = "System-One Study: a calibrated on-device System-1 decision engine built on TileLang (two-track course project: 0->1 from scratch, master beat-baseline)"
+version = "0.0.1"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "torch>=2.4",
+    "tilelang>=0.1.15",
+    "numpy",
+    "safetensors>=0.4",
+    "tokenizers>=0.19",        # S0 自训 BPE
+    "pyarrow>=15",             # typed-decisions parquet
+    "pyyaml",                  # run config / configs/*.yaml
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-xdist",
+    "ruff",
+    # ↓ 评审 2.2.3 实测 7 败的根因：这三件被代码 import 却从未在依赖里声明。
+    #   下界只作兼容声明（CI 装的是当世最新），取界依据逐行注在行尾，实测基线见 CI job。
+    "modelscope>=1.9",         # snapshot_download / hub.constants / hub.api.HubApi（production/assets.py:204,255；sys1/eval/registry.py:649）；1.x 线长期 API，下界取宽。基线 1.40.1
+    "transformers>=5.0",       # 硬依赖 5.x 线：Qwen3_5ForConditionalGeneration（production/teachers/verify_b3.py:193）、config.get_text_config()（assets.py:609）、from_pretrained(dtype=)（teachers/text.py:218）；run 1007-p2-13-c1-ascend-probe-de15 pin 5.18.0。基线 5.18.0
+    "pillow>=9.0",             # PIL.Image 仅基础用法 open().convert("RGB")/new()（production/data/mm.py:54；tests/test_mm.py:55-59），十年稳定，下界取宽。基线 12.3.0
+    # 注：huggingface-hub（tests/test_assets.py:118）由 transformers 传递带入，不单独声明。
+]
+# 二阶段专用（载重轨 production/、serving/）：
+production = [
+    "transformers>=4.5",       # backbone/tokenizer 装载（assets.py）
+    "peft",                    # SFT LoRA
+    "trl",                     # SFT/GKD(≈OPD)/GRPO 三栈框架
+    "accelerate",
+]
+
+[tool.setuptools.packages.find]
+include = ["sys1*", "learning*", "production*", "serving*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "cuda: requires CUDA device",
+    "mps: requires Apple Silicon / MPS",
+    "npu: requires Ascend NPU (CANN + torch_npu)",
+    "slow: long-running training smoke tests",
+    "integration: requires real external assets (downloaded teacher weights / live API key); skipped unless SYS1_TEACHER_INTEGRATION=1",
+]
+
+[tool.ruff]
+line-length = 120

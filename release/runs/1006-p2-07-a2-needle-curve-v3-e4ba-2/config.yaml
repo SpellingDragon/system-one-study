@@ -1,0 +1,13 @@
+run_id: 1006-p2-07-a2-needle-curve-v3-e4ba-2
+run:
+  name: p2-07-a2-needle-curve-v3
+model: Qwen3.5-0.8B 零样本基座（p2-01 载重口 load_backbone，无 SFT）
+device: mps 优先（Mac 上限档如实）
+dtype: bfloat16 via backbone loader
+note: v1 空跑/v2 render 形误均留档；v3 依 test_assets._decide 已验路执行
+commit: dfed11e9a3b699efb3723f758c02a6ce557ba97d
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

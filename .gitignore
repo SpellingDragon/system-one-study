@@ -1,0 +1,61 @@
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# 参考仓与基准数据（由 refs/clone.sh 与 PRODUCTION §5.0 生成，不入库）
+refs/*
+!refs/clone.sh
+bench/
+
+# 权重与检查点：runs/ 只入证据（config/metrics/notes/日志），大权重靠 config 里的来源+commit 重建
+*.safetensors
+*.gguf
+*.bin
+*.pt
+wandb/
+
+# runs/ 例外：允许提交 summary 级产物
+!runs/**/config.yaml
+!runs/**/metrics.jsonl
+!runs/**/system.json
+!runs/**/notes.md
+
+
+# 测试临时产物
+.tmp_*/
+release/tests/.tmp_p205/
+release/ascend/port910b/cann_cache/
+
+# 构建产物：pip install -e 生成的 egg-info 元数据（audit-remediation-1010 R-P1-3 出库，不入库）
+*.egg-info/
+
+# 一次性取证解包/补丁脚本工作地（可从归档 tgz 一键再生，不入库）
+sys1-study/
+release/scratch/
+
+# === 泄密闸（2026-10-21）：本机身份 / 云入口 / 密钥名 一律不入库 ===
+# 规则与 CI 门同源，见 tools/scrub_sensitive.py 与 .github/workflows/secrets-guard.yml
+# 私钥本体与其目录（历史上从未入库，此处为永久防线）
+*.pem
+*.key
+*.ppk
+id_rsa*
+id_ed25519*
+.ssh/
+known_hosts
+
+# 密钥文件名指纹（KeyPair-<hex>）
+KeyPair-*
+**/KeyPair-*
+
+# 本地驱动脚本：硬编码了本机绝对路径与云主机串，只应存在于操作者机器上
+*.local.sh
+*_local.sh
+
+# 机器级配置与临时中继目录
+.env
+.env.*
+release/.relay_*/
+

@@ -1,0 +1,11 @@
+{
+  "step": 20,
+  "config_fingerprint": "c4e8dd1677d3",
+  "tokens_seen": 163840,
+  "files": [
+    "model/*",
+    "train_state.pt",
+    "meta.json"
+  ],
+  "keep_last": 3
+}

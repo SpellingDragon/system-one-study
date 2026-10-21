@@ -1,0 +1,91 @@
+# attempts/S3_compat_proposal.diff — P1-1s 提案（**不落地**，仅取证/评审用；落地由编排裁决）
+#
+# 目标文件 : src/tl_templates/ascend/port910b_compat.h
+#            （trunk md5 = ca023c2e01746ca52c87f36bcea93ee9，本提案生成时复核同值）
+# 应用方式 : patch -p1 < attempts/S3_compat_proposal.diff
+#            （--dry-run 已 PASS；本文件对 trunk **零改动**，只作提案）
+#
+# ── 改动点 ────────────────────────────────────────────────────────────────────
+#  §10b            asc_copy_gm2ub_align  (L604-612)  —— GM->UB 装填（k=48 病档所在路径）
+#  GAP-C DMA       asc_copy_ub2gm_align  (L817-825)  —— UB->GM 写回（同类潜在缺陷，一并收口）
+#  两处同一件事：把 codegen 传来的 **行步长(pitch)** 归一成 910B 原生件要的 **块间空隙(gap)**：
+#      gap_bytes = pitch_bytes - blockLen_bytes   （<0 夹 0）
+#
+# ── 影响面（所有 blockCount>1 件）──────────────────────────────────────────────
+#  仅当 blockCount>1 且 srcStrideB != blockLenB（即 bk<k 的多突发跨步档）时数值改变；
+#  blockCount==1 或 pitch==blockLen 的档 gap 归 0 ⇒ 与旧码逐字节等价（回归安全）。
+#  归档普查（两窗 tgz 全量解析 asc_copy_gm2ub_align 实参，脚本见 §"复跑"）：
+#    w1 (422 条目, md5 f2ba9a20...): 5d732a8f(k=48 fp32), a421afa3(k=96 fp32),
+#                                     ea1059e6(k=96 fp16), 18502bd3(bf16 matmul, BC=2048)
+#    w2 (431 条目, md5 440b5958...): 18502bd3 一枚
+#   其余 40+ 枚全为 blockCount==1（SINGLE），本次改动对它们恒等。
+#
+# ── 为什么 compat 层按 pitch 喂参会错 ─────────────────────────────────────────
+#  codegen (copy.cc:242-245,310-313) 语义上算的是"相邻行首地址间距(pitch)"，
+#  但 910B 原生 copy_gm_to_ubuf 第 6/7 参是"块间空隙(gap)"（一手依据见下）⇒
+#  直接把 pitch 灌进 gap 槽，硬件把有效步长算成 (blockLen + pitch)。
+#  k=48 实发 (blockLen=64B, srcStride=192B, dstStride=64B) ⇒ 硬件有效步长
+#  源 256B(=64 元素，应为 48)、目的 128B(=32 元素，应为 16，等于 2*bk)。
+#  一手依据：
+#    - CANN 8.5.0 asc/include/basic_api/kernel_struct_data_copy.h:47-58
+#      struct DataCopyParams { union { uint16_t srcGap=0; uint16_t srcStride; };
+#                             union { uint16_t dstGap=0; uint16_t dstStride; }; };
+#      注释 "srcStride and dstStride will be deprecated, use srcGap and dstGap instead."
+#    - asc/impl/basic_api/utils/kernel_check_data_copy_util.h:346-351
+#      srcMaxOffset = nBurst*lenBurst*unit + (nBurst-1)*srcStride*unit   （= 段长 + (n-1) 空隙）
+#    - include/pto/npu/a2a3/TLoad.hpp:69
+#      gmGapValue = (gStride3 - gShape4) * sizeof(DType)                 （gap = 行步长 - 行长）
+#
+# ── 局限（诚实登记，见 reconcile/S3_STRIDED_SECOND_FACTOR.md §3/§5/§7）────────
+#  本提案修的是"pitch->gap 归一"这一层；第二窗探针实测显示 best==Z(dstStride 被忽略)
+#  且残留非 0（45/48），我复核判定该"Z 判决"部分源于探针度量的 NaN 不对称伪影，但
+#  仍有 UNATTRIBUTED 640/1152 与"任何单一 (sp,dp,off) 几何都复现不出实测图"
+#  （308,945 组穷举，min L1=167）两项残留 → 第二层因素（H-b UB 未清零/stale）**未定**。
+#  ⇒ 若上卡后本提案失配未归零，需启用"拆趟"形态（每突发单发连续 DMA，blockCount=1，
+#    步长槽不参与 ⇒ 与 gap/pitch 语义无关），该形态属 plan 层（copy.cc），未在本 diff 内。
+#  ⚠ asc_copy_ub2gm_align 这一 hunk 未被 k=48 内核触达（出口为标量 write_gm_bypass_dcache），
+#    属同类推断性收口，需与 gm2ub 同等上卡验证后才可断言。
+#
+--- a/src/tl_templates/ascend/port910b_compat.h
++++ b/src/tl_templates/ascend/port910b_compat.h
+@@ -604,9 +604,22 @@
+                                             asc_load_l2_cache_mode mode, int srcStrideB,
+                                             int dstStrideB) {
+   (void)rsvd0; (void)rsvd1; (void)rsvd2; (void)mode;
++  // [S3/P1-1s] 910B 原生 copy_gm_to_ubuf 的第 6/7 参是 **块间空隙(gap)**，不是首地址间距(pitch)。
++  // 一手依据：CANN 8.5.0 asc/include/basic_api/kernel_struct_data_copy.h:47-58 —— srcStride/dstStride
++  //   与 srcGap/dstGap 是 union 别名，注释 "srcStride will be deprecated, use srcGap instead"；
++  //   asc/impl/basic_api/utils/kernel_check_data_copy_util.h:346-351 ——
++  //   srcMaxOffset = nBurst*lenBurst*单位 + (nBurst-1)*srcStride*单位（即每块之后留 stride 空隙）；
++  //   include/pto/npu/a2a3/TLoad.hpp:69 —— gmGapValue = (gStride3 - gShape4)*sizeof(DType)（gap = 行步长-行长）。
++  // 而 codegen (src/ascend/op/copy.cc:242-245,310-313 + codegen_ascend.cc:1416-1417) 传进来的是 **行步长
++  // (pitch)**。把 pitch 直接灌进 gap 槽 ⇒ 硬件把有效步长算成 (blockLen + pitch)：k=48 实测
++  // srcStrideB=192B→有效 256B(=64 元素，应为 48)、dstStrideB=64B→有效 128B(=32 元素，应为 16)。
++  // 故此处做 pitch->gap 归一：gap = pitch - blockLen（<0 夹 0）。blockCount==1 或 pitch==blockLen
++  // 的档 gap 归 0，与旧码在 pitch 语义下等价、与"忽略 dstStride"语义下亦等价。
++  const int srcGapB = (srcStrideB > blockLenB) ? (srcStrideB - blockLenB) : 0;
++  const int dstGapB = (dstStrideB > blockLenB) ? (dstStrideB - blockLenB) : 0;
+   __cce_scalar::copy_gm_to_ubuf((__ubuf__ void *)dst, (__gm__ void *)src, (uint8_t)0,
+                                 (uint16_t)blockCount, TL910B_BYTES_TO_BLK(blockLenB),
+-                                TL910B_BYTES_TO_BLK(srcStrideB), TL910B_BYTES_TO_BLK(dstStrideB));
++                                TL910B_BYTES_TO_BLK(srcGapB), TL910B_BYTES_TO_BLK(dstGapB));
+ }
+ 
+ // (B 版 ub2gm 已由 C 版取代：同 codegen 契约、注释与 32B 单位换算更严谨 @ orchestration)
+@@ -817,9 +830,14 @@
+   // matmul/matmul_client.h:2745 即 blockLen = N * sizeof(T) / ONE_BLK_SIZE）。
+   // 同一件事在 AscendC dav_c220 DataCopyUB2GMImpl 里也是直接透传 params 的块单位。
+   // 不换算 = 64 倍过搬。非 32B 倍数的尾段需 align_b8/b16/b32 变体 → G-C6。
++  // [S3/P1-1s] 同 gm2ub：native copy_ubuf_to_gm 的第 6/7 参是 gap，codegen 传的是 pitch
++  // ⇒ 归一 pitch->gap（依据同上 TLoad.hpp:69 / DataCopyParams union）。本档在 k=48 内核里未被触达
++  // （出口是标量 write_gm_bypass_dcache），属同类潜在缺陷一并收口。
++  const int srcGapB = (burst_src_stride > burst_len) ? (burst_src_stride - burst_len) : 0;
++  const int dstGapB = (burst_dst_stride > burst_len) ? (burst_dst_stride - burst_len) : 0;
+   copy_ubuf_to_gm(dst, src, (int8_t)0, (uint16_t)burst_num,
+-                  (uint16_t)(burst_len >> 5), (uint16_t)(burst_src_stride >> 5),
+-                  (uint16_t)(burst_dst_stride >> 5));
++                  (uint16_t)(burst_len >> 5), (uint16_t)(srcGapB >> 5),
++                  (uint16_t)(dstGapB >> 5));
+ }
+ 
+ #endif  // TL_PORT910B_COMPAT_GAP_C_DMA_H

@@ -1,0 +1,33 @@
+# 1012 12:42–12:52 · 窗八（A2 预热判决，repo `05e0b10`，450s）——A2 证伪 + H-b 现象不可复现，私有 fork 反向调试宣告止损
+
+## 判决（原始日志在 artifacts/，回读 grep 的 W7- 字面量坑已勘误）
+| 臂 | 结果 |
+|---|---|
+| A0（`SYS1_DISABLE_WARMUP=1`） | `dbeta 8.002e-01` FAIL（对照符合预期，`WARMUP` 行=0） |
+| **A2（默认预热）** | **`WARMUP gdn[ascend]|h2k8v8|c8ubh` + `WARMUP gdnb[ascend]|h2k8v8|c2ubz` 确实触发**（机制正常）——但第二次发射 `dbeta` **仍 `8.002e-01` FAIL**，其余五项 `1e-7` PASS |
+| gradcheck | 6/8：`gdn_delta FAIL 4.698e+03`、`gdn_conv FAIL 1.431e+07`（数值跨窗漂移＝垃圾态相关，判据诚实） |
+| D3 顺序探针 | **`none==dirty==zero==e609a6ab` 逐位同，自判 `ORDER-VERDICT 顺序无关(H-b 证伪)`** |
+
+## 三条结论
+1. **A2 预热证伪**：触发了、没修好——其唯一依据（窗四"any-prior-launch ⇒ correct"）**在本 boot 不可复现**（prefill 三态逐位同）。**warmup 已回退**（无独立依据的结构不留，§〇二；回退后 `gdn_asc.py=676c0793…`、`gdn_conv_asc.py=28cc045a…`，host 三腿逐字复原、340 passed）。
+2. **`dbeta 8.002e-01` 跨 3 个 boot、4 个窗口、两种变体逐字复现** ⇒ 这不是随机未初始化读，是**确定性错误计算**；窗四的"预热后正确"降级为**不可复现异常**（boot 态相关）。
+3. **私有 fork 的 GDN 反向调试止损**：M4 清零、A2 预热、v2 预清零三修皆被真机证伪，机理在生成码之下且 boot 态相关。**而 tilelang-ascend 底座上六件 GDN（含 chunk_o/chunk_h/wy_fast 同数学）真机 `rel=0`**（窗五）——substrate 是对的，错的是我们 fork 的这一层。**GDN 反向的正确性+性能路线改走 TA**（上游 bwd PR 合入前可先在其原语上自实现，判决用我们的 rigs）。
+
+## 工装勘误
+本窗回读 grep 因 sed 只换了部分 `W7-` 字面量漏了 `W8-HEAD/WARMUP` 行——**原始日志抢救后以日志为准**（教训：派生脚本要全量审一遍再用于取证窗）。
+
+
+## 附：CANN 社区定点只读调研（2026-10-12 午后，决策人问询触发；不发声、不提问）
+**Q1 论坛/issue 同类已知问题**：未命中与我们缺陷类（首发射确定性错值/507035）直接对应的帖子——无低挂果实。
+**Q2 CANN 版本情报**：9.0.0 商用版已出（AscendC SIMD+SIMT 混合编程等）、9.1.0 社区版在修精度类问题（如 FAG 短序列 GQA）、vllm-ascend 已迁 CANN 9.0；我们卡上 8.5.2 属旧代。**PTO 路需新 CANN（H2 已证 8.5 失配）**——记为未来升级路线情报，不改当前决策。
+**Q3（高价值）tilelang-ascend 的同步机制对照**：
+- TA 有**两套同步工程**：IR pass `ascend_sync_insert.cc`（`TL_ASCEND_AUTO_SYNC`，IR 级默认关）与 `ascend_sync_insert_vs.cc` + **bisheng 编译器旗标 `--cce-auto-sync`** 的显式管理（`pass_config.py:195-225`：VS 档配 `cce_auto_sync=False, opt_level=3`，**引 #1346**——他们为同步行为做过专门的工程取舍）；
+- **我们 fork 的 main 仓：`grep auto_sync` 为空——无任何同步机制**。
+⇒ **dbeta 确定性错算的最强机理候选＝fork 生成码缺核内（vector↔scalar 跨管）同步**：完美吻合全部观察——确定性错值（调度确定）、"补救 boot 态耦合"（UB 驻留/调度变化）、只打 UB+标量混算的 GDN 反向族、以及 TA substrate 真机 `rel=0`（同步工程已做好）。
+- **一旗证伪探针（P1-1zi，机会性）**：给 fork 的 gdnb 编译加 bisheng `--cce-auto-sync`（patch_bisheng/compile flags 单旗），若 dbeta 转对 ⇒ 机理坐实且 fork 有一旗救活的可能；10 分钟卡腿，**只作为未来任意窗的搭车项**，不重开止损线。
+
+
+## 附2：P1-1zh 设计件落地（O5）＋ 编排者四项裁决
+- **O5 交付**：`tilelang-ascend:examples/gdn_bwd/design.md`（783 行全 11 节）+ `proto.yaml`（fp16/fp32）+ 我方 `reconcile/O5_GDN_BWD_DESIGN_HANDOFF.md`。质量自检过（无占位符、引用行号抽查 4/4 对、三态 ✅31/⚠️5/❓11）；**§7 同步硬约束成节**（新增件强制 `TL_ASCEND_AUTO_SYNC(_VS)`、禁手写 cross flag、跨 chunk 状态只走 GM workspace——以我们 M4/N5 证伪史为反面证据，引 TA `pass_config.py:204-207`/#1346/#1851）。
+- **四项裁决（编排者）**：①fwd `A/W/γ` **首版重算保自足**（正确性优先，workspace 复用留 perf 期）；②bwd 性能预算**待真机回填**（现为 ❓ 外推，口径已并排写明）；③**bf16 首版不纳入**（C2 一手取证 bisheng 8.5 拒、上游 #1762 未闭；fp16/fp32 足够判决）；④**变长 seq_lens 首版不支持**（规则 shape 先行，对齐判决件口径）。
+- NSA Bwd 先例（`7df10967`）为结构模板；`examples_experiment/chunk_gated_delta_rule/` 为 chunked 算法参考（O5 已勘正路径）。

@@ -1,0 +1,13 @@
+run_id: 1004-bench-kernel-autocograd-30step-28ba
+purpose: TileLang 可微内核链接入 mps_main 后与纯 torch 基线的 30 步训练对比
+device: mps
+chip: Apple M3 Pro 36GB
+torch_run: 1004-s1-mps-main-eca8-2
+kernel_run: 1004-s1-mps-main-2081
+grad_suite: tests/test_kernels_autograd.py（CPU 5 + MPS 5 全绿，含 gemm_dw 编译键反假绿断言）
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

@@ -1,0 +1,2 @@
+{"step": 0, "ts": "2026-10-06T05:47:48+0800", "tokens_total": 227, "image_token_slots": 196, "theory": "(448/16/2)^2=196", "exact_match": true}
+{"step": 1, "ts": "2026-10-06T05:47:48+0800", "logits_shape": "(1,227,248320)", "letter_readout_ok": true, "decision_contract": "零改动成立"}

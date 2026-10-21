@@ -1,0 +1,8 @@
+{"step": 0, "ts": "2026-10-05T02:15:39+0800", "asset": "transformers5.18_supports_qwen3_5", "status": "YES", "note": "Qwen3_5ForConditionalGeneration 可载"}
+{"step": 1, "ts": "2026-10-05T02:15:39+0800", "asset": "hf-mirror:typed-decisions", "status": "200", "note": "真 parquet 在（x-linked-size 222140B）；P1 用的离线转写仅为历史数据"}
+{"step": 2, "ts": "2026-10-05T02:15:39+0800", "asset": "hf-mirror:cmmlu/xnli/LongBench", "status": "200", "note": "获取命令须加 HF_ENDPOINT=https://hf-mirror.com"}
+{"step": 3, "ts": "2026-10-05T02:15:39+0800", "asset": "hf-mirror:MMBench", "status": "401", "note": "G5 改走 GitHub open-compass/MMBench（200）"}
+{"step": 4, "ts": "2026-10-05T02:15:39+0800", "asset": "github:Intern-Decision/jevbench/decision-index/CLUE", "status": "200", "note": "照旧"}
+{"step": 5, "ts": "2026-10-05T02:15:39+0800", "asset": "modelscope:Qwen3.5-0.8B/2B", "status": "200", "note": "backbone 主源"}
+{"step": 6, "ts": "2026-10-05T02:15:39+0800", "asset": "modelscope:startlux-4B", "status": "404", "note": "教师权重唯一源=hf-mirror（第一版探测 hasattr 静默 OK 属假绿，直连复核纠正）"}
+{"step": 7, "ts": "2026-10-05T02:15:39+0800", "asset": "laya:serve", "status": "fastapi+uvicorn", "note": "pip install laya[serve] 可装；Mac CPU 路径 A1 执行时首验"}

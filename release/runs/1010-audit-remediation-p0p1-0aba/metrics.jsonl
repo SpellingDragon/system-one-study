@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-10T20:37:12+0800", "before": "README 失实词6处/收集期硬错误0用例可跑/训口axis:quality×6/无LICENSE/待填写77文件/egg-info×10/clone.sh零钉rev"}
+{"step": 1, "ts": "2026-10-10T20:37:12+0800", "after": "失实词grep=0+39行溯源表/326 passed·RC=0(host)/axis:train×5+守卫7passed(注错变红自证)/MIT LICENSE在/待填写62+62行豁免表/egg-info出库/6条sha钉rev(actionlint+docker彩排RC=0)"}
+{"step": 2, "ts": "2026-10-10T20:37:12+0800", "ubuntu_ci_baseline": "release-gates 首跑: 290 passed/11 failed/28 skipped/3 deselected (run 38052186621)——三分归因: 资产类7红(bench/按设计不入库→R-P1-4转SKIP)+环境类4红(test_backends/tilelang探测)+本变更引入0; job级continue-on-error生效总run✓"}
+{"step": 3, "ts": "2026-10-10T20:37:12+0800", "remaining": "R-P1-4正式门化/R-P2-1统计方案/R-P2-2合规入档/F3映射(由N_traceability+Q_hygiene_report承载)"}

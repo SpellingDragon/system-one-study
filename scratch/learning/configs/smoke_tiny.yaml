@@ -1,0 +1,64 @@
+# learning/configs/smoke_tiny.yaml — S1 冒烟档（CI 端到端 + 真实证据 run，CPU 分钟级）
+#
+# 职责：把"练什么尺寸、取哪摊语料、怎么练、蹦几句话"全部写死在这一份单子里。
+# learning/s1_pretrain_gpt.py 只读这里，代码里不留任何一个超参的第二处来源（改数值只改本文件）。
+#
+# 口径说明（诚实记录）：
+#   design 里 smoke 档理想宽度是 d=128；本档按"端到端 CPU ≤10 分钟"的硬约束收到 d=64、
+#   并把步数压到 300（实测本机 8 线程 d=64/bs=64 约 0.28s/步，300 步 ≈ 1.4 分钟，
+#   加上建 run、采样、写盘留足余量）。想回到 design 的 d=128 只改下面 model.d/heads 两行，
+#   代价是同样步数读到的文本量不变、模型容量变大，不影响验收口径（首末 loss 下降）。
+# 红线（GUIDE §7-0）：本档没有任何第三方权重可载——model.seed 一确定，初始数字就是摇出来的，
+#   s1_pretrain_gpt.build_model 是全局唯一的模型创建入口，不看任何外部权重文件。
+run:
+  name: s1-smoke-tiny              # run 目录名（sys1.runs 会加日期与参数散列4位）
+
+model:
+  d: 64                            # 每个位置的数字串长度
+  L: 2                             # 块数（深度）
+  heads: 4                         # 每块份数（d/heads=16，整除且为双数）
+  ctx: 128                         # 最长窗口，必须 >= data.seq_len
+  vocab: 16000                     # 与 p1-03 自训产物一致（1003-s0-bpe-16k-realedu-zh-en）
+  rope_theta: 10000.0
+  seed: 0                          # 同 config 必得同一套初始数字
+  ffn_mult: 4
+  norm_eps: 1.0e-5
+  pad_token_id: 0
+
+data:
+  corpus_dir: runs/corpus_tiny     # p1-08 A2 产出的分片编号流（tiny 档，800 万个编号）
+  seq_len: 128                     # 每次给模型看多长一段
+  batch_size: 64                   # 每步几段
+  seed: 0                          # 抽窗口的随机起点（续训时由存档里的种子接上）
+
+train:
+  device: cpu                      # CI 口径固定 cpu；本机想试 mps 用 --device mps 覆盖
+  threads: 8                       # torch.set_num_threads，避免抢占全部核心
+  max_steps: 300                   # 步数上限（≤300 是端到端时长约束的硬边界）
+  lr: 3.0e-4
+  warmup_steps: 30                 # 前 30 步线性加大，别一上来猛踩
+  min_lr_frac: 0.1                 # cosine 收尾留 10% 余量
+  betas: [0.9, 0.95]
+  weight_decay: 0.1
+  grad_clip: 1.0
+  grad_accum: 1                    # 冒烟档显存无压力，累积 1 步即更新
+  log_interval: 20                 # 每 20 步往 metrics.jsonl 写一行（曲线唯一真源）
+  save_interval: 100               # 每 100 步留一份可续训存档
+  keep_last: 3                     # 只保最近 3 份，防磁盘自挤
+
+sample:
+  n: 8                             # 采样条数（C1 要求 8 条；--sample 可覆盖）
+  temperature: 0.8
+  top_k: 40
+  max_new_tokens: 40               # 每条 ≤40 个片段（spec 的"短句"口径）
+  # stop_token 故意不写进配置：取 sys1.lang.bpe 里那个整篇结束位常量，
+  # 免得把特殊标记的字面量抄进单子，造成"配置一张表、代码另一张表"的漂移。
+  prompts:
+    - "今天天气"
+    - "深度学习需要"
+    - "The capital of France is"
+    - "Once upon a time"
+    - "下列选项中正确的是"
+    - "In 1969, humans"
+    - "床前明月光，"
+    - "Evidence shows that"

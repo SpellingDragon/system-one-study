@@ -1,0 +1,75 @@
+run_id: 1005-p201-backbone-assets-realpath-5d5c
+domain: p2-01-backbone-assets
+device_policy: cpu（MPS 归一阶段长跑占用；本域前向一律 CPU，MPS 只冒烟小张量）
+verify_commands:
+- python -m pytest tests/test_assets.py -k load -q
+- python -m pytest tests/test_assets.py -k seams -q
+- python -m pytest tests/test_assets.py -k seam_fail -q
+- python -m pytest tests/test_assets.py -k swap_brain -q -m mps
+- python -m pytest tests/test_backbone_layout.py -q
+real_probe: .probe_p201_real.py
+fresh_download_dir: bench/p201_dl_fresh
+peak_rss_mb_at_load: 2027.6
+peak_rss_mb_end: 2027.6
+backbone_source: modelscope
+backbone_repo: Qwen/Qwen3.5-0.8B
+backbone_revision: master
+backbone_snapshot: $REPO_ROOT/release/bench/ms_models/models/Qwen--Qwen3.5-0.8B/snapshots/master
+backbone_download_bytes: 0
+backbone_download_seconds: 3.3
+backbone_endpoint: https://www.modelscope.cn
+backbone_files: 14
+backbone_name: Qwen/Qwen3.5-0.8B
+backbone_dtype: float16
+backbone_device: cpu
+backbone_hidden_size: 1024
+render_version: dmlaya_render_v1
+seam_letter_ids:
+- 32
+- 33
+- 34
+- 35
+- 36
+- 37
+- 38
+- 39
+- 40
+- 41
+- 42
+- 43
+- 44
+- 45
+- 46
+- 47
+- 48
+- 49
+- 50
+- 51
+- 52
+- 53
+- 54
+- 55
+- 56
+- 57
+seam_head_vocab: 248320
+seam_hidden_size: 1024
+seam_prompt_sha256_16: a1891aca6c002e48
+seam_prompt_tokens: 80
+seam_think_off_suffix: '<think>
+
+
+  </think>
+
+
+  '
+seam_mm_token_ids:
+  image_token_id: 248056
+  video_token_id: 248057
+  vision_start_token_id: 248053
+  vision_end_token_id: 248054
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

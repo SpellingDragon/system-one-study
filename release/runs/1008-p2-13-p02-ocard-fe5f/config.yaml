@@ -1,0 +1,10 @@
+run_id: 1008-p2-13-p02-ocard-fe5f
+run:
+  name: p2-13-p02-ocard
+env: 910B4 真机, CANN 8.5.2, tilelang 0.1.15, torch_npu(PyTorch-2.7.1 conda)
+commit: dff37d9c94d24547ad70feaf25cac76e0f56a8cd
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

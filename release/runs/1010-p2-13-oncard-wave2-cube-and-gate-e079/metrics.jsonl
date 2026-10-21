@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-10T22:56:22+0800", "vector_face": "**addln PASS rel_y=1.69e-05 rel_h=0.0 有偏判别 7.65e-04**（P1-1e 首收，有偏方差口径在真机成立）；gdn PASS 6.35e-08 复现；**delta_fwd 真机首执行 PASS rel_o=7.51e-08 rel_s=6.03e-08**（P1-3 旗舰数值层首次证真）"}
+{"step": 1, "ts": "2026-10-10T22:56:22+0800", "cube_face": "gemm_l1 与 dw **仍双双 aicore 507015**——P1-1d 九参位序回穿修复为『必要但不充分』：位序错位消除后崩溃原样复现，嫌疑收敛到 V1/V2 **stride 单位**（元素 vs 32B 块）与 dstGap/repeatTimes 语义，纯本地考古域；禁再上卡试错"}
+{"step": 2, "ts": "2026-10-10T22:56:22+0800", "gate_defect": "**train_step 阻塞根因=环境探针自身用 950 载体**：ascend_env._compile_probe 编 SimtVF 最小件必败→active_backend 判 eager→九件内核全旁路→'element 0 of tensors does not require grad'。即便九件全部可编，门也把它们挡在 eager 路。修复=探针改 910B 合法最小件（本地活，代理）"}
+{"step": 3, "ts": "2026-10-10T22:56:22+0800", "readout": "readout FAIL rel=0.178（非 S 全零型≈1，非崩溃）→ 真数值偏差，需本地按 rig 判据反推（ids 散取/末位轴），非卡类问题"}

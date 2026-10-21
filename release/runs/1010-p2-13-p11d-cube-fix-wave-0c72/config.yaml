@@ -1,0 +1,11 @@
+run_id: 1010-p2-13-p11d-cube-fix-wave-0c72
+run:
+  name: p2-13-p11d-cube-fix-wave
+scope: P1-1d cube DMA 9-param fix (507015 root cause) + P1-3 delta rule (F) + P1-1e
+  rig (G); consolidated single-window bundle staged
+commit: 3a0ada37d8173d967543acc22ba6430ac88e0d34
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

@@ -1,0 +1,10 @@
+run_id: 1008-p2-13-p02l-e2e-arc-d5f2
+run:
+  name: p2-13-p02l-e2e-arc
+scope: 本地 Docker 内 tilelang 全管线 e2e（codegen→bisheng）第一次真编译 910B kernel
+commit: 721ea2681a952a9d3db2657c305d391b229b7975
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

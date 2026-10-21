@@ -1,0 +1,10 @@
+run_id: 1010-p2-13-p14-interface-home-reconcile-5e2b
+run:
+  name: p2-13-p14-interface-home-reconcile
+scope: P1-4 接口 home 910B 编译合流波 H/I/J/K + 编排者集成
+commit: 20cb6e00ff161f25dc1f50e82065ff5720f23db0
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

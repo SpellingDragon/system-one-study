@@ -1,0 +1,14 @@
+run_id: 1006-p2-07-a2-needle-curve-e6c8
+run:
+  name: p2-07-a2-needle-curve-v2
+model: bench/ms_models/models/Qwen--Qwen3.5-0.8B/snapshots/master (Qwen3.5-0.8B 零样本，无
+  SFT——曲线口径=基座原生)
+device: mps
+dtype: bfloat16
+limit_note: Mac/MPS 口径，128K 起为 Mac 上限档（256K 待云端）
+commit: dfed11e9a3b699efb3723f758c02a6ce557ba97d
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

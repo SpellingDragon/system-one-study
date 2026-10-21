@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-10T13:10:01+0800", "vector_face": "**三件数值绿**：GDN-conv rel=6.35e-08 / rope rel=3.13e-08 / attn_sw rel=1.41e-07 —— 向量面（标量化+表加载+§11数学件）数值层真机证真"}
+{"step": 1, "ts": "2026-10-10T13:10:01+0800", "cube_face": "gemm_l1 与 dW(l0tr) 双双 aicore exception 507015（设备同步超时=DMA 非法访问型崩溃）——V1/V2 stride 单位假设坐实为致命错而非数值偏；gemm direct rel=nan（UB 布局已知）"}
+{"step": 2, "ts": "2026-10-10T13:10:01+0800", "pattern": "**判决模式清晰：向量面绿 ×3 / cube 面崩 ×2**——崩溃定位收敛到 compat §12 的 load_cbuf_to_ca/cb 装填参数位段（本地可修，官方 Cal 构造点对照重打）"}
+{"step": 3, "ts": "2026-10-10T13:10:01+0800", "rig_debt": "收数器三轮工装债全清（torch.bf16→bfloat16、dtype .to() 构造、rope freq 1D、npu→numpy _np、heredoc-0字节、setsid 进程回收）；addln/readout 数值 case 待补"}

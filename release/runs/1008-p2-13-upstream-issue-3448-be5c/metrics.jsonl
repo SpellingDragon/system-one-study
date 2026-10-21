@@ -1,0 +1,2 @@
+{"step": 0, "ts": "2026-10-08T13:51:17+0800", "issue": "[Ascend][DSL] 950-generation intrinsic emission blocks 910B — findings F1-F5 (dav-c220-cube arch / native __mix__ / plugin TLV deps / T.Cube single-work escape / bf16 proxy) + DSL 立场（非 Ascend C 生成路线）+ 数值验证后最小 PR 意向"}
+{"step": 1, "ts": "2026-10-08T13:51:17+0800", "context": "检索无重复（ascend issues 仅 950 双后端之问 #3317）；官方 collaborator 口径=Ascend C 后端稳/PTO DSL 另途——我们主张 DSL 路径补 910B"}

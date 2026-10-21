@@ -1,0 +1,10 @@
+run_id: 1009-p2-13-p11b-dw-rope-attnsw-6223
+run:
+  name: p2-13-p11b-dw-rope-attnsw
+scope: P1-1b 双代理波：D(dW) ∥ E(rope/attn_sw) + 编排者集成
+commit: 5826f308f47b8ee1dab9e9ead7a4923a190105eb
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

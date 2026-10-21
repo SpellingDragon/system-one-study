@@ -1,0 +1,16 @@
+run_id: 1007-p2-13-b1-910b-port-attempt-7793
+run:
+  name: p2-13-b1-910b-port-attempt
+env: ModelArts snt9b 实例（910B4, CANN 8.5.2, bisheng clang15.0.5）；tilelang 0.1.15 主仓同源
+patches_applied:
+- 'common.h: SIMT 头组+ascend_fp8+simd_inst 收进 TL_ASCEND_SIMT 条件编译'
+- 'numeric_limits.h: std::bit_cast→__builtin_bit_cast'
+- 'debug.h: __aicore__ 空别名兜底 + block_idx 降级 0 + SIMT 展开罩起'
+- 五桩头（主仓+远端 pip 包同步）
+note: 主仓补丁未 commit（day-1 纪律：待端到端实证）；远端 pip 留有 .orig 可回滚
+commit: 4af5607601a763dc47dbbda47d31717d004d6c36
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

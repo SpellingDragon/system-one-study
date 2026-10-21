@@ -1,0 +1,1 @@
+结论（轨A 收官链）：S1 dc8c(2000步, loss 9.85->3.43) → S2 1006-s2-decision-sft-1e95 → S3 1006-s3-calibrate-962f → EVAL runs/1006-eval-report-aa36(rc=0)；链日志 runs/trackA-finish/logs/。

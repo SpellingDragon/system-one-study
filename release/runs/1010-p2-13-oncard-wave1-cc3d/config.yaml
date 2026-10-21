@@ -1,0 +1,10 @@
+run_id: 1010-p2-13-oncard-wave1-cc3d
+run:
+  name: p2-13-oncard-wave1
+env: '910B4 真机 CANN 8.5.2, 两窗: bundle+numerics(6 case)+fixup(gemm_l1/rope/attnsw/dw)'
+commit: bdbeef6b8d7a389df4600aa9e54c0adc1407229f
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

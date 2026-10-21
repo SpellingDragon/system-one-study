@@ -1,0 +1,1 @@
+{"step": 0, "ts": "2026-10-06T05:43:42+0800", "e2e_p50_ms": 382.662, "e2e_p95_ms": 390.694, "e2e_mean_ms": 383.619, "e2e_p99_ms": 392.154, "readout_p50_ms": 380.481, "readout_p95_ms": 388.333, "readout_mean_ms": 381.404, "parity_passed": 1, "parity_worst_drift": 2.05e-05, "prefix_hits_delta": 2, "prefix_tokens_fed_delta": 193}

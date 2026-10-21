@@ -1,0 +1,3 @@
+{"step": 0, "ts": "2026-10-05T14:35:55+0800", "b3_files": 30, "b3_total_bytes": 9344023187, "b3_weight_bytes": 9319828240, "b3_letter_ids_match": 1, "b3_vocab": 248044}
+{"step": 1, "ts": "2026-10-05T14:35:55+0800", "b3_cpu_first_pass_s": 1.366, "b3_cpu_tok_s": 125.9, "b3_forward_calls": 3, "b3_second_pass_hits": 3, "b3_api_calls": 11, "b3_api_mean_latency_s": 4.032, "b3_pack_rows": 10, "b3_replay_hits": 10, "b3_replay_api_calls": 0}
+{"step": 3, "ts": "2026-10-05T14:40:05+0800", "api_argmax_matches_recheck": 10, "api_argmax_total_recheck": 10, "recheck_api_calls": 0}

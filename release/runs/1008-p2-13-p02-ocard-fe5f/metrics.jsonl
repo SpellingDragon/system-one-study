@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-08T23:34:50+0800", "compile": "**E2E-CUBE-ONLY PASS on real card** —— compat 移植层在 8.5.2 与 8.5.0 行为一致（8.5.2 无额外墙）"}
+{"step": 1, "ts": "2026-10-08T23:34:50+0800", "runtime": "RUNTIME-FAIL rel_err=nan, ms=0.046 —— kernel 装载/launch/取回全通（执行链无崩溃），数值错因=布局缺失（T.copy 进 UB 后 mad 直读，无 ND2NZ/分形化/L1 分层）→ 精确落入 P1-1 已知工作项，非新增未知"}
+{"step": 2, "ts": "2026-10-08T23:34:50+0800", "bundle_defect": "bundle[3] 注入锚点在卡上版本漂移（卡侧 result 行含 -mllvm 同行，与本地断行不同）致首轮假 patched；现场以行级注入修复——bundle 需同步修锚（用宽松 anchor '-O2\", \"-fPIC\", \"-std=c++20\"'）"}
+{"step": 3, "ts": "2026-10-08T23:34:50+0800", "ops": "密钥正本在 ~/Downloads/${CARD_KEY}（.venv 副本已复位丢失）；nohup 子 shell + 本地 kill 实现 ssh 脱开"}

@@ -1,0 +1,40 @@
+[project]
+name = "sys1"
+description = "System-One Study: a calibrated on-device System-1 decision engine built on TileLang (two-track course project: 0->1 from scratch, master beat-baseline)"
+version = "0.0.1"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "torch>=2.4",
+    "tilelang>=0.1.15",
+    "numpy",
+    "safetensors>=0.4",
+    "tokenizers>=0.19",        # S0 自训 BPE
+    "pyarrow>=15",             # typed-decisions parquet
+    "pyyaml",                  # run config / configs/*.yaml
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-xdist", "ruff"]
+# 二阶段专用（载重轨 production/、serving/）：
+production = [
+    "transformers>=4.5",       # backbone/tokenizer 装载（assets.py）
+    "peft",                    # SFT LoRA
+    "trl",                     # SFT/GKD(≈OPD)/GRPO 三栈框架
+    "accelerate",
+]
+
+[tool.setuptools.packages.find]
+include = ["sys1*", "learning*", "production*", "serving*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "cuda: requires CUDA device",
+    "mps: requires Apple Silicon / MPS",
+    "npu: requires Ascend NPU (CANN + torch_npu)",
+    "slow: long-running training smoke tests",
+]
+
+[tool.ruff]
+line-length = 120

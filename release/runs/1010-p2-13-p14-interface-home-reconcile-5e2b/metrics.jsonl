@@ -1,0 +1,3 @@
+{"step": 0, "ts": "2026-10-10T16:48:32+0800", "verified": "7 接口 target=ascend 编译 PASS（add_ln前+后/letter_readout/rope/attn_sw/gemm/gdn fwd+pure+bwd+conv，我容器独立复验非信汇报）；gdn 出 .aibin 设备码"}
+{"step": 1, "ts": "2026-10-10T16:48:32+0800", "upgrades": "gdn BWD_STATUS partial→kernelized(attempts/F 六梯)；新增 gdn_conv_asc.py conv 入口(R7)；rope forward 补 ascend 路由+fp32门；test 20 passed/1 skipped 无回归"}
+{"step": 2, "ts": "2026-10-10T16:48:32+0800", "gap": "dW/lora 阻 §12 缺 asc_fill_l1（L1/CBuf 块步填充，官方仅 GM-init Fill）；compat_patch_K.h 上报未假绿；待 §12-owner 原生件或 dW 免尾形"}

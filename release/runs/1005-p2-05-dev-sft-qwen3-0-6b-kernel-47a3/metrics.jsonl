@@ -1,0 +1,4 @@
+{"step": 1, "ts": "2026-10-05T23:12:27+0800", "loss": 2.285952, "lr": 0.0001, "micro": 1, "step_seconds": 24.446, "tokens_per_second": 16.9, "tokens": 412, "batch_tokens": 412, "batch_rows": 2, "grad_norm": 50.0763, "soft_coverage": 1.0}
+{"step": 2, "ts": "2026-10-05T23:12:44+0800", "loss": 3.499027, "lr": 7.500000000000001e-05, "micro": 2, "step_seconds": 17.411, "tokens_per_second": 21.0, "tokens": 778, "batch_tokens": 366, "batch_rows": 2, "grad_norm": 157.7491, "soft_coverage": 1.0}
+{"step": 3, "ts": "2026-10-05T23:13:07+0800", "loss": 0.642264, "lr": 2.500000000000001e-05, "micro": 3, "step_seconds": 22.564, "tokens_per_second": 15.5, "tokens": 1128, "batch_tokens": 350, "batch_rows": 2, "grad_norm": 10.8595, "soft_coverage": 1.0}
+{"step": 0, "ts": "2026-10-05T23:13:07+0800", "asm_encoded": 480, "asm_seen": 480, "teacher_hits": 480, "teacher_misses": 0, "soft_coverage": 1.0, "kernel_compiled": 8}

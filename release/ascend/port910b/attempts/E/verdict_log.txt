@@ -1,0 +1,137 @@
+ENV-COMPAT-IN-SYNC (944 lines)
+bisheng.py already patched (/usr/local/lib/python3.10/dist-packages/tilelang/contrib/bisheng.py)
+########## E-MATRIX rope table ##########
+2026-10-08 17:59:36  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `rope_kernel` with `out_idx=[]`
+2026-10-08 17:59:37  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `rope_kernel`
+E-ROPE-COMPILE-PASS
+  mode=table sign=1 tokens=64 heads=8 dim=64 cores=64 dtype=float32
+  prefix: __global__ __vector__ void rope_kernel_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  lines: 33
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : (none)
+  source dumped -> /tmp/gen_rope_table.asc
+########## E-MATRIX rope rational ##########
+2026-10-08 17:59:38  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `rope_kernel` with `out_idx=[]`
+2026-10-08 17:59:39  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `rope_kernel`
+E-ROPE-COMPILE-PASS
+  mode=rational sign=1 tokens=64 heads=8 dim=64 cores=64 dtype=float32
+  prefix: __global__ __vector__ void rope_kernel_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  lines: 35
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : (none)
+  source dumped -> /tmp/gen_rope_rational.asc
+########## E-MATRIX rope sinf ##########
+2026-10-08 17:59:41  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `rope_kernel` with `out_idx=[]`
+E-ROPE-COMPILE-FAIL
+---- first error lines ----
+  /tmp/tmpgpyemfjk/tl_kernel.asc:23:13: error: use of undeclared identifier 'cosf'
+  Fatal Err: A fatal error occurred in iternel process, and Diagnostic info can not be reported correctly
+  /tmp/tmpgpyemfjk/tl_kernel.asc:23:13: error: use of undeclared identifier 'cosf'
+  Fatal Err: A fatal error occurred in iternel process, and Diagnostic info can not be reported correctly
+---- tail 800 ----
+lock_idx) * 1536) + (s * 512)) + (uc * 64)) + j)];
+        x2 = QKV[(((((((int32_t)block_idx) * 1536) + (s * 512)) + (uc * 64)) + j) + 32)];
+        ang = (((float)((int32_t)block_idx)) * FREQ[j]);
+        c = cosf(ang);
+        sn = sinf(ang);
+        tl::write_gm_bypass_dcache(((__gm__ float*)O + ((((((int32_t)block_idx) * 1536) + (s * 512)) + (uc * 64)) + j)), ((x1 * c) - (x2 * sn)));
+        tl::write_gm_bypass_dcache(((__gm__ float*)O + (((((((int32_t)block_idx) * 1536) + (s * 512)) + (uc * 64)) + j) + 32)), ((x2 * c) + (x1 * sn)));
+      }
+    }
+    for (int32_t j_1 = 0; j_1 < 64; ++j_1) {
+      tl::write_gm_bypass_dcache(((__gm__ float*)O + ((((((int32_t)block_idx) * 1536) + (uc * 64)) + j_1) + 1024)), QKV[((((((int32_t)block_idx) * 1536) + (uc * 64)) + j_1) + 1024)]);
+    }
+  }
+}
+
+
+E-SINF-PROBE-FAIL-AS-EXPECTED（见上一行错误摘要）
+########## E-MATRIX attn stage ##########
+2026-10-08 17:59:43  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `attn_sw_kernel` with `out_idx=[]`
+2026-10-08 17:59:44  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `attn_sw_kernel`
+E-ATTNSW-COMPILE-PASS
+  variant=stage heads=4 seq=64 dim=32 window=8 cores=64 dtype=float32
+  prefix: __global__ __vector__ void attn_sw_kernel_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: True
+  null_ubuf_handle_named: False
+  lines: 52
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/gen_attnsw_stage.asc
+########## E-MATRIX attn pure ##########
+2026-10-08 17:59:45  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `attn_sw_kernel` with `out_idx=[]`
+2026-10-08 17:59:46  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `attn_sw_kernel`
+E-ATTNSW-COMPILE-PASS
+  variant=pure heads=4 seq=64 dim=32 window=8 cores=64 dtype=float32
+  prefix: __global__ __vector__ void attn_sw_kernel_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  null_ubuf_handle_named: False
+  lines: 71
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : expf
+  source dumped -> /tmp/gen_attnsw_pure.asc
+########## E-MATRIX rope sign=-1 (反向件) ##########
+2026-10-08 17:59:48  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `rope_kernel` with `out_idx=[]`
+2026-10-08 17:59:48  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `rope_kernel`
+E-ROPE-COMPILE-PASS
+  mode=table sign=-1 tokens=64 heads=8 dim=64 cores=64 dtype=float32
+  prefix: __global__ __vector__ void rope_kernel_kernel
+  has_mix: False
+  has_ASC_IS_: False
+  has_vf_call: False
+  has_threadIdx: False
+  has_asc_sync: False
+  has_gm_bypass: True
+  has_ubuf: False
+  lines: 34
+  emitted asc_* : asc_get_sub_block_id asc_init
+  emitted tl::* : tl::write_gm_bypass_dcache
+  math/intrin   : (none)
+########## E-MATRIX golden ##########
+ROPE tokens=16 heads=4 dim=32 theta=10000
+  sim32-vs-f64: abs=2.090e-07 rel=1.186e-06 (预算 2e-5) [naive-rel=9.053e-06，近零分量假阳，仅留痕]
+  V-slot 按位透传: True
+  正反旋转对合 max|Δ|=4.768e-07 (预算 2.031e-05)
+  GOLDEN-ROPE-PASS
+ATTN heads=4 seq=24 dim=16 window=8 scale=0.2500
+  sim32(复刻expf)-vs-f64: abs=3.343e-07 rel=5.176e-06 (预算 2e-5) [naive-rel=8.166e-05，近零分量假阳，仅留痕]
+  窗外权重恰0=True / 不可见扰动该行输出按位不变=True
+  行分和 l∈[1,window]: True (min=1.0000 max=5.3721)
+  GOLDEN-ATTN-PASS
+GOLDEN-EMITTED /tmp/e_pairs.npz
+E-GOLDEN-PASS
+########## baseline e2e_cube (compat 注入无回归检查) ##########
+2026-10-08 17:59:50  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:137): TileLang begins to compile kernel `main` with `out_idx=-1`
+2026-10-08 17:59:51  [TileLang:tilelang.jit.kernel:INFO] (kernel.py:145): TileLang completes to compile kernel `main`
+E2E-CUBE-ONLY PASS
+HAS_MIX: True  HAS_ASC_IS: True

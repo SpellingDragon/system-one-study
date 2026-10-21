@@ -1,0 +1,2 @@
+grid-static-applied True
+GRIDSTATIC 12.595611572265625 0.0

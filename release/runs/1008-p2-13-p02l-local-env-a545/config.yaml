@@ -1,0 +1,14 @@
+run_id: 1008-p2-13-p02l-local-env-a545
+run:
+  name: p2-13-p02l-local-env
+env: Mac colima 0.10.3 (aarch64 原生, 10GB) + Ubuntu 22.04 + CANN 8.5.0 aarch64 toolkit（华为
+  OBS 公开直链）+ bisheng clang 15.0.5（与云端 snt9b 同版本）
+cann_download: ascend-repo.obs.cn-east-2.myhuaweicloud.com/CANN/CANN%208.5.0/Ascend-cann-toolkit_8.5.0_linux-aarch64.run
+  (1.1GB)
+docker_mirror: docker.m.daocloud.io（DockerHub 直连超时）
+commit: 7026c84f95b4e3fc0b3d05f26884243c01e53386
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

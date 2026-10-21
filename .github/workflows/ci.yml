@@ -1,0 +1,104 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  cpu-gates:                     # 与本地 `bash tools/ci.sh` 完全同源
+    runs-on: ubuntu-latest
+    env: { GATE_STRICT: "1" }    # 缺 ruff/pytest 即判负
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu  # CPU 轮小且够门；避免拉 CUDA 大包
+      - run: pip install -e "./scratch[dev]"
+      - run: bash scratch/tools/ci.sh
+
+  mac-gates:                     # Apple Silicon 轻量档（编译+注释门；MPS 用例见 device 矩阵）
+    runs-on: macos-latest
+    env: { GATE_STRICT: "1" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install ruff
+      - run: bash scratch/tools/ci.sh --fast
+
+  release-gates:                 # 评审 2.2.3：release/ 的 300+ 测试此前零 CI 覆盖 —— 双重 fixture 能活着入库的结构性原因
+    runs-on: ubuntu-latest
+    timeout-minutes: 30          # 常规优化：大包安装 + 全量测试，不设上限会白烧 runner 六小时
+    # ⚠ 归因已立、已翻正式门（R-P1-4，台账 docs/ci_baseline_triage.md；design「风险与回退」第 3 条：先归因、不静默放行）：
+    #   首跑 38052186621 的 11 红按实况＝6 资产缺件→SKIP 门已立 + 4 backends→MPS 门 skipif 已立
+    #     （host 伪造无 MPS 亦复现同 4 条 skipif）+ 1 test_longctx 判据缺陷（**已修**：旧 `==0.0` 逐位
+    #     判据平台敏感，为此前 2 红 4 绿的根因；已换平台无关结构判据 release/tests/test_longctx.py:634-759，
+    #     host 35 次连跑 0 红，凭据见 release/ascend/kernels/reconcile/E_RESULT.md 与 D_determinism.md）。
+    #     旧注释「KNOWN-ENV 保留红／预期稳态 1 failed」已被证伪，随本次订正删除。
+    #   翻转条件已达成：run 38070929040（0 failed, 297 passed, 38 skipped）+ run 38075461293
+    #     （0 failed，非确定判据重建后首跑）连续两次绿 → 已按既定操作删去 continue-on-error 行，本 job 为硬门。
+    #   翻门后再红即真信号：按三分归因先证后判，勿静默放行（本地全绿 ≠ ubuntu 全绿，属既有现象）。
+    defaults:
+      run: { shell: bash }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: pip 缓存（键=依赖声明指纹）
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: release-pip-${{ runner.os }}-py3.12-${{ hashFiles('release/pyproject.toml') }}
+          restore-keys: release-pip-${{ runner.os }}-py3.12-
+      - name: 建 release/.venv      # 评审 2.2.3 第 4 步的墙：快速上手从未创建过这个 venv，此前只有作者私路径
+        run: python -m venv release/.venv
+      - name: 装依赖
+        run: |
+          set -o pipefail
+          PIP=(release/.venv/bin/python -m pip)
+          # torch 先走 CPU 轮（与 cpu-gates 同一取舍）：默认轮附带数 GB CUDA 依赖，是本 job 超时的头号来源
+          "${PIP[@]}" install --upgrade pip --timeout 60 --retries 5
+          "${PIP[@]}" install "torch>=2.4" --index-url https://download.pytorch.org/whl/cpu --timeout 120 --retries 5
+          "${PIP[@]}" install -e "./release[dev]" --timeout 60 --retries 5
+      - name: pytest tests -q -m "not integration"
+        run: |
+          set -o pipefail            # tee 之后必须保 pytest 的退出码，否则转正式门时会永远绿
+          cd release
+          .venv/bin/python -m pytest tests -q -m "not integration" 2>&1 | tee "$RUNNER_TEMP/release-pytest.log"
+      - name: 基线摘要（红项三分归因的读面）
+        if: always()
+        run: |
+          LOG="$RUNNER_TEMP/release-pytest.log"
+          if [ ! -f "$LOG" ]; then
+            echo "::warning::release-gates 无 pytest 日志——装依赖或更早步骤已失败（环境类红项，非测试红项）"
+            exit 0
+          fi
+          SUMMARY=$(grep -E "^[0-9]+ (passed|failed|error)" "$LOG" | tail -1)
+          [ -n "$SUMMARY" ] || SUMMARY="（未命中汇总行，见工件日志尾部）"
+          {
+            echo "### release-gates 基线（正式门）"
+            echo '```'
+            echo "$SUMMARY"
+            echo '```'
+            echo ""
+            grep -E "^(FAILED|ERROR)" "$LOG" | head -60 || true
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::基线采集期，红项待三分归因：$SUMMARY"
+      - name: 上传基线日志
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-pytest-baseline
+          path: ${{ runner.temp }}/release-pytest.log
+          if-no-files-found: warn
+          retention-days: 30
+
+  # —— 设备矩阵：待课程方 self-hosted runner 接入后启用（label 与 backends.py 对应）——
+  # devices:
+  #   needs: cpu-gates
+  #   strategy: { matrix: { label: [cuda, mps, npu] } }
+  #   runs-on: [self-hosted, "${{ matrix.label }}"]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - run: pip install -e ".[dev]"        # CUDA/MPS 需装 torch；npu 需 CANN+torch_npu
+  #     - run: GATE_STRICT=1 bash tools/ci.sh --device ${{ matrix.label }}

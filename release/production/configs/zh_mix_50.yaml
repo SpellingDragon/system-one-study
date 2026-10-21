@@ -1,0 +1,63 @@
+# p2-09 中文配比消融档 · 50% 档（两档只差 `zh_ratio` 这一个因子）
+#
+# 【做什么】把"往 SFT 语料里掺几成中文"写成可复跑的参数：本档 50%，姊妹档见 zh_mix_30.yaml（30%）。
+#     消融本体（两档 tiny SFT 对照中文集 acc）须待正式 SFT 产物（C5）；本波只把口径钉死在配置里。
+# 【怎么做】除 `zh_ratio` / `zh_corpus` 两键外，其余键与 production/configs/tiny_cpu.yaml 同值、
+#     同 seed、同超参、同题量——`python -m sys1.eval.chinese check-mix` 逐键比两档，差在别的键上
+#     就当场点名（哪怕只差一个 threads）。`zh_ratio` / `zh_corpus` 是 p2-09 的**待接入键**：
+#     `production/sft.py` 的配置白名单今天还不认它们（认了就报错），C5 接训练口时由 p2-05 侧在
+#     `default_cfg()` 增这二键，届时本文件可原样喂给 sft，不必改键名、不必挪注释。
+#     两档 run_prefix 故意相同（`p2-09-zhmix`）：这是"除配比外全同"的一部分；要在 runs 里把两条
+#     run 分开命名，跑的时候用 sft 的 `--run-prefix` 覆盖，别改这份文件（改了就不齐了）。
+# 【为什么】配比消融的全部说服力都压在"其余都一样"这句上；而 `zh_corpus` 现在只能挂显式占位
+#     （`PENDING@待 C5:zh-train`）：registry 的 train 轴还没有中文训练语料这一档，若图省事拿刚
+#     决策化出来的中文**考卷**（cmmlu-decision / clue-decision）当语料掺进去，训练就见过考题，
+#     中文 acc 会漂亮得离谱——`sys1/eval/chinese.py::assert_mix_hygiene()` 专门拦这一条，
+#     占位符在案可查是"缺口已知"，写个评测集 id 进去才是假绿。
+
+# ── 资源与身份（与 tiny_cpu 同）──
+backbone: qwen3-0.6b
+loader: minimal
+device: cpu
+dtype: float32
+threads: 4
+seed: 20261005
+
+# ── 数据（p2-03 registry 口；英文/基线那部分题源不变，中文那部分由下面两键决定）──
+# 2026-10-10 audit-remediation（R-P0-2）：训测分离——旧值走的是评测考卷轴（quality＝test 档），旧 dev run 的 quality 轴记录见 run 档，不回写
+axis: train
+limit: 480
+max_length: 512
+
+# ── 中文配比（p2-09 待接入键，C5 由 p2-05 消费口接上）──
+zh_ratio: 0.50                            # 语料里中文占比；姊妹档为 0.30
+zh_corpus: "PENDING@待 C5:zh-train"       # 中文 train 语料集 id（registry 尚未登记，勿指评测集）
+
+# ── 教师（p2-02 缓存口）──
+teacher_model_id: "StartLuxAI/StartLux-Decision-4B#scaffold-cpu"
+teacher_cache: bench/teacher_cache/p2_05_pseudo
+mix_soft: 0.5
+hard_mass: 0.9
+
+# ── 旁路与算子档（p2-13）──
+kernel_backend: kernel
+ascend_target: cpu
+r: 16
+alpha: 32
+dropout: 0.05
+gradient_checkpointing: false
+
+# ── 步长与调度（StartLux 基线，两档必须一致）──
+lr: 0.0001
+warmup_ratio: 0.05
+weight_decay: 0.0
+max_grad_norm: 1.0
+epochs: 2
+max_tokens: 512
+accum: 1
+max_steps: 100
+
+# ── 产物与记录 ──
+run_prefix: p2-09-zhmix
+out_dir: null
+prefill_chunk: 16

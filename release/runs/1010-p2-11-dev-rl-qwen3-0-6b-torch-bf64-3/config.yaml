@@ -1,0 +1,211 @@
+run_id: 1010-p2-11-dev-rl-qwen3-0-6b-torch-bf64-3
+stage: p2-11-rl/p2-11-dev
+rl_version: rlcd_v1
+parent_run_id: ''
+parent_model: ''
+config:
+  alpha: 32
+  ascend_target: cpu
+  axis: quality
+  backbone: qwen3-0.6b
+  cache_dir: null
+  data_dir: null
+  device: cpu
+  dropout: 0.05
+  dtype: float32
+  ema_beta: 0.9
+  gradient_checkpointing: false
+  kernel_backend: torch
+  limit: 8
+  loader: minimal
+  log_floor: -9.21
+  lr: 0.0001
+  max_grad_norm: 1.0
+  max_steps: 8
+  out_dir: null
+  parent_model: ''
+  parent_run_id: ''
+  patience: 5
+  r: 16
+  run_prefix: p2-11-dev
+  runs_root: null
+  seed: 20261010
+  temperature: 1.0
+  threads: 4
+  top_k: 8
+  w_rps: 1.0
+  w_sph: 0.5
+  warmup_ratio: 0.05
+  weight_decay: 0.0
+assemble:
+  seen: 15047
+  encoded: 8
+  skipped: {}
+  teacher_hits: 0
+  teacher_misses: 0
+  soft_coverage: 0.0
+data_revision: typed-decisions@f7a2487+intern-decision@2f81580+cmmlu-subset@master+clue-subset@master+cmmlu-decision@zh_deci+clue-decision@zh_deci
+axis_splits:
+- set: typed-decisions
+  revision: f7a2487e
+  split: test
+  samples: 2000
+- set: intern-decision
+  revision: 2f81580
+  split: test
+  samples: 12447
+- set: cmmlu-subset
+  revision: master
+  split: test
+  samples: 200
+- set: clue-subset
+  revision: master
+  split: validation
+  samples: 400
+- set: cmmlu-decision
+  revision: zh_decision_v1
+  split: test
+  samples: 200
+- set: clue-decision
+  revision: zh_decision_v1
+  split: validation
+  samples: 400
+student:
+  backbone: Qwen/Qwen3-0.6B
+  loader: minimal
+  dtype: torch.float32
+  params_m: 600.6
+  letters: 26
+  pad_id: 151643
+  snapshot_path: $REPO_ROOT/release/bench/ms_models/models/Qwen--Qwen3-0.6B/snapshots/master
+  source: modelscope
+  revision: master
+counts:
+  trainable: 4587520
+  frozen: 596049920
+  lora_modules: 112
+lora_modules:
+- layers.0.self_attn.k_proj
+- layers.0.self_attn.o_proj
+- layers.0.self_attn.q_proj
+- layers.0.self_attn.v_proj
+- layers.1.self_attn.k_proj
+- layers.1.self_attn.o_proj
+- layers.1.self_attn.q_proj
+- layers.1.self_attn.v_proj
+- layers.10.self_attn.k_proj
+- layers.10.self_attn.o_proj
+- layers.10.self_attn.q_proj
+- layers.10.self_attn.v_proj
+- layers.11.self_attn.k_proj
+- layers.11.self_attn.o_proj
+- layers.11.self_attn.q_proj
+- layers.11.self_attn.v_proj
+- layers.12.self_attn.k_proj
+- layers.12.self_attn.o_proj
+- layers.12.self_attn.q_proj
+- layers.12.self_attn.v_proj
+- layers.13.self_attn.k_proj
+- layers.13.self_attn.o_proj
+- layers.13.self_attn.q_proj
+- layers.13.self_attn.v_proj
+- layers.14.self_attn.k_proj
+- layers.14.self_attn.o_proj
+- layers.14.self_attn.q_proj
+- layers.14.self_attn.v_proj
+- layers.15.self_attn.k_proj
+- layers.15.self_attn.o_proj
+- layers.15.self_attn.q_proj
+- layers.15.self_attn.v_proj
+- layers.16.self_attn.k_proj
+- layers.16.self_attn.o_proj
+- layers.16.self_attn.q_proj
+- layers.16.self_attn.v_proj
+- layers.17.self_attn.k_proj
+- layers.17.self_attn.o_proj
+- layers.17.self_attn.q_proj
+- layers.17.self_attn.v_proj
+- layers.18.self_attn.k_proj
+- layers.18.self_attn.o_proj
+- layers.18.self_attn.q_proj
+- layers.18.self_attn.v_proj
+- layers.19.self_attn.k_proj
+- layers.19.self_attn.o_proj
+- layers.19.self_attn.q_proj
+- layers.19.self_attn.v_proj
+- layers.2.self_attn.k_proj
+- layers.2.self_attn.o_proj
+- layers.2.self_attn.q_proj
+- layers.2.self_attn.v_proj
+- layers.20.self_attn.k_proj
+- layers.20.self_attn.o_proj
+- layers.20.self_attn.q_proj
+- layers.20.self_attn.v_proj
+- layers.21.self_attn.k_proj
+- layers.21.self_attn.o_proj
+- layers.21.self_attn.q_proj
+- layers.21.self_attn.v_proj
+- layers.22.self_attn.k_proj
+- layers.22.self_attn.o_proj
+- layers.22.self_attn.q_proj
+- layers.22.self_attn.v_proj
+- layers.23.self_attn.k_proj
+- layers.23.self_attn.o_proj
+- layers.23.self_attn.q_proj
+- layers.23.self_attn.v_proj
+- layers.24.self_attn.k_proj
+- layers.24.self_attn.o_proj
+- layers.24.self_attn.q_proj
+- layers.24.self_attn.v_proj
+- layers.25.self_attn.k_proj
+- layers.25.self_attn.o_proj
+- layers.25.self_attn.q_proj
+- layers.25.self_attn.v_proj
+- layers.26.self_attn.k_proj
+- layers.26.self_attn.o_proj
+- layers.26.self_attn.q_proj
+- layers.26.self_attn.v_proj
+- layers.27.self_attn.k_proj
+- layers.27.self_attn.o_proj
+- layers.27.self_attn.q_proj
+- layers.27.self_attn.v_proj
+- layers.3.self_attn.k_proj
+- layers.3.self_attn.o_proj
+- layers.3.self_attn.q_proj
+- layers.3.self_attn.v_proj
+- layers.4.self_attn.k_proj
+- layers.4.self_attn.o_proj
+- layers.4.self_attn.q_proj
+- layers.4.self_attn.v_proj
+- layers.5.self_attn.k_proj
+- layers.5.self_attn.o_proj
+- layers.5.self_attn.q_proj
+- layers.5.self_attn.v_proj
+- layers.6.self_attn.k_proj
+- layers.6.self_attn.o_proj
+- layers.6.self_attn.q_proj
+- layers.6.self_attn.v_proj
+- layers.7.self_attn.k_proj
+- layers.7.self_attn.o_proj
+- layers.7.self_attn.q_proj
+- layers.7.self_attn.v_proj
+- layers.8.self_attn.k_proj
+- layers.8.self_attn.o_proj
+- layers.8.self_attn.q_proj
+- layers.8.self_attn.v_proj
+- layers.9.self_attn.k_proj
+- layers.9.self_attn.o_proj
+- layers.9.self_attn.q_proj
+- layers.9.self_attn.v_proj
+reward:
+  w_sph: 0.5
+  w_rps: 1.0
+  log_floor: -9.21
+onpolicy:
+  top_k: 8
+injected_student: false
+commit: b4a399f2687c50977dccb5cf4c05bffca9593c0f
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

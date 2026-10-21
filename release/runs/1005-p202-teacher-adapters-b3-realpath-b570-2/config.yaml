@@ -1,0 +1,16 @@
+run_id: 1005-p202-teacher-adapters-b3-realpath-b570-2
+domain: p2-02-teacher-adapters
+text_teacher: StartLuxAI/StartLux-Decision-4B
+vision_teacher: glm-5.3-flash
+api_samples: 10
+load_guard_mb: 14000
+paths:
+- startlux_local
+- glm_api
+- qwen35_backup_not_verified
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

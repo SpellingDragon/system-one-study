@@ -1,0 +1,16 @@
+run_id: 1006-p2-08-a1-multimodal-probe-0224
+run:
+  name: p2-08-a1-multimodal-probe
+probe:
+  model: Qwen3.5-0.8B(bench/ms_models)
+  transformers: '5.18'
+  mode: two-step(tokenize=False→proc(images,text))
+  onestep_messages_api: blocked(5.18 接口改制, kwargs 须入 processor_kwargs)
+deps_fixed:
+- torchvision(编排者补装，Qwen3VLVideoProcessor 硬依赖)
+commit: 734400a1c32224238ca5f8551077c066820993e6
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

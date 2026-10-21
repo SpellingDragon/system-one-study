@@ -1,0 +1,29 @@
+run_id: 1006-p210-serving-local-half-c5d6
+prefix_domain: p2-10
+engine:
+  engine: Qwen/Qwen3-0.6B
+  loader: minimal
+  device: cpu
+  dtype: float32
+  backend: torch_eager
+  head_shape:
+  - 151936
+  - 1024
+  pad_id: 151643
+  render_version: dmlaya_render_v1
+  provenance:
+    snapshot_path: $REPO_ROOT/release/bench/ms_models/models/Qwen--Qwen3-0.6B/snapshots/master
+    source: modelscope
+    revision: master
+think_off_suffix_ok: true
+warmup: 20
+samples: 50
+parity_records: 10
+render_version: dmlaya_render_v1
+letters: 26
+commit: 734400a1c32224238ca5f8551077c066820993e6
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

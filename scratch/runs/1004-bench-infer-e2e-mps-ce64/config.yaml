@@ -1,0 +1,11 @@
+run_id: 1004-bench-infer-e2e-mps-ce64
+purpose: 端到端推理双路对照（同 40M checkpoint、fp16、MPS、预热后）
+ckpt: 1004-s1-mps-main-2081/model
+batch: 8x1024
+n: 12
+commit: fb70c7939acdc04049c10bc8c47b2dab7151827e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

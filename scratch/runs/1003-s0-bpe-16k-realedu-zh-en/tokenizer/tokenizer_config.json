@@ -1,0 +1,24 @@
+{
+  "vocab_size_actual": 16000,
+  "vocab_size_spec": "8000-32000",
+  "special_tokens": [
+    "<|pad|>",
+    "<|endoftext|>"
+  ],
+  "pad_token_id": 0,
+  "initial_alphabet_size": 122,
+  "cleaning_rules": [
+    "http(s):// 与 www. 开头的网址整段删除",
+    "控制字符删除（保留换行、回车、制表符）",
+    "CRLF 归一为 LF；不做大小写折叠、不压缩空格——保留原样才能逐字还原"
+  ],
+  "pre_tokenizer": "Split(regex='\\\\s+', behavior=isolated)",
+  "decoder": "Sequence([])：片段直接首尾相接，空白由独立片段承载",
+  "created_at": "2026-10-03T18:35:18+00:00",
+  "source": "self-trained BPE (no third-party vocab/weights)",
+  "corpus": [
+    "bench/corpus_s0/txt"
+  ],
+  "stream_limit": "200MB",
+  "min_freq": 3
+}

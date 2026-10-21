@@ -1,0 +1,16 @@
+[1] CMMLU 归档内部档位（零流量）
+    顶层目录（按条目数）: {'dev': 68, 'test': 69}
+    按 .csv 计数      : {'dev': 67, 'test': 67}
+    含 'train' 的路径 : 0 个 []
+    → 只有 dev/test 两档，查无 train：不登记 CMMLU train 项
+[2] CLUE train 原件盘上字节/行数（零流量）
+    bench/eval_data/raw/clue-train-subset/ocnli/train-00000-of-00001.parquet  bytes=2,440,405  rows=50,437
+    bench/eval_data/raw/clue-train-subset/tnews/train-00000-of-00001.parquet  bytes=3,399,930  rows=53,360
+    → train 档真实存在且带答案列：可登记、可装配
+[3] 上游列举（魔搭 API，需要网络）
+    modelscope/cmmlu: files=3 train_files=0
+    opencompass/clue: files=49 train_files=11
+        train-00000-of-00001.parquet  3365760
+        train-00000-of-00001.parquet  3209206
+        train-00000-of-00001.parquet  3399930
+        train-00000-of-00001.parquet  2650129

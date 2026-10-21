@@ -1,0 +1,4 @@
+{"step": 0, "ts": "2026-10-04T09:43:56+0800", "loss": 9.8596, "lr": 0.0, "tok_per_s": 0, "tokens_seen": 0, "note": "step0 baseline（随机初始化，未学过）"}
+{"step": 20, "ts": "2026-10-04T09:43:59+0800", "loss": 9.7522, "lr": 0.00021, "tok_per_s": 56286, "grad_norm": 0.9761, "tokens_seen": 163840, "sec": 2.91}
+{"step": 40, "ts": "2026-10-04T09:44:01+0800", "loss": 9.1507, "lr": 0.0002325, "tok_per_s": 74980, "grad_norm": 1.4657, "tokens_seen": 327680, "sec": 2.19}
+{"step": 60, "ts": "2026-10-04T09:44:04+0800", "loss": 8.5636, "lr": 3e-05, "tok_per_s": 76040, "grad_norm": 1.7174, "tokens_seen": 491520, "sec": 2.15}

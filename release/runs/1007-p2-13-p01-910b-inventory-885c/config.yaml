@@ -1,0 +1,54 @@
+run_id: 1007-p2-13-p01-910b-inventory-885c
+run: p2-13-p01-910b-inventory
+domain: p2-13-ascend-runtime
+suntask: P0-1（甲路主线首件：950 依赖面穷举 + 910B 兼容层设计）
+mode: 纯离线静态分析（本机无 NPU/无 CANN 头；未编译未运行任何 ascend 目标）
+deliverables:
+- release/ascend/port910b/INVENTORY.md
+- release/ascend/port910b/inventory_symbols.md
+- release/ascend/port910b/port910b_compat.h
+- release/ascend/port910b/host_selfcheck.cc
+- release/ascend/port910b/probe910b.sh
+- release/ascend/port910b/checklist.sh
+- release/ascend/port910b/README.md
+- release/ascend/port910b/audit.log
+inventory_counts:
+  dedup_symbols: 349
+  family_uniq_sum_audit: 354
+  A_solved: 35
+  B_compat: 20
+  C_lowering: 250
+  D_unknown: 44
+  families: F1..F12
+  gap: 候选159 / 族内覆盖79 / RESIDUE 80 条已人工复核
+reclassification: '::print_var/::print_buffer 由 B4 改判 A6-SCAN-ARTIFACT（debug.h:24,30
+  宏体内 PrintTraits<T>:: 静态成员，非外部符号）→ B22→20, A33→35'
+host_verification:
+  cmd: clang++ -std=c++17 [-DTL_PORT910B_BF16/HALF_BUILTIN=0/0 | 1/1 | auto] -I. host_selfcheck.cc
+  result: SELFCHECK PASS x3 backend configs；f16 sweep 200000 samples mismatch=0
+  gate: -DTL_ASCEND_SIMT=1 时 compat 头零展开（已验证）
+  bugs_found_by_selfcheck:
+  - fp16 RNE 舍入偏置写成 0x1fff（应为 0x0fff + lsb）
+  - fp16 有偏指数与无符号字面量比较致 0.0f 误判溢出；阈值应为 e>=31
+key_findings:
+- 墙0：design.md『卡点=头而非通路』证据链偏弱——asc_* 的唯一声明入口就是被 B1 桩掉的空头，『崩溃源码里出现』只证明 codegen 发射，不证明
+  bisheng 有声明
+- reduce.h 被 common.h:19 无条件 include 且自身无 TL_ASCEND_SIMT 罩（29 处 __simt_callee__/threadIdx/asc_shfl_xor）→
+  P0-2 首个编译 error 的高概率点
+- 墙3：C++ 侧完全没有 arch gate（target.cc:37-38 只声明选项，全仓无一处读 arch；bisheng.py:93 的 ASCEND_NPU_ARCH
+  未回灌 codegen）→ 所有 C 类处置的公共前置件
+- §5：七件 kernel 全部使用 T.SimtVF → design.md 的『四件纯 AIC 首批移植』修正为『AIC 主体 + SIMT 向量尾巴』，P1-1
+  前置条件应从 D2 改为 C1 决策
+verification_commands:
+- 'cd release/ascend/port910b && ./checklist.sh          # AUDIT PASS 354, unlisted=0'
+- './checklist.sh counts ; ./checklist.sh gap ; ./checklist.sh symbols   # A35/B20/C250/D44,
+  349 行'
+- 'bash -n checklist.sh probe910b.sh ; ./probe910b.sh    # 本机 exit 2（无 bisheng，设计行为）'
+next: P0-2 上卡：probe910b.sh P1→P2→P3→P9（≈15min 卡时），回填 D 类真值后再立项 C 类改造
+note: 主仓全程只读（零改动）；未 pip install；未 git commit；一级 tasks 未碰，仅勾本域二级 tasks.md 的 P0-1 行
+commit: 5981ade9b0080aac5fc672543c54df4ee5da0b4e
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

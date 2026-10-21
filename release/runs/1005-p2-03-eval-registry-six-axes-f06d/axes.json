@@ -1,0 +1,117 @@
+{
+  "backend": "cpu",
+  "axes": {
+    "quality": {
+      "axis": "quality",
+      "sets": [
+        "typed-decisions",
+        "intern-decision",
+        "cmmlu-subset",
+        "clue-subset"
+      ],
+      "present": [
+        "typed-decisions",
+        "intern-decision",
+        "cmmlu-subset",
+        "clue-subset"
+      ],
+      "samples": 15047,
+      "with_gold": 15047,
+      "envelope_ready_sets": [
+        "typed-decisions",
+        "intern-decision"
+      ],
+      "expect": "带人工份额的决策题（typed-decisions / intern-decision 全量 + 中文子集题面）",
+      "status": "data-ready",
+      "reason": "可判分信封 2/4 集（其余为原始题面副本，决策化归对应专域）",
+      "scorable": true
+    },
+    "calibration": {
+      "axis": "calibration",
+      "sets": [
+        "jevbench"
+      ],
+      "present": [
+        "jevbench"
+      ],
+      "samples": 231,
+      "with_gold": 231,
+      "envelope_ready_sets": [
+        "jevbench"
+      ],
+      "expect": "把握度真值可核的集（jevbench 三层 + known-distribution 已知分布试点）",
+      "status": "data-ready",
+      "reason": "",
+      "scorable": true
+    },
+    "longctx": {
+      "axis": "longctx",
+      "sets": [
+        "longbench-zh",
+        "needle-synthetic"
+      ],
+      "present": [
+        "longbench-zh",
+        "needle-synthetic"
+      ],
+      "samples": 230,
+      "with_gold": 200,
+      "envelope_ready_sets": [],
+      "expect": "长上下文题面（longbench-zh 自持副本 + 合成针位计划）",
+      "status": "data-ready",
+      "reason": "题面已自持；判分件属 p2-07，本域不代打；可判分信封 0/2 集（其余为原始题面副本，决策化归对应专域）",
+      "scorable": true
+    },
+    "multimodal": {
+      "axis": "multimodal",
+      "sets": [
+        "mmbench-cn-subset"
+      ],
+      "present": [
+        "mmbench-cn-subset"
+      ],
+      "samples": 200,
+      "with_gold": 200,
+      "envelope_ready_sets": [],
+      "expect": "图文题（mmbench-cn-subset：子集 parquet + 索引 + 图文件）",
+      "status": "data-ready",
+      "reason": "题面已自持；判分件属 p2-08，本域不代打；可判分信封 0/1 集（其余为原始题面副本，决策化归对应专域）",
+      "scorable": true
+    },
+    "speed": {
+      "axis": "speed",
+      "sets": [],
+      "present": [],
+      "samples": 0,
+      "with_gold": 0,
+      "envelope_ready_sets": [],
+      "expect": "任意就绪集若干条即可计时；要真数必须有被测模型",
+      "status": "n/a",
+      "reason": "registry 里没有挂在这条轴上的集",
+      "scorable": false
+    },
+    "parity": {
+      "axis": "parity",
+      "sets": [],
+      "present": [],
+      "samples": 0,
+      "with_gold": 0,
+      "envelope_ready_sets": [],
+      "expect": "被测体必须自带第二条实现路径（见 PARITY_ADJUDICATION）",
+      "status": "n/a",
+      "reason": "parity=n/a：backbone 前向是单一实现路径（本机 CPU/MPS；云端换卡由 p2-13 承接），无双路可对拍；自研件的 parity 验收见 p2-13 G9",
+      "scorable": false
+    }
+  },
+  "scored": {},
+  "parity_adjudication": {
+    "verdict": "P2 一致轴只测 P1 自训 decoder 的延续路径；HF 主干显式 n/a",
+    "measures": "同一份输入下，自研算子路与纯 torch 路的名次是否换人（沿用一阶段 parity 口径）",
+    "not_measured": [
+      "HF 主干（经 transformers 载入的那条前向）——它只有一条实现路径，自己跟自己比恒等于全对",
+      "昇腾卡上的算子对拍——归 p2-13 的梯度对拍验收（G9），不在本域",
+      "远端服务与本地权重的一致性——归 p2-10 serving"
+    ],
+    "na_note": "parity=n/a：backbone 前向是单一实现路径（本机 CPU/MPS；云端换卡由 p2-13 承接），无双路可对拍；自研件的 parity 验收见 p2-13 G9"
+  }
+}

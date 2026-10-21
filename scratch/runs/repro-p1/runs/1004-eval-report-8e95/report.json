@@ -1,0 +1,278 @@
+{
+  "axes": {
+    "quality": {
+      "axis": "quality",
+      "buckets": [
+        {
+          "qtype": "choice",
+          "k": 3,
+          "n": 25,
+          "accuracy": 0.64,
+          "hits": 16,
+          "baseline_metric": "accuracy",
+          "baseline": 0.333333,
+          "delta_pp": 30.6667,
+          "beats_baseline": true,
+          "meets_reference": true,
+          "baseline_source": "dmlaya.calibrate.bucket_baselines",
+          "margin_pp_reference": 10.0
+        },
+        {
+          "qtype": "noul",
+          "k": 2,
+          "n": 35,
+          "accuracy": 0.742857,
+          "hits": 26,
+          "baseline_metric": "accuracy",
+          "baseline": 0.5,
+          "delta_pp": 24.2857,
+          "beats_baseline": true,
+          "meets_reference": true,
+          "baseline_source": "dmlaya.calibrate.bucket_baselines",
+          "margin_pp_reference": 10.0
+        }
+      ],
+      "n_predictions": 60,
+      "empty_buckets": false,
+      "honest_note": "分桶呈现：任何两个 k 都未合并；无跨 k 加权总分（合并由读者按 n 自行加权）"
+    },
+    "calibration": {
+      "axis": "calibration",
+      "mode": "top-label/weighted",
+      "bins": 15,
+      "by_type": [
+        {
+          "qtype": "choice",
+          "n": 25,
+          "bins": 15,
+          "mode": "top-label/weighted",
+          "temperature": 1.4,
+          "temperature_source": "decision_config",
+          "uncalibrated": false,
+          "ece_before": 0.047796,
+          "ece_after": 0.116439,
+          "ece_delta": 0.068643,
+          "improved": false,
+          "mean_confidence_before": 0.592204,
+          "mean_confidence_after": 0.523561,
+          "accuracy_mass_before": 0.64,
+          "accuracy_mass_after": 0.64
+        },
+        {
+          "qtype": "noul",
+          "n": 35,
+          "bins": 15,
+          "mode": "top-label/weighted",
+          "temperature": 3.9,
+          "temperature_source": "decision_config",
+          "uncalibrated": false,
+          "ece_before": 0.031833,
+          "ece_after": 0.164346,
+          "ece_delta": 0.132513,
+          "improved": false,
+          "mean_confidence_before": 0.77469,
+          "mean_confidence_after": 0.578511,
+          "accuracy_mass_before": 0.742857,
+          "accuracy_mass_after": 0.742857
+        }
+      ],
+      "overall": {
+        "scope": "all-rows-pooled",
+        "before": {
+          "n": 60,
+          "ece": 0.038485,
+          "mean_confidence": 0.698654,
+          "accuracy_mass": 0.7
+        },
+        "after": {
+          "n": 60,
+          "ece": 0.144385,
+          "mean_confidence": 0.555615,
+          "accuracy_mass": 0.7
+        }
+      },
+      "empty": false,
+      "honest_note": "口径固定为 top-label + 质量加权（与硬命中口径不混报）；before 恒取倍数按一的那一份，逐类倍数出处随报告带出；overall 是全体行合并的一份，与逐类数不可互推"
+    },
+    "speed": {
+      "axis": "speed",
+      "mode": "model",
+      "device": "cpu",
+      "dtype": "float32",
+      "backend": "torch_eager",
+      "serial": true,
+      "warmup_excluded": 3,
+      "n": 30,
+      "min_samples_reference": 30,
+      "meets_min_samples": true,
+      "e2e_ms": {
+        "p50": 1.384,
+        "p95": 2.083,
+        "p99": 2.261,
+        "min": 1.052,
+        "max": 2.31,
+        "mean": 1.444
+      },
+      "readout_ms": {
+        "p50": 1.232,
+        "p95": 1.752,
+        "p99": 2.06,
+        "min": 0.897,
+        "max": 2.158,
+        "mean": 1.287
+      },
+      "tokens_in": 2855,
+      "throughput_tps_aggregate": 65897.799,
+      "throughput_tps_median_per_row": 69779.384,
+      "output_tokens": 0,
+      "throughput_semantics": "input-tokens read once (no autoregressive decoding)",
+      "honest_note": "主口径为 P50/P95（不报均值为头条）；热身样本已剔除；设备/位宽/后端随报告带出，跨机对比必须连这三项一起看"
+    },
+    "parity": {
+      "axis": "parity",
+      "device": "cpu",
+      "backend": "torch_eager",
+      "consistent": 8,
+      "total": 8,
+      "argmax_agreement": 1.0,
+      "passed": true,
+      "max_abs_err_scores": 0.00017318129539489746,
+      "fp16_tolerance": 0.02,
+      "dialect_compiles_this_run": 0,
+      "compiled_keys": [],
+      "blockers": {},
+      "external_ops": [
+        "gelu"
+      ],
+      "precision": "residual=fp32, dialect operands=fp16",
+      "elapsed_ms": 24.229,
+      "per_sample": [
+        {
+          "id": "typed-test-choice-0005",
+          "n": 3,
+          "kernel_pick": 0,
+          "torch_pick": 0,
+          "same": true,
+          "max_abs_err": 3.5509467124938965e-05
+        },
+        {
+          "id": "typed-test-noul-0048",
+          "n": 2,
+          "kernel_pick": 0,
+          "torch_pick": 0,
+          "same": true,
+          "max_abs_err": 0.00017318129539489746
+        },
+        {
+          "id": "typed-test-choice-0009",
+          "n": 3,
+          "kernel_pick": 0,
+          "torch_pick": 0,
+          "same": true,
+          "max_abs_err": 7.605552673339844e-05
+        },
+        {
+          "id": "typed-test-choice-0013",
+          "n": 3,
+          "kernel_pick": 0,
+          "torch_pick": 0,
+          "same": true,
+          "max_abs_err": 8.81776213645935e-05
+        },
+        {
+          "id": "typed-test-noul-0018",
+          "n": 2,
+          "kernel_pick": 0,
+          "torch_pick": 0,
+          "same": true,
+          "max_abs_err": 0.0001710653305053711
+        },
+        {
+          "id": "typed-test-choice-0010",
+          "n": 3,
+          "kernel_pick": 0,
+          "torch_pick": 0,
+          "same": true,
+          "max_abs_err": 8.847564458847046e-05
+        },
+        {
+          "id": "typed-test-choice-0019",
+          "n": 3,
+          "kernel_pick": 0,
+          "torch_pick": 0,
+          "same": true,
+          "max_abs_err": 0.00010883808135986328
+        },
+        {
+          "id": "typed-test-choice-0012",
+          "n": 3,
+          "kernel_pick": 0,
+          "torch_pick": 0,
+          "same": true,
+          "max_abs_err": 7.913261651992798e-05
+        }
+      ]
+    }
+  },
+  "tables": {
+    "quality": "qtype   k     n    acc     base    Δ        within1  mae     超基线  超参考线(+10.0pp)\nchoice  3   25   0.6400  0.3333  +30.67pp -        -       是      是     \nnoul    2   35   0.7429  0.5000  +24.29pp -        -       是      是     \n分桶呈现：任何两个 k 都未合并；无跨 k 加权总分（合并由读者按 n 自行加权）",
+    "calibration": "qtype     n    倍数(出处)              ECE前   ECE后   Δ         改善\nchoice    25   1.4000(已调,decision_config) 0.0478  0.1164  +0.0686  否\nnoul      35   3.9000(已调,decision_config) 0.0318  0.1643  +0.1325  否\npooled    60   (all rows              ) 0.0385  0.1444  +0.1059\n口径 top-label/weighted × 15 桶；口径固定为 top-label + 质量加权（与硬命中口径不混报）；before 恒取倍数按一的那一份，逐类倍数出处随报告带出；overall 是全体行合并的一份，与逐类数不可互推",
+    "speed": "speed     serial n=30 (warmup-3)  P50=1.38ms P95=2.08ms P99=2.26ms [readout P50=1.23 P95=1.75]\n          device=cpu dtype=float32 backend=torch_eager  tok/s=65897.8 (aggregate input-only, output_tokens=0)",
+    "parity": "parity  argmax 一致 8/8 (100.0%)  passed=True\n        device=cpu backend=torch_eager max|err|=1.732e-04 compiles=+0 blockers=0 external_ops=gelu"
+  },
+  "provenance": {
+    "run_id": "1004-s2-decision-sft-d828",
+    "commit": "fb70c7939acdc04049c10bc8c47b2dab7151827e",
+    "sources": {
+      "../config.yaml": "1004-s2-decision-sft-d828",
+      "../system.json": "1004-s2-decision-sft-d828"
+    },
+    "chain": {
+      "calibration_run_id": "1004-s3-calibrate-de2d",
+      "calibration_status": "fitted",
+      "upstream_ckpt": "$WORKSPACE_ROOT/deep-mutimodal-laya-by-tilelang/runs/1004-s1-smoke-tiny-ca2f-6/model"
+    },
+    "exempt": false
+  },
+  "header": {
+    "mode": "model",
+    "model_dir": "$WORKSPACE_ROOT/deep-mutimodal-laya-by-tilelang/runs/1004-s2-decision-sft-d828/model",
+    "tokenizer_dir": "runs/1003-s0-bpe-16k-realedu-zh-en/tokenizer",
+    "device": "cpu",
+    "backend": "torch_eager",
+    "dtype": "float32",
+    "render_version": "dmlaya_render_v1",
+    "temperatures": {
+      "choice": 1.4,
+      "noul": 3.9
+    },
+    "provenance": {
+      "run_id": "1004-s2-decision-sft-d828",
+      "commit": "fb70c7939acdc04049c10bc8c47b2dab7151827e",
+      "sources": {
+        "../config.yaml": "1004-s2-decision-sft-d828",
+        "../system.json": "1004-s2-decision-sft-d828"
+      },
+      "chain": {
+        "calibration_run_id": "1004-s3-calibrate-de2d",
+        "calibration_status": "fitted",
+        "upstream_ckpt": "$WORKSPACE_ROOT/deep-mutimodal-laya-by-tilelang/runs/1004-s1-smoke-tiny-ca2f-6/model"
+      },
+      "exempt": false
+    }
+  },
+  "n_predictions": 60,
+  "verdict": {
+    "passed": true,
+    "provenance_ok": true,
+    "criteria": [
+      "溯源不是豁免来的（--allow-missing-run-id 出的数按规则不算通过）",
+      "被点名的轴都真的出了数（没有空轴）",
+      "一致轴 argmax 名次未换人"
+    ],
+    "exempt": false,
+    "empty_axes": [],
+    "dialect_verified": false,
+    "note": "质量/把握为呈现值，不参与退出码判定（tiny 档模型质量贴基线属预期）"
+  }
+}

@@ -1,0 +1,1 @@
+{"step": 0, "ts": "2026-10-04T05:52:30+0800", "ece_before_choice": 0.044192, "ece_after_choice": 0.112822, "ece_delta_choice": 0.068631, "temperature_choice": 1.4, "ece_before_noul": 0.195621, "ece_after_noul": 0.00048, "ece_delta_noul": -0.195141, "temperature_noul": 3.9}

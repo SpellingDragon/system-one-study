@@ -1,0 +1,6 @@
+{"step": 0, "ts": "2026-10-04T10:12:56+0800", "op": "gemm_proj_512", "tilelang_ms": 1.6, "torch_ms": 0.81, "speedup": 0.51}
+{"step": 1, "ts": "2026-10-04T10:12:56+0800", "op": "gemm_qkv_1536", "tilelang_ms": 4.97, "torch_ms": 2.3, "speedup": 0.46}
+{"step": 2, "ts": "2026-10-04T10:12:56+0800", "op": "gemm_lm_head_16000", "tilelang_ms": 53.85, "torch_ms": 24.35, "speedup": 0.45}
+{"step": 3, "ts": "2026-10-04T10:12:56+0800", "op": "add_ln_8192x512", "tilelang_ms": 5.84, "torch_ms": 1.0, "speedup": 0.17}
+{"step": 4, "ts": "2026-10-04T10:12:56+0800", "op": "rope_8192tok", "tilelang_ms": 1.66, "torch_ms": 0.5, "speedup": 0.3}
+{"step": 5, "ts": "2026-10-04T10:12:56+0800", "op": "attn_sw_seq256", "tilelang_ms": 10.5, "torch_ms": 2.83, "speedup": 0.27}

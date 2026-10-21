@@ -1,0 +1,10 @@
+run_id: 1009-p2-13-p11-merge-a5a5
+run:
+  name: p2-13-p11-merge
+scope: P1-1 并发波：agent B(add_ln/readout) ∥ agent C(GDN conv)，编排者合并+集成回归
+commit: 18facda0301b40345e3721287cc90b7d10e7e0f4
+data_revision: UNPINNED
+hardware:
+  os: Darwin 23.6.0
+  machine: arm64
+  chip: Apple M3 Pro

@@ -1,0 +1,7 @@
+{"step": 0, "ts": "2026-10-05T20:19:44+0800", "download_bytes": 1769980952, "download_seconds": 311.3, "download_files": 14}
+{"step": 1, "ts": "2026-10-05T20:19:44+0800", "load_seconds": 17.0, "weight_mb": 1706.0, "peak_rss_mb_at_load": 2027.6, "peak_rss_mb_end": 2027.6}
+{"step": 2, "ts": "2026-10-05T20:19:44+0800", "seam_checks_passed": 4, "letter_unique_tokens": 26, "parity_layers_ok": 2, "parity_rel_max": 6.18e-06, "parity_rel_min": 3.546e-06}
+{"step": 3, "ts": "2026-10-05T20:19:44+0800", "swap_brain_questions": 3, "causal_max_abs_diff": 3.814697265625e-06, "causal_same_argmax": 1, "mps_small_smoke": 1}
+{"step": 4, "ts": "2026-10-05T20:19:44+0800", "tests_full_rc": 0, "tests_a4_mps_rc": 0}
+{"step": 5, "ts": "2026-10-05T20:34:46+0800", "layout_tests_passed": 16, "tests_full_passed": 44, "tests_full_skipped": 1, "tests_a4_mps_variants": 1, "notes_corrected": 1}
+{"step": 6, "ts": "2026-10-05T20:35:16+0800", "config_download_bytes_is_cache_hit": 0, "first_pull_bytes": 1769980952, "first_pull_seconds": 311.3}

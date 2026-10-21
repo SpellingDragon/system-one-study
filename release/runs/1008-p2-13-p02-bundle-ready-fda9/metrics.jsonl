@@ -1,0 +1,3 @@
+{"step": 0, "ts": "2026-10-08T11:43:50+0800", "e2e": "T.Cube() 显式单工 cube kernel => **E2E-CUBE-ONLY PASS**（tilelang 全管线：语义→codegen→bisheng→cubin，本地零成本）"}
+{"step": 1, "ts": "2026-10-08T11:43:50+0800", "key_findings": "① T.Cube 块=codegen kCube 单工，绕开 mix 跨核同步注册校验全雷区 ② 插件注入段依赖官方 kernel_utils_macros.h TLV 枚举/结构——compat 直连该头而非复刻 ③ __mix__ 系 910B 原生 core_ratio 属性宏，覆盖反而坏事 ④ BISHENG_HOME 内外层皆可"}
+{"step": 2, "ts": "2026-10-08T11:43:50+0800", "bundle": "bundle_ondemand.sh：clone→overlay patches/→bisheng.py 注入→[4]编译判→[5]运行判（run_kernel.py: 2048³ bf16 vs torch + tflops, RUNTIME-PASS{json} 契约）；预演抓出并修复 2 处 set -u 炸点 + 模板目录探测（R14 价值实证）"}

@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-10-05T14:30:00",
+  "memory": {
+    "page_bytes": 16384,
+    "free_mb": 16.3,
+    "inactive_mb": 4230.3,
+    "speculative_mb": 148.4,
+    "reclaimable_mb": 4395.1
+  },
+  "load_guard_mb": 14000,
+  "inventory": {
+    "dir": "$REPO_ROOT/release/bench/ms_models/models/StartLuxAI--StartLux-Decision-4B/snapshots/master",
+    "files": 30,
+    "total_bytes": 9344023187,
+    "weight_shards": {
+      "model-00001-of-00002.safetensors": 5356493792,
+      "model-00002-of-00002.safetensors": 3963334448
+    },
+    "weight_bytes": 9319828240
+  },
+  "tokenizer_seam": {
+    "vocab_size": 248044,
+    "letter_token_first_last": [
+      32,
+      57
+    ],
+    "letter_ids_match_config": true,
+    "temperature_by_type": {
+      "noul": 1.5905,
+      "choice": 1.3872,
+      "score": 1.4172
+    },
+    "pad_token_id": 248044,
+    "chat_template_ends_with_think_off": true,
+    "padding_side": "right",
+    "decision_config_bytes": 477
+  },
+  "vision_probe": {
+    "tensors_total": 738,
+    "tensors_visual": 297,
+    "preprocessor_config": true,
+    "verdict": "结构上可兼视觉教师（视觉塔权重在场），但主路线仍是 GLM-5.3-Flash 离线伪标（父设计 D9）"
+  },
+  "prompts_available": 50,
+  "cpu_pipeline": {
+    "model_id": "StartLuxAI/StartLux-Decision-4B#scaffold-cpu",
+    "scaffold_params_m": 36.6,
+    "samples": 3,
+    "first_pass_seconds": 0.842,
+    "tokens_per_second_first_pass": 204.3,
+    "stats_after_first_pass": {
+      "forward_calls": 3,
+      "api_calls": 0,
+      "cache_hits": 3,
+      "cache_misses": 4,
+      "generations": 2
+    },
+    "second_pass_cache_hits": 3,
+    "second_pass_forward_delta": 0,
+    "generative_path_seconds": 3.637,
+    "generative_path_result": null,
+    "forward_calls_total": 3,
+    "rows": [
+      {
+        "keys": [
+          "A",
+          "B",
+          "C"
+        ],
+        "qtype": "choice",
+        "argmax": "B",
+        "top": 0.3854,
+        "sum": 1.0
+      },
+      {
+        "keys": [
+          "A",
+          "B",
+          "C"
+        ],
+        "qtype": "choice",
+        "argmax": "B",
+        "top": 0.3854,
+        "sum": 1.0
+      },
+      {
+        "keys": [
+          "A",
+          "B",
+          "C"
+        ],
+        "qtype": "choice",
+        "argmax": "B",
+        "top": 0.3855,
+        "sum": 1.0
+      }
+    ],
+    "prompt_tokens_total": 172
+  },
+  "real_4b_load": {
+    "attempted": false,
+    "skipped_reason": "可回收内存仅 4395.1MB < 守卫 14000MB（权重 9319828240 字节），本机 MPS 被一阶段长跑占用，按 D6 完整载入与吞吐实测延后至云端 C3"
+  },
+  "glm_api": {
+    "model_id": "glm-5.3-flash",
+    "requested": 10,
+    "api_calls": 14,
+    "labeled": 2,
+    "argmax_matches_ground_truth": 0,
+    "failures": [
+      "TeacherUnreachableError: 外部教师两次都未按格式作答，无法产标（候选 ['A', 'B', 'C']）",
+      "TeacherUnreachableError: 外部教师两次都未按格式作答，无法产标（候选 ['A', 'B', 'C']）",
+      "TeacherUnreachableError: 外部教师两次都未按格式作答，无法产标（候选 ['A', 'B', 'C']）",
+      "TeacherUnreachableError: 外部教师两次都未按格式作答，无法产标（候选 ['A', 'B', 'C']）",
+      "TeacherUnreachableError: 本次产标预算 14 次已用尽（熔断，防超支）"
+    ],
+    "latency_last_per_call_seconds": 2.714,
+    "latency_mean_seconds": 2.714,
+    "usage": {
+      "calls": 14,
+      "prompt_tokens": 1470,
+      "completion_tokens": 887,
+      "seconds": 37.993
+    },
+    "pack_flushed_rows": 2,
+    "replay_rows_hit": 2,
+    "replay_api_calls": 0,
+    "cache_stats": {
+      "hits": 0,
+      "misses": 10,
+      "pending": 0,
+      "entries": 2
+    }
+  },
+  "qwen35_backup": {
+    "verified": false,
+    "statement": "备选教师 Qwen3.5-4B 本域不验：主路线（StartLux-4B 文本 + GLM-5.3-Flash 视觉）已跑通，备选只在主路线降级时启用，届时按同一脚本补一次实测"
+  },
+  "copyright_note": "D11：StartLux 权重仅作教师打分/判分/对照评测三种只读用途，绝不进任何训练初始化或基座"
+}

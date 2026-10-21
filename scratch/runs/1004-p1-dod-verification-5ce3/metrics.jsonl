@@ -1,0 +1,2 @@
+{"step": 0, "ts": "2026-10-04T06:03:06+0800", "sxtasks_done": 77, "sxtasks_total": 77, "cpu_tests": 274, "mps_tests": 36}
+{"step": 1, "ts": "2026-10-04T06:05:04", "correction_domain_tasks_done": 66, "correction_domain_tasks_total": 66, "note": "step0 的 sxtasks_done=77 系编排者笔误；实测域内 66 + 一级 14，以本行为准"}

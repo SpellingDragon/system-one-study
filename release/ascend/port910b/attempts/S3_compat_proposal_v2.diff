@@ -1,0 +1,110 @@
+# attempts/S3_compat_proposal_v2.diff — P1-1s **双因子**提案 v2（**不落地**，仅取证/评审用；落地由编排裁决）
+#
+# 目标文件 : src/tl_templates/ascend/port910b_compat.h
+#            （trunk md5 = ca023c2e01746ca52c87f36bcea93ee9，本提案生成时复核同值；
+#             基线 tilelang 仓 = 994b44eca1a83a00d19d926e5264a6c608700656）
+# 应用方式 : patch -p1 < attempts/S3_compat_proposal_v2.diff
+#            （--dry-run 已 PASS；本文件对 trunk **零改动**，只作提案）
+# 执行代理 : G3（p2-13，两件小活）
+#
+# ── 与 v1（attempts/S3_compat_proposal.diff）的关系 ────────────────────────────
+#  v2 = v1（因子一：几何）+ 因子二（状态）。两因子来自窗三 E 段实测（见下），
+#  二者**正交**：因子一管"数据该落在哪"（几何/规格），因子二管"没落到的槽是什么"（状态/脏读）。
+#
+# ── 因子一（几何，v1 原文保留）────────────────────────────────────────────────
+#  §10b            asc_copy_gm2ub_align  —— GM->UB 装填（k=48 病档所在路径）
+#  GAP-C DMA       asc_copy_ub2gm_align  —— UB->GM 写回（同类潜在缺陷，一并收口；k=48 未触达）
+#  把 codegen 传来的 **行步长(pitch)** 归一成 910B 原生件要的 **块间空隙(gap)**：
+#      gap_bytes = pitch_bytes - blockLen_bytes   （<0 夹 0）
+#  一手依据三处互证（CANN 8.5.0）：
+#    · asc/include/basic_api/kernel_struct_data_copy.h:47-58 —— srcStride/dstStride 与
+#      srcGap/dstGap 是 union 别名，注释 "srcStride will be deprecated, use srcGap instead"。
+#    · asc/impl/basic_api/utils/kernel_check_data_copy_util.h:346-351 ——
+#      srcMaxOffset = nBurst*lenBurst*unit + (nBurst-1)*srcStride*unit（总跨度 = 段长累加 + (n-1) 空隙）。
+#    · include/pto/npu/a2a3/TLoad.hpp:69 —— gmGapValue = (gStride3 - gShape4)*sizeof(DType)（gap=行步长-行长）。
+#  影响面：仅 blockCount>1 且 srcStride!=blockLen 的多突发跨步档数值改变；SINGLE 档 gap 归 0 ⇒
+#    与旧码逐字节等价（回归安全）。
+#
+# ── 因子二（状态）为何必需：窗三 E 段实测（runs/1012-p2-13-oncard-window3-pin/artifacts/w3_s3.log）
+#  k=48/96 × {none,relu}（dma=strided）→ `STALE-DIFF` 与 none 不同的 prefill = ['zero','perm']
+#      ⇒ H-b（UB 未清零/残留）**真**：换 prefill 即改变结果 ⇒ 残留受上次发射影响。
+#  k=32 × {none,relu}（dma=single）→ prefill=无 ⇒ H-b 未触发（单发连续写满，无空洞）。
+#  所有候选 mm+nn>0（含 sym=0 的最优仍>0）⇒ **非单一几何**：即便挑到最优几何，实测图仍复现不出
+#      ⇒ 只修因子一不够，必须同时处理 UB 预清零 / 落趟拆解。
+#  ⇒ 修复＝同时处理"几何"与"UB 残留"。本 v2 采用**因子二方案 A（UB 目标区预清零）**。
+#
+# ── 因子二 两方案（取舍与代价，两方案都给）────────────────────────────────────
+#  方案 A（本 diff 采用）：**UB 目标区预清零**——融合 DMA 之前把本趟目的跨度整段清零。
+#     实现：`__cce_scalar::vector_dup((__ubuf__ float*)dst, 0.0f, zrep, 1, 1, 8, 0)`
+#           （dav_c220 原生 UB 填充，官方形态见 asc/impl/basic_api/dav_c220/
+#            kernel_operator_vec_duplicate_impl.h:32 `vector_dup(dstLocal, scalarValue,
+#            repeatTime, dstBlockStride, 1, dstRepeatStride, 0)`，本代理容器实测该 7 参形态可编）。
+#     代价：每条跨步装填多 1 组 V 面填充（span/256B 个 repeat）；需在 DMA(MTE2) 前保证 V 面可见
+#           （现有 compat 的 `__cce_pipe_barrier(PIPE_V)` 序列化已覆盖，仍应上卡确认）。
+#     优点：**保留融合 DMA 快路径**（数据面 MTE2 指令数不变）；对 SINGLE 档 `blockCount==1` 直接跳过
+#           ⇒ 与旧码逐字节等价；即便硬件不忠实实现 gap 语义，空洞也不再是 stale（退化为确定的 0）。
+#  方案 B（备选，未在本 diff 内联）：**落趟拆解**——把多突发融合 DMA 拆成 blockCount 条**单发连续**
+#     的 DMA，每条只搬 1 块（blockCount=1）⇒ 两个 stride/gap 槽**根本不参与** ⇒ 与 gap/pitch/
+#     "忽略 dstStride"三种语义全都无关（几何因子消解），且每块都被完整写入 ⇒ 目的区无空洞
+#     （状态因子 H-b 亦消解）。**语义无关的稳妥解**，可一石解双因子。
+#     代价：`bn=32` ⇒ 32 条 MTE2（指令数×blockCount，性能面需评估/由上层流水吸收）；
+#           并**使因子一的 gap 归一在该路径上成为死码**（因为 blockCount=1）。
+#     何时退到 B：下窗若 A 打上后 STALE-DIFF/失配**未归零** ⇒ A 不足 ⇒ 走 B。
+#  最小实现选择：本代理选**方案 A**——它在 v1 之上"**增加**"（不推翻 v1 的融合 DMA 与 gap 归一），
+#     改动最小、对 SINGLE 无回归；方案 B 会替换（而非叠加）v1 的 DMA，故列为备选。
+#
+# ── 诚实边界（不得写成已修）──────────────────────────────────────────────────
+#  本提案**真机判决未做**（本代理不占卡）：v2 属"提案"，仅证 **可编译** 与 **patch 可应用**。
+#  下窗判决：用 reconcile/S3_probe_nextshot.py（--dev npu --prefills none,zero,perm）在
+#    v2 打上后复跑 —— 判据：`A=0 且 U=0 且 STALE-DIFF=0` ⇒ 双因子都归零、v2 充分；
+#    `A=0 但 STALE-DIFF>0` ⇒ 因子二方案 A 未奏效 ⇒ 退方案 B（落趟拆解）。
+#  ⚠ dbeta（delta 反向第六项）与跨步装填**不是同一面**：D3 段已证 `gdnb` 无 DMA（w3_deltabwd.log），
+#    故本提案**不**声称顺带修 dbeta —— 不要把两者混为一个收益。
+#
+--- a/src/tl_templates/ascend/port910b_compat.h
++++ b/src/tl_templates/ascend/port910b_compat.h
+@@ -604,9 +604,26 @@
+                                             asc_load_l2_cache_mode mode, int srcStrideB,
+                                             int dstStrideB) {
+   (void)rsvd0; (void)rsvd1; (void)rsvd2; (void)mode;
++  // [S3/v2 · 因子一：几何] pitch -> gap 归一（v1 原文保留）。910B 原生 copy_gm_to_ubuf 第 6/7 参是
++  //   **块间空隙(gap)**，codegen 传的是行步长(pitch) ⇒ gap = pitch - blockLen（<0 夹 0）。
++  //   一手依据同 attempts/S3_compat_proposal.diff 头注（CANN kernel_struct_data_copy.h:47-58 union /
++  //   kernel_check_data_copy_util.h:346-351 总跨度=n*len+(n-1)*stride / TLoad.hpp:69 gap=行步长-行长）。
++  const int srcGapB = (srcStrideB > blockLenB) ? (srcStrideB - blockLenB) : 0;
++  const int dstGapB = (dstStrideB > blockLenB) ? (dstStrideB - blockLenB) : 0;
++  // [S3/v2 · 因子二：状态] UB 目标区预清零（消 H-b stale）。E 段实测（w3_s3.log:21/31/41）：
++  //   同形状换 prefill(none/zero/perm) 结果随之变 ⇒ UB 残留是真因子 ⇒ 只修几何不够。
++  //   做法：融合 DMA 之前，把本趟将要落数据的**整个目的跨度**先清零 ⇒ DMA 未写的空洞 = 确定的 0，
++  //   而非上一次发射的 stale。跨度 = 末块起点 + 块长 = (blockCount-1)*dstStrideB + blockLenB；
++  //   float 视图下 1 repeat=256B（零的位型与元素类型无关），repeat 向上取整。
++  //   blockCount==1(SINGLE) 时 DMA 写满整块、无空洞 ⇒ 跳过预清零（与旧码逐字节等价，回归安全）。
++  if (blockCount > 1) {
++    const int spanB = (blockCount - 1) * dstStrideB + blockLenB;
++    const uint16_t zrep = (uint16_t)((spanB + 255) / 256);
++    __cce_scalar::vector_dup((__ubuf__ float *)dst, 0.0f, zrep, 1, 1, 8, 0);
++  }
+   __cce_scalar::copy_gm_to_ubuf((__ubuf__ void *)dst, (__gm__ void *)src, (uint8_t)0,
+                                 (uint16_t)blockCount, TL910B_BYTES_TO_BLK(blockLenB),
+-                                TL910B_BYTES_TO_BLK(srcStrideB), TL910B_BYTES_TO_BLK(dstStrideB));
++                                TL910B_BYTES_TO_BLK(srcGapB), TL910B_BYTES_TO_BLK(dstGapB));
+ }
+ 
+ // (B 版 ub2gm 已由 C 版取代：同 codegen 契约、注释与 32B 单位换算更严谨 @ orchestration)
+@@ -817,9 +834,14 @@
+   // matmul/matmul_client.h:2745 即 blockLen = N * sizeof(T) / ONE_BLK_SIZE）。
+   // 同一件事在 AscendC dav_c220 DataCopyUB2GMImpl 里也是直接透传 params 的块单位。
+   // 不换算 = 64 倍过搬。非 32B 倍数的尾段需 align_b8/b16/b32 变体 → G-C6。
++  // [S3/v2 · 因子一：几何] 同 gm2ub：native copy_ubuf_to_gm 第 6/7 参是 gap，codegen 传的是 pitch
++  //   ⇒ 归一 pitch->gap。⚠ 本档在 k=48 内核里未被触达（出口是标量 write_gm_bypass_dcache），
++  //   属同类潜在缺陷一并收口，需与 gm2ub 同等上卡验证后才可断言。
++  const int srcGapB = (burst_src_stride > burst_len) ? (burst_src_stride - burst_len) : 0;
++  const int dstGapB = (burst_dst_stride > burst_len) ? (burst_dst_stride - burst_len) : 0;
+   copy_ubuf_to_gm(dst, src, (int8_t)0, (uint16_t)burst_num,
+-                  (uint16_t)(burst_len >> 5), (uint16_t)(burst_src_stride >> 5),
+-                  (uint16_t)(burst_dst_stride >> 5));
++                  (uint16_t)(burst_len >> 5), (uint16_t)(srcGapB >> 5),
++                  (uint16_t)(dstGapB >> 5));
+ }
+ 
+ #endif  // TL_PORT910B_COMPAT_GAP_C_DMA_H

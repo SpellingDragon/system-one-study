@@ -1,0 +1,23 @@
+===== [3] run.sh --dma (搬运面 19 例) =====
+PROBE gm2ub_cfg3_voidptr                 PASS
+PROBE gm2ub_cfg3_u8ptr                   PASS
+PROBE ub2gm_cfg3_voidptr                 PASS
+PROBE ub2gm_cfg3_u8ptr                   PASS
+PROBE gm2ub_7arg_voidptr                 PASS
+PROBE gm2ub_7arg_u8ptr                   PASS
+PROBE ub2gm_7arg_voidptr                 PASS
+PROBE ub2gm_7arg_u8ptr                   PASS
+PROBE ub2gm_7arg_f32ptr                  PASS
+PROBE copy_data_gm2ub                    FAIL :: /tmp/tmpj1rd3zq0/tl_kernel.asc:6:3: error: no matching function for call to 'copy_data'
+PROBE copy_data_ub2gm                    FAIL :: /tmp/tmpcjcw5qi1/tl_kernel.asc:6:3: error: no matching function for call to 'copy_data'
+PROBE copy_data_align64_gm2ub            FAIL :: /tmp/tmpwjsym6ca/tl_kernel.asc:6:3: error: no matching function for call to 'copy_data_align64'
+PROBE compat_gm2ub_align_10arg           PASS
+PROBE compat_ub2gm_align_10arg           PASS
+PROBE codegen_ub2gm_7arg_as_emitted      PASS
+PROBE asc_store_l2_cache_mode_exists     PASS
+PROBE arity_control_ub2gm_2arg           FAIL :: /tmp/tmpnzivsiep/tl_kernel.asc:6:19: error: parameters too few
+PROBE arity_control_ub2gm_9arg           FAIL :: /tmp/tmpvtz7ks2h/tl_kernel.asc:6:19: error: parameters too many
+PROBE arity_control_gm2ub_5arg           FAIL :: /tmp/tmpt3ridt6h/tl_kernel.asc:6:19: error: parameters too many
+PROBE-DMA-SUMMARY pass=13 fail=6
+
+

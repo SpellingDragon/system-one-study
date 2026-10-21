@@ -1,0 +1,65 @@
+{
+  "calibration": {
+    "status": "pending"
+  },
+  "owner": "p1-09-sft-pipeline",
+  "readout": {
+    "letters": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "W",
+      "X",
+      "Y",
+      "Z"
+    ],
+    "max_options": 26,
+    "position": "last_real_token"
+  },
+  "render_version": "dmlaya_render_v1",
+  "sft": {
+    "all_beat_baseline": true,
+    "conclusion": "s2 smoke 完成：train=540 holdout=60 epochs=1 lr=0.03；留出集各桶准确率 vs 分桶随机基线：{'choice': {3: {'accuracy': 0.6364, 'baseline': 0.3333333333333333, 'beats_baseline': True}}, 'noul': {2: {'accuracy': 0.5789, 'baseline': 0.5, 'beats_baseline': True}}}；全部桶超基线。",
+    "epochs": 1,
+    "lr": 0.03,
+    "n_holdout": 60,
+    "n_train": 540,
+    "per_bucket": {
+      "choice": {
+        "3": {
+          "accuracy": 0.6364,
+          "baseline": 0.3333333333333333,
+          "beats_baseline": true
+        }
+      },
+      "noul": {
+        "2": {
+          "accuracy": 0.5789,
+          "baseline": 0.5,
+          "beats_baseline": true
+        }
+      }
+    }
+  },
+  "temperatures": {},
+  "version": "dmlaya_s2_sft_v1"
+}
