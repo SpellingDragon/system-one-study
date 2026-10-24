@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: 视觉塔载入
-`production/` 多模态路径 SHALL 载入 SigLIP/CLIP ViT（ModelScope 镜像优先），两段式：冻结投影对齐 → 解冻微调；视觉特征以 image token 序列注入 state 段（`sys1/data/mm.py` 装配）。
+`production/` 多模态路径 SHALL 载入**基座模型自带的视觉塔并冻结**（主路线；A1 探针已实证：297 个视觉张量可加载、transformers processor 一站式装配）；视觉特征以 image token 序列注入 state 段（`sys1/data/mm.py` 装配）。**SigLIP/CLIP + projector 仅作备选路线**（processor 不成熟时切换，并记录取证；当前不启用）。
 
 #### Scenario: 图文样本装配
 - **WHEN** 装配一个含 1 图 + 3 选项的样本

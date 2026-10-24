@@ -137,6 +137,9 @@
 | 性能 | 真形档（B1 H16 T8192 DK128 DV128）跑通并记录与 fwd 的倍率（不承诺绝对值） |
 | 证据 | 每项判决入库、脚本可复跑（`scripts/w11_car.sh` + 分层 run notes） |
 
+> **【注记 2026-10-24 · 裁定 2-B】形态行统计边界**：`≤2 kernel` 判据**保留**（不登记放弃，也不按 #1802 重写）；其**统计边界 = 反向扫描主体 kernel 数**，**不含** `cumsum` / `solve_a` / `scan1` 三个前置件；**host 运算与 launch 数另行入账**（不与 kernel 计数混算）。现状（20-kernel、~17 ms/chunk、63× fwd（分母两位有效数字，误差棒 51~74×））登记为**待改进项**，收口报告按本口径写形态现状；profiler / 片上容量账 / 同工作量 A/B 三件为**独立性能锚专项**，另行立项排产。依据：`docs/reassessment/05-plan-recommendations.md` §5 裁定 2-B 与 R10。
+> **【注记 2026-10-24 · 裁定 5-C】能力边界行降级声明**：① **fp32 显式降级**——从未验收（bf16 已被 ruling 3 排除；训练主档 fp16；数学正确性由 CPU fp64 golden 覆盖），且**无生产消费方**；② **DK≠DV 显式降级**——依据目标模型公开结构：Qwen3.5-0.8B GDN 头 **16 V + 16 QK、head_dim 128 ⇒ DK=DV=128**；③ **尾块以 host pad 承接**——哑 token 契约（q 任意、k=0、v=0、g=0、β=0、dO=0）见 `docs/learning_path/06-accelerators-and-kernels.md` §6.9；本地对照 `_pad_invariance.py`（TA 仓 `examples/gdn_bwd_v2/_process/`，由 `adjudication-remediation-1024` B5 交付）；**完整 pad 前后对照入 R9 设计件** `release/ascend/kernels/reconcile/R9_V3_BRIDGE_DESIGN.md`。依据：`docs/reassessment/05-plan-recommendations.md` §5 裁定 5-C 与 `adjudication-remediation-1024` design D5。
+
 ### 9.2 路径（倒推，每阶段有出口判据与车数上限）
 
 | 阶段 | 内容 | 出口判据 | 上限 |

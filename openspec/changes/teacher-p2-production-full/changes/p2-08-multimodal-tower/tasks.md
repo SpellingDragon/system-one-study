@@ -11,4 +11,5 @@
 
 - [ ] B1 加图/去图对照点 run（同一样本两预测入 runs） —— 验证：runs/ 含 mm 对照 run-id
 - [x] B2 `sys1/eval/multimodal.py`：MMBench-CN 子集（≥200 题）+ OCRBench 抽样，含无图对照列 —— 验证：评测报告含 acc/样本数/run-id/无图列
+  > **【勘误 2026-10-24】** 复核：原勾选时**无评测报告产物**（acc / 样本数 / run-id / 无图列均未兑现）；补产物任务挂 `adjudication-remediation-1024` **C6**（资源前置：模型推理与数据），**勘误不回改勾选**。
 - [x] B3 视觉伪标缓存复用冒烟（二次冒烟教师前向=0） —— 验证：`python -m pytest tests/test_mm.py -k pseudo_cache -q`
