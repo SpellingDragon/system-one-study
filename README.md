@@ -113,6 +113,18 @@ flowchart TB
 
 > 每往上一层，都多一个前提。**上一层的绿，推不出下一层。**
 
+## 另一层：这个仓库本身是一次 agent 协作实验
+
+前面两层讲模型与实验；这一层讲**这些东西是怎么被组织做出来的**——多级计划、并行派发、按证据验收。资产在 `.agent/`，不是摆设：`openspec/` 下的活跃变更就是它的工作产物。
+
+| 资产 | 内容 | 什么时候看 |
+|---|---|---|
+| [`.agent/rules/common.md`](.agent/rules/common.md) | 通用工程纪律：断言即负债、结构不得自证、边界跟随语义单元，附实测失败模式表 | 想学“怎么审自己的结论” |
+| [`.agent/skills/openspec-multilevel-planning/`](.agent/skills/openspec-multilevel-planning/SKILL.md) | 多级计划三件（共 521 行）：规划防线（覆盖性检查）、执行防线（派发单与完成度五查）、验收证据 | 要把一个大任务拆给多人 / 多 agent 并行 |
+| [`.agent/agents/openspec-apply.md`](.agent/agents/openspec-apply.md) | 执行子智能体定义：五段战报（凭据 / 错误 / 决策 / 偏离 / 产物），缺凭据不算完成 | 想约束 agent“别谎报完成” |
+
+一个具体例子：本仓库的[技术重评](docs/reassessment/README.md)就是这么产出的——五批任务、三单并行，每次交付带可复跑命令，复核时被推翻的结论留在[证据索引](docs/reassessment/evidence.md)里。
+
 ## 想找什么
 
 | 你想 | 去哪 |
