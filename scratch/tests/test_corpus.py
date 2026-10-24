@@ -325,6 +325,12 @@ def test_tiny_output_meets_spec_requirements():
     if not index_file.exists():
         pytest.skip(f"先执行 python -m sys1.data.pretrain_corpus --config tiny --out {TINY_OUTPUT}")
     index = json.loads(index_file.read_text(encoding="utf-8"))
+    # 二进制分片不随库分发（仓库只留 index 台账）：缺片与缺目录同属“资产不可用”，
+    # 按既有 skip 惯例跳过并在摘要里显形，不放行成假绿。
+    missing = [s["file"] for s in index["shards"] if not (TINY_OUTPUT / s["file"]).exists()]
+    if missing:
+        pytest.skip(f"runs/corpus_tiny 缺分片 {missing[:2]}（二进制未随库分发）；"
+                    f"先执行 python -m sys1.data.pretrain_corpus --config tiny --out {TINY_OUTPUT}")
     spec = pc.load_spec("tiny")
 
     assert index["totals"]["tokens"] >= spec["min_tokens_expected"], "产出必须达到配置下限"

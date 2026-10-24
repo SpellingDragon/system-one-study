@@ -11,9 +11,9 @@ import sys
 
 sys.path.insert(0, "/work")
 sys.path.insert(0, os.path.join("/work", "ascend", "kernels", "reconcile"))
-import tilelang                      # noqa: E402
-import verify_dw as V                # noqa: E402
-from ascend.kernels import ascend_env  # noqa: E402
+import tilelang
+import verify_dw as V
+from ascend.kernels import ascend_env
 
 NEG = sys.argv[1] if len(sys.argv) > 1 else "1"
 

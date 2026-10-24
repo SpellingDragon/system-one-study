@@ -330,9 +330,14 @@ def _sample_lines(notes_text: str) -> list[str]:
 @pytest.mark.slow
 def test_e2e_smoke_tiny_end_to_end(s1, tmp_path, monkeypatch):
     """C2：一条命令跑完 smoke_tiny，退出码 0、曲线降、8 条采样、存档可载，CPU < 10 分钟。"""
-    if not (CORPUS_TINY / "index.json").exists():
+    index_file = CORPUS_TINY / "index.json"
+    if not index_file.exists():
         pytest.skip("runs/corpus_tiny 不在；先跑 A2（python -m sys1.data.pretrain_corpus "
                     "--config tiny --stream-limit 200MB --out runs/corpus_tiny）")
+    # 二进制分片不随库分发：缺片与缺目录同属“资产不可用”，按 skip 惯例显形，不假装通过。
+    shards = json.loads(index_file.read_text(encoding="utf-8")).get("shards", [])
+    if not shards or any(not (CORPUS_TINY / s["file"]).exists() for s in shards):
+        pytest.skip("runs/corpus_tiny 缺分片（二进制未随库分发）；先跑 A2 重新装配该目录")
     keep = os.environ.get("DMLAYA_KEEP_ARTIFACTS") == "1"
     if not keep:
         monkeypatch.setenv("DMLAYA_RUNS_DIR", str(tmp_path / "runs"))
