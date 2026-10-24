@@ -1,4 +1,4 @@
-"""p2-06 OPD 栈：学生自采样 top-k + 教师同选项 reverse-KL/JSD（本地开发/CPU 半场档）。
+"""p2-06 OPD 栈：on-policy 选项蒸馏（选项级 forward-KL）——学生自采样 top-k + 教师同选项 KL/JSD（本地开发/CPU 半场档）。
 
 【做什么】
     三栈之二（on-policy distillation）。与前一行 `production/sft.py` 的差别只有一处、但要害：
@@ -523,6 +523,8 @@ def reverse_kl(
 ) -> torch.Tensor:
     """散度方向锁定：`KL(p_teacher ‖ p_student) = Σ_j p_t[j]·(log p_t[j] − log p_s[j])`。
 
+    命名说明：命名为历史遗留（改名波及全部调用与测试，收益为负）；实算 KL(teacher‖student)（选项级 forward-KL 方向）。
+
     白话：以**教师**为参照量学生差多远——教师说哪一档有份额，那档就必须被学生摊到份额，
     摊不到就按教师的信心罚。于是教师同时看好几档时学生不敢只押一档（这叫 mode-covering，
     教师的多峰不会被抹平）。反过来的写法学生只需押中教师最高的那一峰就能少挨罚，
@@ -906,10 +908,11 @@ def opd_step(
 
 
 def default_cfg() -> dict[str, Any]:
-    """默认配置 = p2-05 基线超参 + OPD 专属三件（k/mix_gt/散度档）+ 本地 CPU 冒烟档。
+    """默认配置 = p2-05 基线超参 + OPD 专属四件（k/mix_gt/散度档/重采周期）+ 本地 CPU 冒烟档。
 
-    白话：底单照抄 SFT 那一档（消融才可比），只多三件事：学生自己挑几档、真值掺几分、
-    用哪一种散度。`mix_soft` 一栏是给 p2-05 的产物小抄留的兼容位，语义等于"教师说话的分量"
+    白话：底单照抄 SFT 那一档（消融才可比），只多四件事：学生自己挑几档、真值掺几分、
+    用哪一种散度、每隔几步按当时的学生重采一次（`resample_every`，0=只装配一次）。
+    `mix_soft` 一栏是给 p2-05 的产物小抄留的兼容位，语义等于"教师说话的分量"
     （= 1 − mix_gt），别让下游读到一个不存在的名字。
     """
     return {
@@ -917,7 +920,7 @@ def default_cfg() -> dict[str, Any]:
         "backbone": "qwen3-0.6b", "loader": LOADER_MINIMAL, "device": "cpu", "dtype": "float32",
         "threads": 4, "seed": 20261006, "cache_dir": None,
         # ── 数据（p2-03 registry 口）──
-        "axis": "quality", "data_dir": None, "limit": 256, "max_length": 512,
+        "axis": "train", "data_dir": None, "limit": 256, "max_length": 512,
         # ── 教师（p2-02 缓存口；训练循环零教师前向）──
         "teacher_model_id": DEFAULT_TEACHER_MODEL_ID,
         "teacher_cache": "bench/teacher_cache/p2_05_pseudo",
@@ -925,7 +928,7 @@ def default_cfg() -> dict[str, Any]:
         # ── OPD 专属 ──
         "top_k": DEFAULT_TOP_K, "mix_gt": DEFAULT_MIX_GT, "gt_mode": "hard",
         "hard_mass": DEFAULT_HARD_MASS, "loss": LOSS_REVERSE_KL, "jsd_beta": DEFAULT_JSD_BETA,
-        "sample_chunk": 8,
+        "sample_chunk": 8, "resample_every": 50,                  # 0 = 只装配一次（旧路径）
         # ── 起点（p2-05 SFT 产物：续训的来路必须能被追溯）──
         "parent_run_id": "", "parent_model": "", "opd_on": True,
         # ── 旁路与算子档（p2-13；垫片仍由 p2-05 提供）──
@@ -977,6 +980,11 @@ def load_config(path: str | Path | None, *, overrides: dict[str, Any] | None = N
     return cfg
 
 
+def _segment_seed(cfg: Mapping[str, Any], seg_no: int) -> int:
+    """段采样种子 = `seed + 段号`：同配置同段必得同一批采样，段与段之间互不串号。"""
+    return int(cfg["seed"]) + int(seg_no)
+
+
 def train(
     cfg: dict[str, Any],
     *,
@@ -987,7 +995,9 @@ def train(
     """跑一条 OPD 续训：装起点 → 自采样装配 → 逐微批散度下降 → 落产物 + run 四件套。
 
     白话：先把 p2-05 训好的那副垫片贴回学生身上（`parent_model`），再让学生自己挑题面上
-    最有把握的几档、拿教师在那几档上的份额当答案，一桌一桌地把差距压小。跑完交三样：
+    最有把握的几档、拿教师在那几档上的份额当答案，一桌一桌地把差距压小。学生边训边变，
+    所以每 `resample_every` 步按当时的学生重新挑一次（0=只挑一次，旧路径），段种子按
+    `seed+段号` 派生；优化器与学习率调度跨段连续，不因重采重建。跑完交三样：
     能贴回去的垫片、一张怎么读答案的小抄、一本流水账——账里明写着起点是哪一次 SFT run。
 
     :param cfg: `default_cfg()/load_config()` 出来的配置表。
@@ -1015,12 +1025,21 @@ def train(
         cache = DistCache(root=cfg["teacher_cache"], read_only=True).load()   # 只读：绝不改教师账本
     records = load_quality_records(cfg["axis"], data_dir=cfg.get("data_dir"))
     k = int(cfg["top_k"]) if cfg["opd_on"] else 0                 # off 档 = 不截断（退化 soft-KD）
-    samples, asm, tstats = collect_onpolicy(
-        records, student, cache=cache, teacher_model_id=cfg["teacher_model_id"], k=k,
-        mix_gt=float(cfg["mix_gt"]), gt_mode=cfg["gt_mode"], hard_mass=float(cfg["hard_mass"]),
-        max_length=int(cfg["max_length"]), chunk=int(cfg["sample_chunk"]), limit=int(cfg["limit"]),
-        teacher=teacher, allow_online_teacher=bool(cfg["allow_online_teacher"]),
-    )
+    resample_every = max(0, int(cfg["resample_every"]))           # 0 = 只装配一次（旧路径）
+
+    def _assemble(seg_no: int) -> tuple[list[OpdSample], AsmStats, Any]:
+        """按段装配：段种子 = `seed + 段号`；重采档才重设随机源（0 档保持旧路径零扰动）。"""
+        if resample_every > 0:
+            random.seed(_segment_seed(cfg, seg_no))
+            torch.manual_seed(_segment_seed(cfg, seg_no))
+        return collect_onpolicy(
+            records, student, cache=cache, teacher_model_id=cfg["teacher_model_id"], k=k,
+            mix_gt=float(cfg["mix_gt"]), gt_mode=cfg["gt_mode"], hard_mass=float(cfg["hard_mass"]),
+            max_length=int(cfg["max_length"]), chunk=int(cfg["sample_chunk"]), limit=int(cfg["limit"]),
+            teacher=teacher, allow_online_teacher=bool(cfg["allow_online_teacher"]),
+        )
+
+    samples, asm, tstats = _assemble(0)
     if not samples:
         raise RuntimeError(
             f"一条 OPD 样本都没装配出来（见 {asm.seen} 条，丢弃 {asm.skipped}，教师命中 {asm.hits}/"
@@ -1032,6 +1051,8 @@ def train(
     buckets = bucket_batches(samples, max_tokens=int(cfg["max_tokens"]), shuffle=True, seed=int(cfg["seed"]))
     total_steps = int(cfg["max_steps"]) or max(1, int(len(buckets) * float(cfg["epochs"]) // max(1, int(cfg["accum"]))))
     sched = torch.optim.lr_scheduler.LambdaLR(opt, cosine_lambda(total_steps, float(cfg["warmup_ratio"])))
+    segment_count = 1 if resample_every <= 0 else max(1, math.ceil(total_steps / resample_every))
+    segment_seeds = [_segment_seed(cfg, i) for i in range(segment_count)]   # 计划段种子（进 run 配置）
 
     run = new_run(f"{cfg['run_prefix']}-opd-{cfg['backbone']}-{cfg['kernel_backend']}", {
         "stage": f"p2-06-opd/{cfg['run_prefix']}", "opd_version": OPD_VERSION,
@@ -1042,7 +1063,8 @@ def train(
         "lora_modules": sorted(loras), "counts": counts, "adapter_tensors_loaded": loaded,
         "onpolicy": {"top_k": k, "mix_gt": float(cfg["mix_gt"]), "gt_mode": cfg["gt_mode"],
                      "loss": cfg["loss"], "jsd_beta": float(cfg["jsd_beta"]),
-                     "mean_mass": round(sum(s.mass for s in samples) / len(samples), 6)},
+                     "mean_mass": round(sum(s.mass for s in samples) / len(samples), 6),
+                     "resample_every": resample_every, "segment_seeds": segment_seeds},
         "kernels": {"backend": cfg["kernel_backend"], "ascend_target": cfg["ascend_target"]},
     }, **({"root": cfg["runs_root"]} if cfg.get("runs_root") else {}))
 
@@ -1052,11 +1074,17 @@ def train(
     running, tokens_all, seconds_all = 0.0, 0, 0.0
     started = time.time()
     student.model.train()
-    for epoch in range(max(1, math.ceil(float(cfg["epochs"])))):
-        for idx in buckets:
+    epoch, segment, seg_steps = 0, 0, 0
+    seg_samples, seg_buckets = samples, buckets
+    segment_log: list[dict[str, Any]] = [
+        {"segment": 0, "seed": _segment_seed(cfg, 0), "samples": len(samples),
+         "teacher_hits": asm.hits, "teacher_misses": asm.misses}
+    ]
+    while step < total_steps and epoch < max(1, math.ceil(float(cfg["epochs"]))):
+        for idx in seg_buckets:
             if step >= total_steps:
                 break
-            batch = collate_opd(samples, idx, pad_id=student.pad_id, letter_map=student.letter_ids).to_(cfg["device"])
+            batch = collate_opd(seg_samples, idx, pad_id=student.pad_id, letter_map=student.letter_ids).to_(cfg["device"])
             loss = opd_step(student, batch, loss=cfg["loss"], beta=float(cfg["jsd_beta"])) / accum
             loss.backward()
             micro += 1
@@ -1072,6 +1100,7 @@ def train(
                 step_seconds = spent - seconds_all
                 seconds_all = spent
                 step += 1
+                seg_steps += 1
                 value = running / accum
                 losses.append(value)
                 run.log_metrics(step, loss=round(value, 6), lr=lr, micro=micro,
@@ -1082,8 +1111,26 @@ def train(
                 running = 0.0
                 print(f"[{step}/{total_steps}] loss {value:.4f} lr {lr:.2e} "
                       f"{step_seconds:.2f}s/{step} tokens {tokens_all}", flush=True)
+                if resample_every > 0 and seg_steps >= resample_every and step < total_steps:
+                    segment += 1                     # 段边界：按此刻的学生重采（optimizer/sched 不重建）
+                    seg_steps = 0
+                    seg_samples, seg_asm, _ = _assemble(segment)
+                    if not seg_samples:
+                        raise RuntimeError(
+                            f"第 {segment} 段重采一条 OPD 样本都没装配出来（见 {seg_asm.seen} 条，"
+                            f"丢弃 {seg_asm.skipped}，教师命中 {seg_asm.hits}/未命中 {seg_asm.misses}）"
+                            f"——检查 {cfg['teacher_cache']!r} 是否覆盖新策略的 top-k"
+                        )
+                    seg_buckets = bucket_batches(seg_samples, max_tokens=int(cfg["max_tokens"]),
+                                                 shuffle=True, seed=_segment_seed(cfg, segment))
+                    segment_log.append({"segment": segment, "seed": _segment_seed(cfg, segment),
+                                        "samples": len(seg_samples), "teacher_hits": seg_asm.hits,
+                                        "teacher_misses": seg_asm.misses})
+                    break
             if step >= total_steps:
                 break
+        else:
+            epoch += 1                         # 桶表走完一轮：旧路径进下一 epoch；重采档通常先到 max_steps
 
     teacher_forward = int(getattr(tstats, "forward_calls", 0) or 0) - forward_before
     result: dict[str, Any] = {
@@ -1094,6 +1141,7 @@ def train(
         "teacher_forward_calls": teacher_forward, "teacher_cache": (cache.stats if cache is not None else None),
         "trainable": counts.get("trainable"), "seconds": round(time.time() - started, 2),
         "assemble": asm.as_dict(),
+        "resample": {"every": resample_every, "segments": segment_log},
     }
     out_dir = cfg.get("out_dir") or (Path(run.path) / "model")
     listing = write_model_dir(out_dir, student=student, loras=loras, cfg=cfg, asm=asm, result=result)
@@ -1125,6 +1173,8 @@ def _write_opd_notes(run: Any, cfg: dict[str, Any], result: dict[str, Any]) -> N
         f"装配 {asm.get('seen')} 见 / {result['samples']} 成，教师缓存命中 {asm.get('teacher_hits')}、"
         f"未命中 {asm.get('teacher_misses')}，训练循环教师前向 {result['teacher_forward_calls']} 次；"
         f"耗时 {result['seconds']} s；可训 {result.get('trainable')} 参数。",
+        f"- 重采：resample_every={cfg['resample_every']}（0=一次性装配），实际装配 "
+        f"{len((result.get('resample') or {}).get('segments') or [])} 段；段种子 `seed+段号` 逐段派生。",
         "- 对照 GKD（design 要求记的差异点）：TRL 的 `GKDTrainer` 逐 token 自回归蒸馏、用 λ 混"
         "on/off-policy 采样、可切广义 JSD(β)；本域是判别式末位一次读出的选项份额表，"
         "“token”在这里退化成“一档”，于是没有 λ——顶上它的是 top-k 截断（on 档）与全表摊开"

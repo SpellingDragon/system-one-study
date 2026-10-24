@@ -869,6 +869,29 @@ def _trainable_student(seed: int = 7) -> _FakeStudent:
                         provenance={"snapshot_path": "unit", "source": "unit-test"})
 
 
+class _SwingPolicyBody(torch.nn.Module):
+    """带 qkvo 四门、读数会随一步梯度更新换档的假学生（重采用例专用）。
+
+    前向读数 = 底版 profile + LoRA B 片按行的和：B 片零起点 ⇒ 初读就是底版；一步 AdamW
+    按散度梯度把 B 行整行挪一个 `lr`，top-k 集合随之换一套。这样"政策变化"由真反向传播
+    驱动，第二段该采到什么可以手算——本条验的是训练循环按当时的学生重采，不是 LoRA 的动力学。
+    """
+
+    def __init__(self, base: list[float]) -> None:
+        super().__init__()
+        self.q_proj = torch.nn.Linear(D, D, bias=False)          # 四门只为 inject_lora 有落点
+        self.k_proj = torch.nn.Linear(D, D, bias=False)
+        self.v_proj = torch.nn.Linear(D, D, bias=False)
+        self.o_proj = torch.nn.Linear(D, D, bias=False)
+        self.register_buffer("_base", torch.tensor(base, dtype=torch.float32))
+
+    def forward(self, input_ids=None, attention_mask=None, use_cache: bool = True,  # noqa: ARG002
+                return_dict: bool = True, **_: object) -> SimpleNamespace:
+        profile = self._base + self.q_proj.lora_b.sum(dim=1)            # (D,)：B 片零起点=底版
+        batch, width = input_ids.shape
+        return SimpleNamespace(last_hidden_state=profile[None, None, :].expand(batch, width, D))
+
+
 def _local_half_cfg(tmp_path, cache, **extra):
     """本地半场的 train 配置：题源与缓存都由测试注入，记录本指到 tmp，绝不碰真 runs/。"""
     cfg = load_config(None, overrides={
@@ -916,6 +939,92 @@ def test_train_local_half_writes_run_and_notes_with_zero_teacher_forwards(tmp_pa
     assert (Path(result["model_dir"]) / "adapter.safetensors").exists()
     assert (Path(result["model_dir"]) / "decision_config.json").exists()
     assert student.body.calls > 0                                   # 真跑过学生前向（不是空转的假绿）
+
+
+def test_train_resample_every_step_resamples_with_the_current_policy(tmp_path, monkeypatch):
+    """resample_every=1：每步之前按当时的学生重采；一步更新后 top-k 换档，第二段跟着换。
+
+    口径（可手算）：初版读数 [A 3.0, B 2.0, C 1.9, D 0.5] ⇒ 第一段 top-2 = {A,B}；教师份额
+    压在 B 上 ⇒ 梯度把 A 压低、B 抬高各 ≈ lr×r（Adam 首步 ≈ ±lr）；lr=1 时第二段读数
+    [A 1.0, B 4.0, C 1.9] ⇒ top-2 = {B,C}，教师子集随之换位。
+    """
+    import json
+
+    from production import opd as opd_module
+
+    codes = ["continue", "human_review", "observe", "stop"]
+    records = _seeded_records(4, codes)
+    monkeypatch.setattr(opd_module, "load_quality_records", lambda axis, data_dir=None: list(records))
+
+    flat = _flat_rows(records, codes)
+    cache = _tmp_cache(tmp_path, SCAFFOLD_MODEL_ID,
+                       _teacher_rows([p for p, _ in flat], [c for _, c in flat], [0.02, 0.96, 0.01, 0.01]))
+    body = _SwingPolicyBody([3.0, 2.0, 1.9, 0.5] + [0.0] * (D - 4))
+    student = _FakeStudent(body=body, tokenizer=_FakeTokenizer(), head_weight=_head_weight(),
+                           letter_ids=tuple(LETTER_AT[c] for c in LETTERS), pad_id=PAD_ID, model=body,
+                           provenance={"snapshot_path": "unit", "source": "unit-test"})
+
+    real_collect = opd_module.collect_onpolicy
+    seen: list[list[tuple[tuple[str, ...], tuple[int, ...]]]] = []
+
+    def spy(records_, student_, **kwargs):
+        out = real_collect(records_, student_, **kwargs)
+        seen.append([(s.subset, tuple(i for i, v in enumerate(s.teacher) if v > 0.0)) for s in out[0]])
+        return out
+
+    monkeypatch.setattr(opd_module, "collect_onpolicy", spy)
+    cfg = _local_half_cfg(tmp_path, cache, resample_every=1, lr=1.0, mix_gt=0.0)
+
+    result = train(cfg, student=student, cache=cache)
+
+    assert result["steps"] == 2
+    assert len(seen) == 2                                           # 两步走了两段：段边界确实重采
+    assert seen[0] == [(('A', 'B'), (0, 1))] * 4                    # 第一段：初版政策 A/B 领跑
+    assert seen[1] == [(('B', 'C'), (1, 2))] * 4                    # 第二段：更新后 C 挤掉 A（教师子集同步换位）
+    assert [s["seed"] for s in result["resample"]["segments"]] == [cfg["seed"], cfg["seed"] + 1]
+    assert [s["samples"] for s in result["resample"]["segments"]] == [4, 4]
+
+    run_dir = Path(result["run_dir"])
+    metrics = [json.loads(line) for line in
+               (run_dir / "metrics.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+    lrs = [row["lr"] for row in metrics if "lr" in row]
+    assert len(lrs) == 2 and lrs[0] > lrs[1]                        # 调度器跨段连续（重建会从满档重来）
+    cfg_text = (run_dir / "config.yaml").read_text(encoding="utf-8")
+    assert "segment_seeds" in cfg_text and str(cfg["seed"] + 1) in cfg_text
+
+
+def test_train_resample_off_assembles_once_like_the_old_path(tmp_path, monkeypatch):
+    """resample_every=0：装配只发生一次、两步共用同批样本（旧的一次性装配路径作回归锚）。"""
+    from production import opd as opd_module
+
+    codes = ["continue", "human_review", "observe", "stop"]
+    records = _seeded_records(4, codes)
+    monkeypatch.setattr(opd_module, "load_quality_records", lambda axis, data_dir=None: list(records))
+
+    flat = _flat_rows(records, codes)
+    cache = _tmp_cache(tmp_path, SCAFFOLD_MODEL_ID,
+                       _teacher_rows([p for p, _ in flat], [c for _, c in flat], [1.0, 2.0, 3.0, 4.0]))
+    student = _trainable_student()
+
+    real_collect = opd_module.collect_onpolicy
+    calls = {"n": 0}
+
+    def counting(*args, **kwargs):
+        calls["n"] += 1
+        return real_collect(*args, **kwargs)
+
+    monkeypatch.setattr(opd_module, "collect_onpolicy", counting)
+    cfg = _local_half_cfg(tmp_path, cache, resample_every=0)
+
+    result = train(cfg, student=student, cache=cache)
+
+    assert calls["n"] == 1                                          # 装配一次：旧路径不因开关改变节奏
+    assert result["steps"] == 2 and result["samples"] == 4
+    assert result["resample"]["every"] == 0
+    assert result["resample"]["segments"] == [
+        {"segment": 0, "seed": cfg["seed"], "samples": 4, "teacher_hits": 4, "teacher_misses": 0}
+    ]
+    assert result["teacher_forward_calls"] == 0
 
 
 def test_ablation_plan_pairs_differ_only_by_truncation():

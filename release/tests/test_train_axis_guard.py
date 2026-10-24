@@ -5,7 +5,7 @@
     `quality`——而 quality 轴主力集（typed-decisions / intern-decision）在 registry
     登记的就是 `split="test"`。按现配置点火＝在评测考卷上训练＝假分。
 本文件是防这条雷复发的机器守卫：
-    ① 逐条核验 sft.py 默认配置与全部 `production/configs/*.yaml` 的训练 axis：
+    ① 逐条核验 sft.py / opd.py 默认配置与全部 `production/configs/*.yaml` 的训练 axis：
        不得为 quality、不得属于任何评测轴、且该轴在 registry 上登记的副本必须
        全为 train 档。轴→split 映射唯一取自 `sys1.eval.registry.REGISTRY`，
        本文件不硬编码任何集名——registry 改登记，守卫跟着变，这才叫守卫。
@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from production import sft
+from production import opd, sft
 from sys1.eval import registry
 
 RELEASE_ROOT = Path(__file__).resolve().parents[1]
@@ -60,8 +60,11 @@ def assert_training_axis_ok(axis: str, *, amap: dict[str, set[str]] | None = Non
 
 
 def configured_axes(*, extra_configs: list[Path] | None = None) -> list[tuple[str, str]]:
-    """收集（来源, 训练 axis）：sft.py 默认档 + 全部 yaml；yaml 没写 axis 即沿用默认档。"""
-    out: list[tuple[str, str]] = [("production/sft.py::default_cfg", str(sft.default_cfg()["axis"]))]
+    """收集（来源, 训练 axis）：sft/opd 默认档 + 全部 yaml；yaml 没写 axis 即沿用默认档。"""
+    out: list[tuple[str, str]] = [
+        ("production/sft.py::default_cfg", str(sft.default_cfg()["axis"])),
+        ("production/opd.py::default_cfg", str(opd.default_cfg()["axis"])),   # R4：OPD 入口也要盯
+    ]
     paths = sorted(CONFIG_DIR.glob("*.yaml")) + [Path(p) for p in (extra_configs or [])]
     for p in paths:
         data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
@@ -130,3 +133,11 @@ def test_r14_monkeypatch_default_turns_red(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(sft, "default_cfg", lambda: {**real(), "axis": "quality"})
     bad = check_all()
     assert any("sft.py::default_cfg" in row for row in bad), f"默认档注入 quality 后守卫未红：{bad}"
+
+
+def test_r14_monkeypatch_opd_default_turns_red(monkeypatch: pytest.MonkeyPatch):
+    """monkeypatch 把 OPD 默认档打回 quality——守卫必须报这条来源的红；自动还原，不落盘。"""
+    real = opd.default_cfg
+    monkeypatch.setattr(opd, "default_cfg", lambda: {**real(), "axis": "quality"})
+    bad = check_all()
+    assert any("opd.py::default_cfg" in row for row in bad), f"OPD 默认档注入 quality 后守卫未红：{bad}"

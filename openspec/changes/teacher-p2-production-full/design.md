@@ -198,3 +198,12 @@ flowchart TD
 - Qwen3.5-0.8B 的 chat template 思考关闭前缀形态——W0 接缝校验实测固化。
 - 教师实测（获取已实证、key 已在位）：StartLux-4B 真拉载入+打分吞吐+视觉兼任探测、GLM API 连通延迟——W0 冒烟（p2-02 B3）定档。
 - transformers 5.18 对 qwen3_5 多模态 processor 成熟度——p2-08 A1 探针裁决主/备路线。
+
+### D14 on-policy 选项蒸馏的裁定修订（2026-10-24）
+
+**结论**：D9 "业界参照矩阵"里"蒸馏"行的 **per-token reverse KL** 表述由本节取代（D9 原文按历史记录保留不改；引用蒸馏口径时以本节为准）；D2 子域表第 6 行 `opd-gkd` 的同名表述按本节口径读，原文不动。
+
+- **实现形态**：选项级 forward-KL——散度方向 `KL(p_teacher ‖ p_student)`，作用在末位一次读出的候选份额表上；判别式读出让 token 退化为"一档"，不存在逐 token 自回归。
+- **on-policy 的落地**：`collect_onpolicy` 的 top-k 采样从"训练前一次性"移入训练循环，按 `resample_every` 步分段重采（默认 50；**0=关闭**，退化为旧的一次性装配，作回归锚）；优化器与学习率调度跨段连续、不重建；段种子由 `seed+段号` 派生并记入 run 配置与段记录。
+- **明确不做**：零生成产品形态下不做序列级 on-policy（"学生生成序列"无自然对应物）；将来若做需先立设计定义，不在本裁定授权内。
+- **依据**：`docs/reassessment/05-plan-recommendations.md` §5 裁定记录第 4 项（C on-policy 做实：top-k 采样移入训练循环、随学生更新重采；命名"on-policy 选项蒸馏"并写明 forward-KL 方向）。
