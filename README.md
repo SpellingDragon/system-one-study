@@ -1,7 +1,8 @@
 # System-One Study
 
-> 一部**可审计的造模型实录**：一个人从零造出一个端侧决策引擎（第一幕），再在同一个基座上用训练配方、蒸馏与自研算子把它做得更好（第二幕）。
-> 这里的每个数字都带出处，负结果与进展同强度写；"设计定了"与"跑出来了"分开写。
+> **一句话**：两幕学习项目——第一幕**从零**造出一个端侧决策引擎（禁任何第三方权重），第二幕在**同一基座**上用受控实验证明训练配方与自研算子到底值多少。
+> **现在**：第一幕已归档闭环；第二幕进行中，**昇腾算子研究是当前主线**，训练栈与扩展实验挂起等资源。
+> **诚信规则**：每个数字带出处，负结果与进展同强度；"设计定了"与"跑出来了"分开写。
 
 [![CI](https://github.com/SpellingDragon/system-one-study/actions/workflows/ci.yml/badge.svg)](https://github.com/SpellingDragon/system-one-study/actions/workflows/ci.yml)
 [![Sensitive Guard](https://github.com/SpellingDragon/system-one-study/actions/workflows/secrets-guard.yml/badge.svg)](https://github.com/SpellingDragon/system-one-study/actions/workflows/secrets-guard.yml)
@@ -54,11 +55,12 @@ flowchart LR
 
 ## 三分钟的三条路线
 
-| 你是 | 先读 | 再读 | 读完能判断 |
-|---|---|---|---|
-| 想学做模型 | [学习路径](docs/learning_path/README.md) 第 1–3 章 | 第 4–6 章（教师/蒸馏/加速器） | 一次决策从数据到概率经过了什么，怎么验 |
-| 来评审结果 | [全局评估](docs/reassessment/01-global-plan.md) | [证据索引](docs/reassessment/evidence.md) | 哪些数字能引用、哪些只是形特定或替身 |
-| 接手工程 | [p2-13 现状](openspec/changes/teacher-p2-production-full/changes/p2-13-ascend-runtime/STATUS.md) | [下一轮建议](docs/reassessment/05-plan-recommendations.md) | 下一步做什么、什么被卡、为什么 |
+| 你是 | 预算 | 先读 | 再读 | 读完能判断 |
+|---|---|---|---|---|
+| 只想知道值不值得看 | **3 分钟** | 本页「30 秒」+「诚实边界」两张表 | — | 这个项目有没有值得偷的东西 |
+| 想学做模型 | **半天** | [学习路径](docs/learning_path/README.md) 第 1–3 章 | 第 4–6 章（教师/蒸馏/加速器） | 一次决策从数据到概率经过了什么，怎么验 |
+| 来评审结果 | **30 分钟** | [全局评估](docs/reassessment/01-global-plan.md) | [证据索引](docs/reassessment/evidence.md) | 哪些数字能引用、哪些只是形特定或替身 |
+| 接手工程 | **30 分钟** | [p2-13 现状](openspec/changes/teacher-p2-production-full/changes/p2-13-ascend-runtime/STATUS.md) | [下一轮建议](docs/reassessment/05-plan-recommendations.md) | 下一步做什么、什么被卡、为什么 |
 
 ## 第一幕：从零造（P1）
 
