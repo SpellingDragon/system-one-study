@@ -52,6 +52,19 @@ cd ../release && python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 
 最后一行的验收口径**以运行输出为准**，不引用任何历史快照数：本机实跑（Apple Silicon / macOS，2026-10-10）为 **326 passed, 3 skipped, 3 deselected**（含 audit-remediation-1010 R-P0-2 新增的 `test_train_axis_guard.py` 7 项）。同时如实记下这笔账的前置条件：`tests/test_backends.py` 的双重 `@pytest.fixture` 装饰器在修复前会让该命令**收集期硬错误、0 个测试被执行**（修复见同变更 R-P0-3）；Linux/CI 上的数以新增的 release job 为准——MPS-only 用例在 Linux 口径不同（审计容器内最佳 276 passed），跨环境数字不可互抄。
 
+## 文档索引
+
+| 文档 | 读它做什么 |
+|---|---|
+| [`docs/learning_path/`](docs/learning_path/README.md) | **零基础学习路径**：从项目地图、张量与梯度到教师/蒸馏/实验证据/加速器六章，含可复跑 CPU 实验与自测；GDN 专题见下 |
+| [`docs/reassessment/`](docs/reassessment/README.md) | 2026-10-24 全项目技术重评：P1/P2/Ascend 四批评估、统一证据索引与下一轮修订建议（未裁定的建议，非新计划） |
+| [`docs/teaching_gdn_bwd_verification.md`](docs/teaching_gdn_bwd_verification.md) | **零基础教学**：从“GDN 反向在算什么”到“怎么判断一个算子对不对”；含可当场跑的 CPU 实验与 8 道自测题（2026-10-24 已勘误，见文首说明） |
+| [`docs/gdn_bwd_target_shape_postmortem.md`](docs/gdn_bwd_target_shape_postmortem.md) | 同一件事的工程版复盘：八次假绿、唯一真缺陷的三步定位、代价统计与决策记录 |
+| [`release/ascend/port910b/ACCEPTANCE_CHECKLIST.md`](release/ascend/port910b/ACCEPTANCE_CHECKLIST.md) | 数值验收十条检查的浓缩版（昇腾算子通用） |
+| [`docs/compliance.md`](docs/compliance.md) | 对外权利推演与条款核验（非法律意见） |
+| [`docs/ci_baseline_triage.md`](docs/ci_baseline_triage.md) | CI 基线归因台账（红项三分与处置） |
+| [`docs/drafts/acceptance-gates-pending-validation/`](docs/drafts/acceptance-gates-pending-validation/README.md) | 数值验收十条 gate 的**草稿**（协议/证据/排查手册/取证工具）。**未验证、不是 skill**，仅作自查清单 |
+
 ## 三条红线（学习项目的品格）
 
 1. 第一幕 `learning/` 轨禁第三方权重；第二幕产出基座必须 Apache 2.0（StartLux 权重实为 CC BY-NC-4.0，仅限蒸馏/verifier/对照评测；蒸馏产物权利推演待补，见 P2 合规论证项）；
