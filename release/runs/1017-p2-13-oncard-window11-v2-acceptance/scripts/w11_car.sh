@@ -11,9 +11,20 @@
 #   3) 判活看 python 进程与 cache 目录增长，不看"日志静默"（曾两次误杀编译中的车）
 #   4) 每腿独立 cache 目录；日志与判决统一落 artifacts/w11car/
 set -u
-K=$REPO_ROOT/release/.venv/${CARD_KEY}
-H=${CARD_SSH}
-SSH="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=20 -i $K -p 31955"
+# 连接参数与路径：真实值只存在于未跟踪的 .env.card（模板见 .env.card.example）。
+# 2026-10-25 修复：本文件曾把 key 拼成 $REPO_ROOT/release/.venv/$CARD_KEY、并把端口写死成常量。
+# CARD_KEY 本身就是 key 路径、CARD_PORT 会随实例重启变化（HANDOFF §5），
+# 两者都不该在脚本里二次加工。
+_HERE=$(cd "$(dirname "$0")" && pwd)
+[ -f "$_HERE/.env.card" ] && . "$_HERE/.env.card"
+: "${CARD_SSH:?CARD_SSH missing (copy .env.card.example to .env.card)}"
+: "${CARD_KEY:?CARD_KEY missing}"
+: "${CARD_PORT:?CARD_PORT missing}"
+: "${WORKSPACE_ROOT:?WORKSPACE_ROOT missing}"
+: "${REPO_ROOT:?REPO_ROOT missing}"
+K="${CARD_KEY}"
+H="${CARD_SSH}"
+SSH="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=20 -i $K -p $CARD_PORT"
 SRC=$WORKSPACE_ROOT/tilelang-ascend/examples/gdn_bwd_v2
 RUNS=$REPO_ROOT/release/runs/1017-p2-13-oncard-window11-v2-acceptance
 OUT="$RUNS/artifacts/w11car"
@@ -35,6 +46,12 @@ MANIFEST=(
   "$SRC/_process/_w11_s2a_boxes.py:_w11_s2a_boxes.py"
   "$SRC/_process/_w11_s2b_zero.py:_w11_s2b_zero.py"
   "$SRC/_process/_w11_num_diag.py:_w11_num_diag.py"
+  # 2026-10-25 补：快照版曾被裁到 7 项，导致 wsc/v3t/ex/rsa 腿无依赖文件可跑
+  "$SRC/_process/_ws_cmp.py:_ws_cmp.py"
+  "$SRC/_process/_realshape_acc.py:_realshape_acc.py"
+  "$SRC/../gdn_bwd_v3/gdn_bwd_v3.py:gdn_bwd_v3.py"
+  "$SRC/../gdn_bwd_v3/example_gdn_bwd.py:example_gdn_bwd.py"
+  "$SRC/../gdn_bwd_v3/test_gdn_bwd_v3.py:test_gdn_bwd_v3.py"
 )
 
 echo "=== [0] liveness + TA ==="
@@ -80,7 +97,7 @@ run_leg () {  # name cmd timeout
   echo \"=== LEG \$1 ===\"
   timeout \"\$3\" bash -c \"\$2\" > /tmp/w11car_\$1.log 2>&1
   echo \"\$1-EXITC=\$?\"
-  grep -aE '^STEP |^ONE|^STAT-|^out[0-9]_|DUMP-|PROBE-|PV-|RuntimeError|Traceback|5070|NAMING|S2ABOX|W11DIAG|S2BZERO' /tmp/w11car_\$1.log | tail -20
+  grep -aE '^STEP |^ONE|^STAT-|^out[0-9]_|DUMP-|PROBE-|PV-|RuntimeError|Traceback|5070|NAMING|S2ABOX|W11DIAG|S2BZERO|RELAY|REALSHAPE-ACC|WSCMP|CONTROL|Kernel Output Match|PADINV|PRECISION_|BOUNDARY_|DKPART|LEVEL ' /tmp/w11car_\$1.log | tail -30
 }
 for leg in $LEGS; do
   case \$leg in
@@ -99,6 +116,11 @@ for leg in $LEGS; do
     ndb)    run_leg ndb    'GDN_S2B_DBG=1 python3 -u /tmp/_w11_num_diag.py' 1200 ;;
     ndm)    run_leg ndm    'python3 -u /tmp/_w11_num_diag.py l0_multi_fp16' 1200 ;;
     ndv)    run_leg ndv    'GDN_S2A_VN_DBG=1 GDN_S2A_VN_CC=1 python3 -u /tmp/_w11_num_diag.py l0_multi_fp16' 1200 ;;
+    # 2026-10-25 补：快照版腿表缺以下四条（T3a 验收与阶段二回归都靠它们）
+    wsc)    run_leg wsc    'python3 -u /tmp/_ws_cmp.py' 2400 ;;
+    rsa)    run_leg rsa    'python3 -u /tmp/_realshape_acc.py' 3000 ;;
+    v3t)    run_leg v3t    'python3 -u /tmp/test_gdn_bwd_v3.py --level all' 1800 ;;
+    ex)     run_leg ex     'python3 -u /tmp/example_gdn_bwd.py' 1800 ;;
     *)      echo \"unknown leg \$leg\" ;;
   esac
 done
@@ -131,6 +153,6 @@ for f in /tmp/w11dump_1.npy /tmp/w11dump_2.npy /tmp/w11box_out2.npy; do
   ssh -T $SSH "$H" "cat $f" 2>/dev/null > "$OUT/$b" || true
   [ -s "$OUT/$b" ] && echo "PULLED $b $(wc -c < "$OUT/$b")B" || rm -f "$OUT/$b"
 done
-ssh -T $SSH "$H" 'cat /tmp/w11car_all.log; for f in /tmp/w11car_*.log; do echo "----- $f -----"; grep -aE "^STEP |^ONE|^STAT-|^out[0-9]_|DUMP-|PROBE-|PV-|RuntimeError|Traceback|5070|NAMING|S2ABOX|W11DIAG|S2BZERO|EXITC" $f | tail -40; done' 2>/dev/null > "$OUT/w11car_verdict.txt"
+ssh -T $SSH "$H" 'cat /tmp/w11car_all.log; for f in /tmp/w11car_*.log; do echo "----- $f -----"; grep -aE "^STEP |^ONE|^STAT-|^out[0-9]_|DUMP-|PROBE-|PV-|RuntimeError|Traceback|5070|NAMING|S2ABOX|W11DIAG|S2BZERO|EXITC|RELAY|REALSHAPE-ACC|WSCMP|CONTROL|Kernel Output Match|PADINV|PRECISION_|BOUNDARY_|DKPART|LEVEL " $f | tail -60; done' 2>/dev/null > "$OUT/w11car_verdict.txt"
 tail -60 "$OUT/w11car_verdict.txt"
 echo "W11CAR-FIRE-DONE"

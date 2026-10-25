@@ -1544,3 +1544,79 @@ L0–L2–Boundary 数值门全过（fp16 主档）· 单文件 example · **≤
 
 ### 下次上卡第一件事
 `w11_car.sh "boxb onem ndv"` —— 一条命令同时给出 P0 的三个判据。
+
+---
+
+## [160] T3a 通过：真修成立、`BK=DK` 绕行已撤；快照版发车车脚本残缺已修（2026-10-25）
+
+### 车 `20261025T0925Z`（腿 `wsc v3t ex`，840 s，全量日志已归档）
+
+**T3a（`wsc`，exit 0）**
+
+| 用例 | h_rel | a_rel | 判 |
+|---|---|---|---|
+| CONTROL H1/T256/DK64/BK64 | 3.621e-04 | 5.931e-05 | ok |
+| CONTROL H1/T512/DK64/BK64 | 6.616e-04 | 5.398e-05 | ok |
+| WSCMP H1/T256/DK128/**BK64** | 3.992e-04 | 5.961e-05 | ok |
+| WSCMP H1/T256/DK128/BK128 | 3.992e-04 | 5.961e-05 | ok |
+
+`BK=64` 与 `BK=128` **逐位相同**（两次都是 a 5.961e-05 / h 3.992e-04）⇒ `301bfde0` 的真修成立；
+判据（a≈6e-5、h≈4e-4）同时满足；两条 64 形 CONTROL 也 ok ⇒ 量具自证。
+
+**`v3t`（exit 1，红因是已知 Ratio 口径，非本轮引入）**
+
+- T=64 六项 rel 全 PASS：dq 4.321e-04 / dk 3.669e-04 / dv 6.514e-04 / dbeta 3.400e-04 / dg 2.511e-04 / dh0 4.619e-04，与历史**逐位相同**（前置件改 idiom 不影响 64 形）。
+- T=128 六项 rel PASS（dk 2.400e-03、dg 2.026e-03）；T=192 六项 rel PASS（dg 2.048e-03，历史 1.911e-03，差 7%，仍 <5e-3）。
+- l2 T=65 正确拒绝；boundary 三条 WARN（非阻塞）；`LEVEL all ok=False` 来自 T=64 的 ratio 口径（[140] 已定性）。
+
+**`ex`（exit 0）**：T=64 与 T=256 全 PASS，打印 `Kernel Output Match!`。
+
+### 处置：撤 `BK=DK` 绕行
+
+`gdn_bwd_v3.py` 与 `example_gdn_bwd.py` 各两处 `solve_a(B,H,T_len,DK,C,DK,...)` → `solve_a(..., 64, ...)`；
+注释替换为 T3a 实测结论。`py_compile` 通过、`check_example_sync.py` 两段全绿（776/776 + SYNC2 3/3）。
+撤绕行后的回归车见 [161]。
+
+### 工具面新发现：快照版 `w11_car.sh` 残缺（已修，三处）
+
+1. **连接参数**：把 key 拼成 `$REPO_ROOT/release/.venv/$CARD_KEY`、端口硬编码（`-p 31955`），且不再自加载 `.env.card` ⇒ 连着两次 `ABORT unreachable`（车把 ssh 的 stderr 吞了；手工同形 ssh 正常，才定位到拼接错误）。修为：自加载 `scripts/.env.card` + 五个变量 `:?` 校验 + `K="$CARD_KEY"` + `-p $CARD_PORT`。
+2. **清单与腿表被裁**：MANIFEST 只剩 7 项、腿表缺 `wsc / rsa / v3t / ex` ⇒ 首车全部腿打印 `unknown leg`、20 s 空转结束。修为：MANIFEST 补 5 项（`_ws_cmp.py`、`_realshape_acc.py`、v3 三件），腿表补 4 条。
+3. **判据行被过滤**：runner 与 pull 两处的 `grep -aE` 白名单不含 `RELAY / REALSHAPE-ACC / WSCMP / CONTROL / Kernel Output Match / PADINV / PRECISION_ / BOUNDARY_ / DKPART / LEVEL` ⇒ 腿跑完也拉不回判据。修为：两处白名单补齐，`run_leg` 摘要由 `tail -20` 放宽到 `tail -30`。
+
+`bash -n` 通过后重发，12 项 md5 全 OK、车跑完 840 s。
+
+### 归档
+
+车 `20261025T0925Z`：**20 个文件 / 644 KB**（`w11car_all.log` + `w11car_{wsc,v3t,ex}.log` 全量 + 卡上 7 份运行器副本 + `MANIFEST.txt`）。
+`w11_pull_logs.sh` 同样被快照裁掉，本次以手工归档脚本落盘（逐文件 `cat` + `md5 -q` + 字节数）。
+
+---
+
+## [161] 撤 `BK=DK` 绕行后的回归：数值零变化，`dk/dbeta` 与 BK 分块无关（车 `20261025T0952Z`）
+
+腿 `v3t ex rsa`，1400 s，全量日志已归档（20 文件 / 652 KB）。
+
+| 腿 | exit | 结果 |
+|---|---|---|
+| `v3t` | 1 | 红因仍是 T=64 的 ratio 口径（[140]）；l1 T=128/192 六项 rel PASS；l2 T=65 正确拒绝；boundary 三条 WARN |
+| `ex` | 0 | `Test pass!` + `Kernel Output Match!`（T=64 / T=256） |
+| `rsa` | 0 | 目标形 `ALL_PASS`；H1 扫描 T=128 `SOME_FAIL`、T=8192 `SOME_FAIL`（与历史同） |
+
+**逐位相同**（对照 [154]/[156] 的历史值）：
+
+- 目标形 H16/T8192：dq 5.897e-04 / dk 4.289e-03 / dv 1.043e-03 / dbeta 4.555e-03 / dg 4.718e-03 / dh0 4.642e-04 —— 六项一致；
+- `v3t` T=64 与 T=256 六项、T=128 与 T=192 六项 —— 与首车（绕行版）一致；
+- H1 扫描：T=128 dk 8.049e-03 FAIL；T=512 dk 1.321e-03；T=2048 dbeta 3.687e-03；T=8192 dbeta 6.116e-03 FAIL —— 全部一致。
+
+### 两条推论
+
+1. `BK=64` 与 `BK=DK` 在 `solve_a` 上等价（T3a 用 `wsc` 直接证过：A/H_in 两档逐位相同），故**撤绕行安全**，代码回到统一 idiom，不再背"回避不是修复"的注释。
+2. **`dk`/`dbeta` 的薄边界不是 BK 分块造成的**——换回 `bk_num=2` 后两量在四个形状上与历史逐位同值。继续查的两个入口不变：`dk` 四项分解（T3'，腿 `dks128`）与 `dbeta` 主导项（T2b）。
+
+### 计时口径（别误读）
+
+目标形 `card_s=269.6`，首车同一用例是 44.9 ——本次 `TILELANG_CACHE_DIR` 在 launch 前被清空，**这个数含编译**，两者不可直接比较。纯运行时需热缓存复测。
+
+### 工具面
+
+归档脚本对 `w11car_ex.log` 抓到 0 字节（卡上为 2330 B、内容完整）；已重抓并给归档循环加非空校验（`[ -s ]` + 告警），避免"证据看起来归档了、实际是空文件"。
