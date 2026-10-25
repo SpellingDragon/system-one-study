@@ -27,10 +27,13 @@
 
 | 仓库 | 路径 | 分支 / 提交 | 说明 |
 |---|---|---|---|
-| system-one（计划与证据） | `/Users/pengweiye/Documents/codes/system-one` | `main` @ `1d98dd5` | 2026-10-25 已与 `origin/main` 同步；远端曾被重建为 curated snapshot，**本地旧历史已作废** |
-| tilelang-ascend（算子所在） | `/Users/pengweiye/Documents/codes/tilelang-ascend` | 本地 `ascendc_pto` @ `5adc8753` | 相对上游 ahead 222 / behind 18 |
+| system-one（计划与证据） | `$REPO_ROOT` | `main` @ `1d98dd5` | 2026-10-25 已与 `origin/main` 同步；远端曾被重建为 curated snapshot，**本地旧历史已作废** |
+| tilelang-ascend（算子所在） | `$WORKSPACE_ROOT/tilelang-ascend` | 本地 `ascendc_pto` @ `5adc8753` | 相对上游 ahead 222 / behind 18 |
 | tilelang-ascend 的 fork | `github.com/SpellingDragon/tilelang-ascend` | 分支 `gdn-bwd-measure-fixes` @ `5adc8753` | 本会话提交**只在这里**；fork 为 public |
 | tilelang-ascend 上游 | `github.com/tile-ai/tilelang-ascend` | `origin/ascendc_pto` @ `43b0b697` | **未推送、未强推**；本地落后 18 个提交，恢复同步需 rebase 或 merge（会改写或引入历史，属被裁事项） |
+
+> 文中 `$REPO_ROOT` / `$WORKSPACE_ROOT` 是脱敏占位符（个人路径不入库）。本机典型值：
+> `$REPO_ROOT=~/Documents/codes/system-one`，`$WORKSPACE_ROOT=~/Documents/codes`；发车脚本所用的 `.env.card` 已导出这两个变量。
 
 本会话在 tilelang-ascend 的实际改动（提交 `5adc8753`）：
 
@@ -184,7 +187,7 @@ release/runs/1017-…/scripts/.env.card      # 不入库，含 key 路径
 ### 发一辆车（三条命令）
 
 ```bash
-cd /Users/pengweiye/Documents/codes/system-one/release/runs/1017-p2-13-oncard-window11-v2-acceptance
+cd $REPO_ROOT/release/runs/1017-p2-13-oncard-window11-v2-acceptance
 set -a; . scripts/.env.card; set +a
 bash scripts/w11_car.sh "rsa wsc"          # 腿名见 §6；一条车顺序跑完所有腿（单锁）
 bash scripts/w11_pull_logs.sh 20261025T0100Z   # 归档到 artifacts/w11car/<tag>/
@@ -268,12 +271,15 @@ bash scripts/w11_pull_logs.sh 20261025T0100Z   # 归档到 artifacts/w11car/<tag
 ## 9. 怎么验证本文件没写错（新会话开场可跑）
 
 ```bash
+# 以下命令假定两个根已导出（发车脚本的 .env.card 也会导出它们）
+export REPO_ROOT=$HOME/Documents/codes/system-one WORKSPACE_ROOT=$HOME/Documents/codes
+
 # 1) 两仓状态与提交
-cd /Users/pengweiye/Documents/codes/system-one && git log --oneline -1 && git status --short
-cd /Users/pengweiye/Documents/codes/tilelang-ascend && git log --oneline -1 && git rev-list --left-right --count origin/ascendc_pto...HEAD
+cd $REPO_ROOT && git log --oneline -1 && git status --short
+cd $WORKSPACE_ROOT/tilelang-ascend && git log --oneline -1 && git rev-list --left-right --count origin/ascendc_pto...HEAD
 
 # 2) 证据与门禁
-cd /Users/pengweiye/Documents/codes/system-one
+cd $REPO_ROOT
 ls release/runs/1017-p2-13-oncard-window11-v2-acceptance/{notes.md,w11_fork_plan.md}
 # artifacts 未随库分发；先恢复再数（见 §2.1）
 git restore --source=7f1011b --worktree -- release/runs/1017-p2-13-oncard-window11-v2-acceptance/artifacts
@@ -287,15 +293,15 @@ grep -aq "T=8192 H=16 DK=128" "$f" && echo BATCH-OK
 sed -n "/T=8192 H=16/,/ACC dim=128/p" "$f" | tail -8
 
 # 4) 本会话修的验收面是否在位
-TA_ROOT=/Users/pengweiye/Documents/codes/tilelang-ascend \
+TA_ROOT=$WORKSPACE_ROOT/tilelang-ascend \
   release/.venv/bin/python -P release/runs/1017-p2-13-oncard-window11-v2-acceptance/scripts/check_example_sync.py
 # 期望 SYNC-OK + SYNC2-OK 3/3
-cd /Users/pengweiye/Documents/codes/tilelang-ascend/examples/gdn_bwd_v2 \
-  && /Users/pengweiye/Documents/codes/system-one/release/.venv/bin/python -P _process/_pad_invariance.py
+cd $WORKSPACE_ROOT/tilelang-ascend/examples/gdn_bwd_v2 \
+  && $REPO_ROOT/release/.venv/bin/python -P _process/_pad_invariance.py
 # 期望 PADINV worst≈9.6e-17 verdict=PASS
 
 # 5) 本地门禁
-cd /Users/pengweiye/Documents/codes/system-one/scratch && PYTHON=$PWD/.venv/bin/python bash tools/ci.sh   # 278 passed
+cd $REPO_ROOT/scratch && PYTHON=$PWD/.venv/bin/python bash tools/ci.sh   # 278 passed
 cd ../release && PYTHONPATH=$PWD .venv/bin/python -P -m pytest tests -q -m "not integration"              # 343 passed
 ```
 
