@@ -14,12 +14,12 @@
 |---|---|
 | 在做什么 | `system-one` **p2-13**：GDN（Gated DeltaNet）反向在昇腾 910B 上的实现与验收 |
 | 目标形 | `B1 H16 T8192 DK128 DV128 C64`（128 chunk），六项 `dq/dk/dv/dbeta/dg/dh0` |
-| 数值状态 | 目标形**首次六项 <5e-3**（历史批次，余量 9%~14%）；但 `dk`/`dbeta` 是**薄边界项**，换 H 或 chunk 数会翻线 |
-| 根因 | `solve_a` 的 KK^T 分块路径在 `bk_num>1` 时错；上游 idiom 是 GM→L1 直拷，我们多了一层 UB 中转。`BK=DK` 是绕行，真修 `301bfde0` **尚待上卡验证** |
+| 数值状态 | 目标形**六项 <5e-3**（历史批次，余量 9%~14%）；`dk`/`dbeta` 是**薄边界项**，换 H 或 chunk 数会翻线；**已证与 BK 分块无关**（[161]） |
+| 根因与处置 | `solve_a` 的 KK^T 分块路径在旧时刻被一层 UB 中转带坏；回上游 idiom（GM→L1 直拷）后 **T3a 已通过**：DK=128 下 `BK=64` 与 `BK=128` 的 A/H_in 逐位相同（a 5.961e-05 / h 3.992e-04）⇒ **`BK=DK` 绕行已撤**（提交 `bc4126a4`） |
 | 本会话新增 | 五项裁定落地（`openspec/changes/adjudication-remediation-1024`，16/17）；验收测量面修复；R9 接入静态设计；全项目重评与教材（`docs/reassessment`、`docs/learning_path`） |
-| 待办 | 阶段二队列从头开始：**T3a**（`wsc` 验真修）→ T3'（dk 分解）→ T2b（dbeta）→ T5（双形收紧） |
+| 待办 | `dk` 四项分解（**T3'**，腿 `dks128`）→ `dbeta` 主导项（**T2b**）→ 修完重跑 **T5**（判据：两量都 ≤2e-3；车 `20261025T0952Z` 已各跑一次，仍为 8.049e-03 / 6.116e-03） |
 | 卡 | **实例已恢复（`ALIVE`，端口未变）**，可立即发车 |
-| 最大风险 | ① 真修未验证前任何"六项全绿"都建立在绕行上；② `scan2a/scan2b` 的同形 BK 分半仍未验（v2 自身作为 oracle 的风险） |
+| 最大风险 | ① `dk`/`dbeta` 仍未收紧（8.0e-3 / 6.1e-3），修完前不得报“全形通过”；② `scan2a/scan2b` 的同形 BK 分半仍未验（v2 作为 oracle 时的风险） |
 
 ---
 
@@ -27,9 +27,9 @@
 
 | 仓库 | 路径 | 分支 / 提交 | 说明 |
 |---|---|---|---|
-| system-one（计划与证据） | `$REPO_ROOT` | `main` @ `1d98dd5` | 2026-10-25 已与 `origin/main` 同步；远端曾被重建为 curated snapshot，**本地旧历史已作废** |
-| tilelang-ascend（算子所在） | `$WORKSPACE_ROOT/tilelang-ascend` | 本地 `ascendc_pto` @ `5adc8753` | 相对上游 ahead 222 / behind 18 |
-| tilelang-ascend 的 fork | `github.com/SpellingDragon/tilelang-ascend` | 分支 `gdn-bwd-measure-fixes` @ `5adc8753` | 本会话提交**只在这里**；fork 为 public |
+| system-one（计划与证据） | `$REPO_ROOT` | `main` @ `5d3c345` | 2026-10-25 已与 `origin/main` 同步；远端曾被重建为 curated snapshot，**本地旧历史已作废** |
+| tilelang-ascend（算子所在） | `$WORKSPACE_ROOT/tilelang-ascend` | 本地 `ascendc_pto` @ `bc4126a4` | 相对上游 ahead 223 / behind 18 |
+| tilelang-ascend 的 fork | `github.com/SpellingDragon/tilelang-ascend` | 分支 `gdn-bwd-measure-fixes` @ `bc4126a4` | 本会话提交**只在这里**；fork 为 public |
 | tilelang-ascend 上游 | `github.com/tile-ai/tilelang-ascend` | `origin/ascendc_pto` @ `43b0b697` | **未推送、未强推**；本地落后 18 个提交，恢复同步需 rebase 或 merge（会改写或引入历史，属被裁事项） |
 
 > 文中 `$REPO_ROOT` / `$WORKSPACE_ROOT` 是脱敏占位符（个人路径不入库）。本机典型值：
@@ -43,6 +43,7 @@
 | `examples/gdn_bwd_v3/test_gdn_bwd_v3.py` | boundary 注入后**用同一 do 重算参考**（原口径是拿注入后的输出比未注入的 golden） |
 | `examples/gdn_bwd_v3/example_gdn_bwd.py` | 内联 `solve_a` 回到 v2 现行 idiom（删 `fill` + GM→UB→L1 中转） |
 | `examples/gdn_bwd_v2/_process/_pad_invariance.py` | 新增：哑 token pad 契约的本地对照（见 §3.6） |
+| `examples/gdn_bwd_v3/{gdn_bwd_v3,example_gdn_bwd}.py` | 撤 `BK=DK` 绕行（T3a 通过后），四个调用点恢复 `BK=64` |
 
 ---
 
@@ -54,13 +55,15 @@
 
 ```
 release/runs/1017-p2-13-oncard-window11-v2-acceptance/
-├── notes.md          4271 行，逐条记录 [1]…[159]（只读尾部与指定编号，别通读）
+├── notes.md          1622 行（快照版比旧历史短；按编号查，别通读，重点 `[144][152]–[161]`）
 ├── w11_fork_plan.md  W12 波次表 / W13 收获清单 / 待裁项
-├── scripts/          w11_car.sh（真机长跑）、w11_pull_logs.sh（归档）、
+├── scripts/          w11_car.sh（真机长跑，已合自加载 .env.card）、
 │                     check_example_sync.py（示例↔kernel + **内联前置件**对账）、
 │                     .env.card（含凭据路径，不入库）
-└── artifacts/w11car/<UTC时间>/   15 批车证据（全量日志 + 卡上运行器 + MANIFEST 字节数）
+└── artifacts/w11car/<UTC时间>/   17 批车证据（全量日志 + 卡上运行器副本 + MANIFEST）
 ```
+
+> **`w11_pull_logs.sh` 已被快照剔除**：归档改用 §9 式的逐文件 `cat` + `md5` + 字节数，并校验 bytes>0（曾出现 `w11car_ex.log` 抓到 0 字节而卡上 2330 B）。
 
 > **artifacts 当前不在版本库里**：2026-10-25 快照重建时被移出工作区。可从旧提交恢复（19 MB，仅工作区、不自动入库）：
 > `git restore --source=7f1011b --worktree -- release/runs/1017-p2-13-oncard-window11-v2-acceptance/artifacts`
@@ -103,6 +106,8 @@ dq 5.897e-04   dk 4.289e-03   dv 1.043e-03   dbeta 4.555e-03   dg 4.718e-03   dh
 ```
 
 **同批 CONTROL（H16/T512/DK64）多项 FAIL，整批终判 `SOME_FAIL`**——目标行通过 ≠ 整批验收通过。
+
+> **[161] 回归（车 `20261025T0952Z`，撤绕行后）**：目标形六项与上表**逐位相同**（dq 5.897e-04 … dh0 4.642e-04），H1 扫描也相同（T=128 dk 8.049e-03、T=8192 dbeta 6.116e-03）；`v3t` 六项与 `ex` 输出同样与历史一致。
 
 ### 3.2 前置件对 golden（`wsc` 腿，带 64 形 CONTROL）
 
@@ -214,13 +219,13 @@ bash scripts/w11_pull_logs.sh 20261025T0100Z   # 归档到 artifacts/w11car/<tag
 
 ### 6.2 阶段二（需卡；实例已 `ALIVE`）
 
-| 单号 | 动作 | 判据 | 腿 |
+| 单号 | 动作 | 判据 | 状态 |
 |---|---|---|---|
-| **T3a** | 验 `301bfde0`（`solve_a` 回上游 idiom）：DK=128、**BK=64** 下量 A/H_in | `a_rel ≈ 6e-5`、`h_rel ≈ 4e-4` ⇒ 真修成立，可撤 `BK=DK` 绕行；否则保留绕行并记证据 | `wsc` |
-| **回归** | `v3t` + `ex`（example 前置件已改，必须重跑） | 64 形六项与历史逐位相同或更好；`ex` 打印 Match | `v3t ex` |
-| **T3'** | `dk` 四项分解（最差 T=128/2 chunk 与最好 T=512/8 chunk） | 看哪一项 abs_max 与 dk 同量级；`sum_vs_full≈0` 否则拆分不完备 | `dks128` |
-| **T2b** | 同法看 `dbeta` 主导项 | 若与 dk 的 q2 同源，一次修两处 | 需扩 `_dk_split_128.py` |
-| **T5** | 重跑 `rsa`（目标形 + 弱配置 T=128/H=1） | `dk`、`dbeta` 都 ≤2e-3 才算收紧成功 | `rsa` |
+| **T3a** | 验 `301bfde0`（`solve_a` 回上游 idiom） | `a_rel ≈ 6e-5`、`h_rel ≈ 4e-4` | **✅ 已通过**（车 `20261025T0925Z`，`a 5.961e-05 / h 3.992e-04`；绕行已撤） |
+| **回归** | `v3t ex rsa`（example 前置件已改） | 64 形与历史逐位相同 | **✅ 已跑**（车 `20261025T0952Z`，见 [161]） |
+| **T3'** | `dk` 四项分解（最差 T=128/2 chunk 与最好 T=512/8 chunk） | 看哪一项 abs_max 与 dk 同量级；`sum_vs_full≈0` | 待发（腿 `dks128`） |
+| **T2b** | 同法看 `dbeta` 主导项 | 若与 dk 的 q2 同源，一次修两处 | 待（需扩 `_dk_split_128.py`） |
+| **T5** | 重跑 `rsa`（目标形 + 弱配置） | `dk`、`dbeta` 都 ≤2e-3 | 已跑一次未达（8.049e-03 / 6.116e-03），修完复验 |
 
 ### 6.3 挂起 / 待裁
 
