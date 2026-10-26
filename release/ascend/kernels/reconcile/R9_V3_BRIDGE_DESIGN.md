@@ -83,6 +83,18 @@ train_step.py → ops.gdn_delta → autograd_asc._GdnFn
 - 路由开关：建议 env（如 `SYS1_GDN_V3_BRIDGE=0|1`，默认 0）；v3 不可用（无 torch_npu / target≠ascend / TA 包缺失）时**回落 gdn_asc 并登记 blocker**，不假绿。
 - 同步：v3 relay 内部已有 `torch.npu.synchronize()`；桥不重复加同步，避免改变时序语义（实现期复核）。
 
+### 1.5b 外部参照：AIC/AIV tile 级 flag 流水（得物 910C 融合算子，2026-10-27 补记）
+
+得物在 910C 上自研 `matmul_allreduce_add_rmsnorm_910c` 融合算子（源码 `csrc/mc2/matmul_allreduce_add_rmsnorm910c/`）展示了多阶段片上流水的具体 AscendC 写法：
+- **AIC 侧**：细粒度 matmul，每算完一个 tile 就在 GM 上置位 tile-ready flag；
+- **AIV 侧**：轮询 AIC 的 flag，tile 就绪即启动跨 rank 归约 + RMSNorm，不回 host；
+- **流水协议**：flag 分三段（AIC tile 就绪 / 跨 rank 协议状态 / RMS 就绪），AIC 越往后算，AIV 的归约越能与之重叠，形成细粒度流水；
+- **双层回退**：Python 侧形状守卫（不满足返回 None 走未融合路径）+ 算子内部 Dispatcher 回退到标准算子组合，保证正确性不依赖融合算子的形状覆盖度。
+
+对本桥的启发：① v3 前置件（cumsum→solve_a→scan1）若未来做片上融合，可参照此 flag 协议设计 AIC/AIV 流水，替代当前的 GM workspace 中转；② 双层回退（形状守卫 + 算子内回退）是融合算子不改正确性语义的结构保证，桥的 env 路由 + blocker 登记同属此模式。
+
+来源：得物技术《昇腾 910C 大模型推理优化（下）》§二.3（2026-10-21）；彼文在 910C/CANN 9.x 上实现，本项目在 910B/CANN 8.5.2 上实现，具体指令与 flag 地址布局不可直接搬。
+
 ### 1.6 ⑥ pad 契约（T%C≠0 由 host pad）
 
 - 现状：v3 relay 入口 `assert T_len % C == 0`（`gdn_bwd_v3.py:699`）——**拒绝**而非实现尾块。
